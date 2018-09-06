@@ -154,7 +154,7 @@ function raff(model, data, n)
 
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
-    v = Array{Any,1}(plimsup - pliminf + 1)
+    v = Array{Any,1}(undef, plimsup - pliminf + 1)
     k = 1
 
     for i = pliminf:plimsup
