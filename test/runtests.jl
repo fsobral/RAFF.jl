@@ -1,6 +1,7 @@
 using RAFF
 
 using Test
+using DelimitedFiles
 
 @testset "Simple test" begin
 
@@ -31,24 +32,44 @@ using Test
 
     answer = [2.0, -0.5]
 
-    conv, x, iter, p = LMlovo(model,data,2,18)
+    conv, x, iter, p = LMlovo(model, data, 2, 18)
 
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
     
-    # raff(model,data,2)
+    conv, x, iter, p = raff(model, data, 2)
+    
+    @test conv == 1
+    @test x ≈ answer atol=1.0e-5
+    @test p == 18
     
 end
 
-#adjustment model
-#function model(x,t)
-#    return x[1]*exp(t*x[2])
-#end
+@testset "Generated test set" begin
 
-#exact answer 2exp(-0.5t)
+    dir = "../examples/"
+    N = readdlm(string(dir, "list.dat"))
+    m, n = size(N)
+    
+    for i = 1:m
 
-#
-##
+        data = readdlm(string(dir, N[i, 1]))[:, [1, 2]]
+        aux = readdlm(string(dir, N[i, 2]))
+        n = aux[1, 1]
+        tsol = ""
+        for k = 1:n 
+            tsol = tsol * (aux[2, k]) # aux[2,] is substring
+        end
+        
+        model = eval(Meta.parse(aux[3, 1]))
+        answer = eval(Meta.parse(tsol))
+        
+        conv, x, iter, p = raff(model, data, n)
 
-#
+        @test conv == 1
+        @test x ≈ answer atol=1.0e-2
+
+    end 
+
+end
