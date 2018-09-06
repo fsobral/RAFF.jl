@@ -1,5 +1,5 @@
-RAFF - Robust Algebraic Fit Function
-====================================
+RAFF - Robust Algebraic Fitting Function
+========================================
 
 This package implements a robust method to fit a given function
 (described by its parameters) to input data. The method is based on
