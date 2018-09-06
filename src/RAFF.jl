@@ -175,6 +175,10 @@ function raff(model, data, n)
     mainind = findlast(x->x == maximum(votsis), votsis)
     
     display(v[mainind])
+    println()
+
+    return v[mainind]
+    
 end
 
 end
