@@ -1,8 +1,11 @@
 module RAFF
 
+__precompile__(false)
+
 # Dependencies
 using ForwardDiff
 using LinearAlgebra
+using Printf
 
 export LMlovo, raff
 
@@ -180,5 +183,76 @@ function raff(model, data, n)
     return v[mainind]
     
 end
+
+"""
+
+    writeTestProblems(datFilename::String, solFilename::String,
+                      modelStr::String, n::Int, np::Int, p::Int)
+
+Generate random data files for testing fitting problems.
+
+  - `datFilename` and `solFilename` are strings with the name of the
+    files for storing the random data and solution, respectively.
+  - `modelStr` is a string representing the model function, e.g.
+
+         modelStr = "(x, t) -> x[1] * t + x[2]"
+
+    where `x` represents the parameters (to be found) of the model and
+    `t` is the variable of the model.
+  - `n` is the number of parameters
+  - `np` is the number of points to be generated.
+  - `p` is the number of trusted points to be used in the LOVO
+    approach.
+
+"""
+function writeTestProblems(datFilename::String,
+                           solFilename::String, modelStr::String,
+                           n::Int, np::Int, p::Int)
+                           
+    # Generate parameters x (solution)
+    x = 10.0 * randn(n)
+    
+    open(solFilename, "w") do sol
+    
+        println(sol, n) # number of variables
+
+        println(sol, x) # parameters
+        
+        println(sol, modelStr) # function expression
+
+    end
+
+    #
+    # Generate (ti,yi) where tmin <= t_i <= tmax (data)
+    t = [tmin:(tmax - tmin) / (np - 1):tmax;]
+    
+    y = zeros(length(t))
+
+    open(datFilename, "w") do data
+        
+        f = eval(Meta.parse(modelStr))
+        
+        v = rand([1:1:np;], np - p)
+
+        # Add noise to some random points
+        for k = 1:np
+            
+            y[k] = f(x, t[k])
+
+            noise = 0.0
+            
+            if k in v 
+                noise = randn() * rand([1.0, 2.0, 3.0])
+            end
+            
+            @printf(data, "%20.15f %20.15f %20.15f\n",
+                    t[k], y[k] + noise, noise)
+
+        end
+
+    end
+    
+end
+
 
 end
