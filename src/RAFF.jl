@@ -31,6 +31,9 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
 """
 function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int)
 
+    @assert(n > 0, "Dimension should be positive.")
+    @assert(p >= 0, "Trusted points should be nonnegative.")
+    
     # Define closures for derivative and initializations
     model_cl(x) = model(x, t)
     grad_model_cl(x) = ForwardDiff.gradient(model_cl, x)
