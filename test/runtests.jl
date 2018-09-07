@@ -3,7 +3,7 @@ using RAFF
 using Test
 using DelimitedFiles
 
-@testset "Simple test" begin
+@testset "Simple tests" begin
 
     model(x, t) = x[1] * exp(t * x[2])
 
@@ -43,28 +43,47 @@ using DelimitedFiles
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
+
+    @test_throws AssertionError LMlovo(model, data, 0, 1)
+    @test_throws AssertionError LMlovo(model, data, 2, -1)
+
+    conv, x, iter, p = LMlovo(model, data, 2, 0)
+
+    @test conv == 1
+    @test iter == 1    
     
 end
 
 @testset "Generated test set" begin
 
     dir = "../examples/"
-    N = readdlm(string(dir, "list.dat"))
-    m, n = size(N)
-    
-    for i = 1:m
 
-        data = readdlm(string(dir, N[i, 1]))[:, [1, 2]]
-        aux = readdlm(string(dir, N[i, 2]))
-        n = aux[1, 1]
-        tsol = ""
-        for k = 1:n 
-            tsol = tsol * (aux[2, k]) # aux[2,] is substring
-        end
+    # Iterate over a list of small problems and solutions
+    for prob in eachline(string(dir, "list.dat"))
+
+        # Ignore blank lines
+        (length(strip(prob)) == 0) && continue
         
-        model = eval(Meta.parse(aux[3, 1]))
-        answer = eval(Meta.parse(tsol))
-        
+        dname, sname = split(prob)
+
+        # Data file
+        data = readdlm(string(dir, dname))[:, [1, 2]]
+
+        # Solution file
+        fsol = open(string(dir, sname), "r")
+
+        # Number of parameters
+        n = Meta.parse(readline(fsol))
+
+        # Solution vector
+        answer = eval(Meta.parse(readline(fsol)))
+
+        # Model function to fit data
+        model = eval(Meta.parse(readline(fsol)))
+
+        close(fsol)
+
+        # Call raff
         conv, x, iter, p = raff(model, data, n)
 
         @test conv == 1
