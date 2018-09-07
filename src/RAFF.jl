@@ -125,11 +125,11 @@ function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int)
     end
     if safecount==200
     #    println("no solution was founded in $safecount iterations")
-        return 0,x,safecount,p
+        return 0, x, safecount, p
     else
     #    println("solution founded::   $x " )
     #    println("number of iterations:: $(safecount)")
-        return 1,x,safecount,p
+        return 1, x, safecount, p
     end
 end
 
@@ -174,9 +174,6 @@ function raff(model, data, n)
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    display(v[mainind])
-    println()
-
     return v[mainind]
     
 end
