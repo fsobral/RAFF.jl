@@ -6,7 +6,7 @@ using Printf
 # expected outputs.
 
 # Iterate over a list of problems and solutions
-for prob in eachline("list.dat")
+for prob in eachline("files/list.dat")
 
     # Ignore blank lines
     (length(strip(prob)) == 0) && continue
@@ -14,10 +14,10 @@ for prob in eachline("list.dat")
     dname, sname = split(prob)
 
     # Data file
-    data = readdlm(dname)[:, [1, 2]]
+    data = readdlm("files/" * dname)[:, [1, 2]]
 
     # Solution file
-    fsol = open(sname, "r")
+    fsol = open("files/" * sname, "r")
 
     # Number of parameters
     n = Meta.parse(readline(fsol))
