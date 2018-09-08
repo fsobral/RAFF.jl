@@ -7,7 +7,7 @@ using ForwardDiff
 using LinearAlgebra
 using Printf
 
-export LMlovo, raff
+export LMlovo, raff, generateTestProblems
 
 """
     LMlovo(model, data, n, p)
@@ -186,15 +186,18 @@ end
 
 """
 
-    writeTestProblems(datFilename::String, solFilename::String,
-                      modelStr::String, n::Int, np::Int, p::Int)
+    generateTestProblems(datFilename::String, solFilename::String,
+                         model::Function, modelStr::String, n::Int,
+                         np::Int, p::Int)
 
 Generate random data files for testing fitting problems.
 
   - `datFilename` and `solFilename` are strings with the name of the
     files for storing the random data and solution, respectively.
-  - `modelStr` is a string representing the model function, e.g.
+  - `model` is the model function and `modelStr` is a string
+    representing this model function, e.g.
 
+         model = (x, t) -> x[1] * t + x[2]
          modelStr = "(x, t) -> x[1] * t + x[2]"
 
     where `x` represents the parameters (to be found) of the model and
@@ -205,9 +208,11 @@ Generate random data files for testing fitting problems.
     approach.
 
 """
-function writeTestProblems(datFilename::String,
-                           solFilename::String, modelStr::String,
-                           n::Int, np::Int, p::Int)
+function generateTestProblems(datFilename::String,
+                              solFilename::String, model::Function,
+                              modelStr::String,
+                              n::Int, np::Int, p::Int;
+                              tmin=-10.0, tmax=10.0)
                            
     # Generate parameters x (solution)
     x = 10.0 * randn(n)
@@ -226,31 +231,27 @@ function writeTestProblems(datFilename::String,
     # Generate (ti,yi) where tmin <= t_i <= tmax (data)
     t = [tmin:(tmax - tmin) / (np - 1):tmax;]
     
-    y = zeros(length(t))
+    data = open(datFilename, "w")
 
-    open(datFilename, "w") do data
-        
-        f = eval(Meta.parse(modelStr))
-        
-        v = rand([1:1:np;], np - p)
+    v = rand([1:1:np;], np - p)
 
-        # Add noise to some random points
-        for k = 1:np
+    # Add noise to some random points
+    for k = 1:np
             
-            y[k] = f(x, t[k])
+        y = model(x, t[k])
 
-            noise = 0.0
+        noise = 0.0
             
-            if k in v 
-                noise = randn() * rand([1.0, 2.0, 3.0])
-            end
-            
-            @printf(data, "%20.15f %20.15f %20.15f\n",
-                    t[k], y[k] + noise, noise)
-
+        if k in v 
+            noise = randn() * rand([1.0, 2.0, 3.0])
         end
+            
+        @printf(data, "%20.15f %20.15f %20.15f\n",
+                t[k], y + noise, noise)
 
     end
+
+    close(data)
     
 end
 

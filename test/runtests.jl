@@ -3,6 +3,48 @@ using RAFF
 using Test
 using DelimitedFiles
 
+@testset "Random generator" begin
+
+    modelStr = "(x, t) -> x[1] * t + x[2]"
+
+    model = eval(Meta.parse(modelStr))
+
+    n = 2
+
+    np = 5
+
+    p = 1
+
+    datf = "test.dat"
+
+    solf = "sol.dat"
+
+    generateTestProblems(datf, solf, model, modelStr, n, np, p)
+
+    open(solf, "r") do fp
+
+        @test n == parse(Int, readline(fp))
+        @test n == length(split(readline(fp)))
+        @test modelStr == readline(fp)
+
+    end
+
+    nLines = 0
+    nNoise = 0
+    
+    for line in eachline(datf)
+
+        nLines += 1
+
+        (parse(Float64, split(line)[3]) != 0.0) && (nNoise += 1)
+
+    end
+
+    @test (np - p) >= nNoise
+    @test np == nLines        
+    
+end
+
 @testset "Simple tests" begin
 
     model(x, t) = x[1] * exp(t * x[2])
@@ -56,10 +98,10 @@ end
 
 @testset "Generated test set" begin
 
-    dir = "../examples/"
+    dir = "../examples/files/"
 
     # Iterate over a list of small problems and solutions
-    for prob in eachline(string(dir, "list.dat"))
+    for prob in eachline(dir * "list.dat")
 
         # Ignore blank lines
         (length(strip(prob)) == 0) && continue
@@ -67,10 +109,10 @@ end
         dname, sname = split(prob)
 
         # Data file
-        data = readdlm(string(dir, dname))[:, [1, 2]]
+        data = readdlm(dir * dname)[:, [1, 2]]
 
         # Solution file
-        fsol = open(string(dir, sname), "r")
+        fsol = open(dir * sname, "r")
 
         # Number of parameters
         n = Meta.parse(readline(fsol))
