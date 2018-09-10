@@ -49,6 +49,13 @@ end
 
     model(x, t) = x[1] * exp(t * x[2])
 
+    gmodel!(x, t, g) = begin
+
+        g[1] = exp(t * x[2])
+        g[2] = t * x[1] * x[2] * exp(t * x[2])
+
+    end
+
     data = [-1.0   3.2974425414002564;
             -0.75  2.9099828292364025;
             -0.5    2.568050833375483;
@@ -92,7 +99,9 @@ end
     conv, x, iter, p = LMlovo(model, data, 2, 0)
 
     @test conv == 1
-    @test iter == 1    
+    @test iter == 1
+
+    # LMlovo with function and gradient
     
 end
 
