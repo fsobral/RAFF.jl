@@ -10,7 +10,10 @@ using Printf
 export LMlovo, raff, generateTestProblems
 
 """
-    LMlovo(model, data, n, p)
+    LMlovo(model::Function, data::Array{Float64, 2}, n::Int, p::Int [; kwargs...])
+
+    LMlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int,
+           p::Int [; MAXITER::Int])
 
 Fit the `n`-parameter model `model` to the data given by matrix
 `data`. The strategy is based on the LOVO function, which means that
@@ -19,10 +22,16 @@ algorithm is implemented in this version.
 
 The signature of function `model` should be given by
 
-    model(x, t)
+    model(x::Vector{Float64}, t::Float64)
 
 where `x` is a `n`-dimensional vector of parameters and `t` is the
-argument.
+argument. If the gradient of the model `gmodel!`
+
+    gmodel!(x::Vector{Float64}, t::Float64, g::Vector{Float64})
+
+is not provided, then the function ForwardDiff.gradient! is called to
+compute it. **Note** that this choice has an impact in the
+computational performance of the algorithm.
 
 Returns a tuple `s`, `x`, `iter`, `p`, where
 
@@ -54,7 +63,7 @@ end
 
 function LMlovo(model::Function, gmodel::Function,
                 data::Array{Float64,2}, n::Int, p::Int;
-                MAXITER::Int)
+                MAXITER::Int=200)
 
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
@@ -97,9 +106,10 @@ function LMlovo(model::Function, gmodel::Function,
         rJ = zeros(p, n)
         k = 1
         for i in ind
-            r[k] = model(x, data[i, 1]) - data[i, 2]
             t = data[i, 1]
-            rJ[k, :] = grad_model_cl(x)
+            r[k] = model(x, t) - data[i, 2]
+            # Check if it is not allocating a new vector
+            gmodel!(x, t, rJ[k, :])
             k = k + 1
         end
         return r, rJ
@@ -147,11 +157,11 @@ function LMlovo(model::Function, gmodel::Function,
         end
         safecount+=1
     end
-    if safecount==200
-    #    println("no solution was founded in $safecount iterations")
+    if safecount == MAXITER
+    #    println("no solution was found in $safecount iterations")
         return 0, x, safecount, p
     else
-    #    println("solution founded::   $x " )
+    #    println("solution found::   $x " )
     #    println("number of iterations:: $(safecount)")
         return 1, x, safecount, p
     end
@@ -159,7 +169,13 @@ function LMlovo(model::Function, gmodel::Function,
 end
 
 """
-    raff(model, data, n)
+    raff(model::Function, data::Array{Float64, 2}, n::Int)
+
+    raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int)
+
+Robust Algebric Fitting Function (RAFF) algorithm. This function uses
+a voting system to automatically find the number of trusted data
+points to fit the `model`.
 
   - `model`: function to fit data. Its signature should be given by
 
@@ -167,23 +183,29 @@ end
 
     where `x` is a `n`-dimensional vector of parameters and `t` is the
     argument
+  - `gmodel!`: gradient of the model function. Its signature should be
+    given by
+
+      gmodel!(x, t, g)
+
+    where `x` is a `n`-dimensional vector of parameters and `t` is the
+    argument and the gradient is written in `g`.
   - `data`: data to be fit
   - `n`: dimension of the parameter vector in the model function
 
-Robust Algebric Fitting Function (RAFF) algorithm. This function uses
-a voting system to automatically find the number of trusted data
-points to fit the `model`.
-
 """
-function raff(model, data, n)
+function raff(model::Function, gmodel!::Function,
+              data::Array{Float64, 2}, n::Int)
 
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
+    
     v = Array{Any,1}(undef, plimsup - pliminf + 1)
+    
     k = 1
 
     for i = pliminf:plimsup
-        v[k] = LMlovo(model, data, n, i)
+        v[k] = LMlovo(model, gmodel!, data, n, i)
         k += 1
     end
     
@@ -201,6 +223,25 @@ function raff(model, data, n)
     
     return v[mainind]
     
+end
+
+function raff(model::Function, data::Array{Float64, 2}, n::Int)
+
+    # Define closures for derivative and initializations
+
+    # 't' is considered as global parameter for this function
+    model_cl(x) = model(x, t)
+    
+    grad_model(x, t_) = begin
+
+        global t = t_
+        
+        return ForwardDiff.gradient(model_cl, x)
+
+    end
+
+    return raff(model, grad_model, data, n)
+
 end
 
 """
