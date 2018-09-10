@@ -32,14 +32,32 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
   - `p`: number of trusted points
 
 """
-function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int)
+function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int;
+                MAXITER::Int)
+
+    # Define closures for derivative and initializations
+
+    # 't' is considered as global parameter for this function
+    model_cl(x) = model(x, t)
+    
+    grad_model(x, t_) = begin
+
+        global t = t_
+        
+        return ForwardDiff.gradient(model_cl, x)
+
+    end
+
+    return LMlovo(model, grad_model, data, n, p, MAXITER=MAXITER)
+    
+end
+
+function LMlovo(model::Function, gmodel::Function,
+                data::Array{Float64,2}, n::Int, p::Int;
+                MAXITER::Int)
 
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
-    
-    # Define closures for derivative and initializations
-    model_cl(x) = model(x, t)
-    grad_model_cl(x) = ForwardDiff.gradient(model_cl, x)
     
     t = 0.0
     npun = length(data[:, 1])
@@ -137,6 +155,7 @@ function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int)
     #    println("number of iterations:: $(safecount)")
         return 1, x, safecount, p
     end
+
 end
 
 """
