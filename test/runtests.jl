@@ -3,48 +3,6 @@ using RAFF
 using Test
 using DelimitedFiles
 
-@testset "Random generator" begin
-
-    modelStr = "(x, t) -> x[1] * t + x[2]"
-
-    model = eval(Meta.parse(modelStr))
-
-    n = 2
-
-    np = 5
-
-    p = 1
-
-    datf = "test.dat"
-
-    solf = "sol.dat"
-
-    generateTestProblems(datf, solf, model, modelStr, n, np, p)
-
-    open(solf, "r") do fp
-
-        @test n == parse(Int, readline(fp))
-        @test n == length(split(readline(fp)))
-        @test modelStr == readline(fp)
-
-    end
-
-    nLines = 0
-    nNoise = 0
-    
-    for line in eachline(datf)
-
-        nLines += 1
-
-        (parse(Float64, split(line)[3]) != 0.0) && (nNoise += 1)
-
-    end
-
-    @test (np - p) >= nNoise
-    @test np == nLines        
-    
-end
-
 @testset "Simple tests" begin
 
     model(x, t) = x[1] * exp(t * x[2])
@@ -52,7 +10,7 @@ end
     gmodel!(x, t, g) = begin
 
         g[1] = exp(t * x[2])
-        g[2] = t * x[1] * x[2] * exp(t * x[2])
+        g[2] = t * x[1] * exp(t * x[2])
 
     end
 
@@ -102,6 +60,68 @@ end
     @test iter == 1
 
     # LMlovo with function and gradient
+
+    conv, x, iter, p = LMlovo(model, gmodel!, data, 2, 18)
+    
+    @test conv == 1
+    @test x ≈ answer atol=1.0e-5
+    @test p == 18
+    
+    conv, x, iter, p = raff(model, gmodel!, data, 2)
+    
+    @test conv == 1
+    @test x ≈ answer atol=1.0e-5
+    @test p == 18
+
+    @test_throws AssertionError LMlovo(model, gmodel!, data, 0, 1)
+    @test_throws AssertionError LMlovo(model, gmodel!, data, 2, -1)
+
+    conv, x, iter, p = LMlovo(model, gmodel!, data, 2, 0)
+
+    @test conv == 1
+    @test iter == 1
+
+end
+
+@testset "Random generator" begin
+
+    modelStr = "(x, t) -> x[1] * t + x[2]"
+
+    model = eval(Meta.parse(modelStr))
+
+    n = 2
+
+    np = 5
+
+    p = 1
+
+    datf = "test.dat"
+
+    solf = "sol.dat"
+
+    generateTestProblems(datf, solf, model, modelStr, n, np, p)
+
+    open(solf, "r") do fp
+
+        @test n == parse(Int, readline(fp))
+        @test n == length(split(readline(fp)))
+        @test modelStr == readline(fp)
+
+    end
+
+    nLines = 0
+    nNoise = 0
+    
+    for line in eachline(datf)
+
+        nLines += 1
+
+        (parse(Float64, split(line)[3]) != 0.0) && (nNoise += 1)
+
+    end
+
+    @test (np - p) >= nNoise
+    @test np == nLines        
     
 end
 

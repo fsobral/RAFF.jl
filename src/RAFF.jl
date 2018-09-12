@@ -42,18 +42,18 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
 
 """
 function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int;
-                MAXITER::Int)
+                MAXITER::Int=200)
 
     # Define closures for derivative and initializations
 
     # 't' is considered as global parameter for this function
     model_cl(x) = model(x, t)
     
-    grad_model(x, t_) = begin
+    grad_model(x, t_, g) = begin
 
         global t = t_
         
-        return ForwardDiff.gradient(model_cl, x)
+        ForwardDiff.gradient!(g, model_cl, x)
 
     end
 
@@ -61,7 +61,7 @@ function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int;
     
 end
 
-function LMlovo(model::Function, gmodel::Function,
+function LMlovo(model::Function, gmodel!::Function,
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200)
 
@@ -108,26 +108,34 @@ function LMlovo(model::Function, gmodel::Function,
         for i in ind
             t = data[i, 1]
             r[k] = model(x, t) - data[i, 2]
-            # Check if it is not allocating a new vector
-            gmodel!(x, t, rJ[k, :])
+
+            v = @view(rJ[k, :])
+            gmodel!(x, t, v)
+
             k = k + 1
         end
         return r, rJ
     end
+    
     # Levenberg-Marquardt algorithm
+    # -----------------------------
+    
     Id = Matrix(1.0I, n, n)
-    ε=10.0^(-4)
-    λ_up=2.0
-    λ_down=2.0
-    λ=1.0
-    x=zeros(n) #initial point
-    d=zeros(n)
-    y=zeros(n)
+    
+    # Parameters
+    ε = 10.0^(-4)
+    λ_up = 2.0
+    λ_down = 2.0
+    λ = 1.0
+
+    x = zeros(n) #initial point
+    d = zeros(n)
+    y = zeros(n)
     (ind_lovo,val_lovo)=LovoFun(x)
     (val_res,jac_res)=ResFun(x,ind_lovo)
     grad_lovo=jac_res'*val_res
     safecount=1
-    while norm(grad_lovo,2)>=ε && safecount<200
+    while (norm(grad_lovo,2) >= ε) && (safecount < MAXITER)
         G = jac_res' * jac_res + λ * Id
         F = qr(G)     
         ad = try
@@ -145,7 +153,7 @@ function LMlovo(model::Function, gmodel::Function,
         #d=G\(-grad_lovo)
         xnew=x+d
         (ind_lovo_new,val_lovo_new)=LovoFun(xnew)
-        if  val_lovo_new<=val_lovo 
+        if  val_lovo_new<=val_lovo
             x=copy(xnew)
             val_lovo=copy(val_lovo_new)
             ind_lovo=copy(ind_lovo_new)
@@ -232,11 +240,11 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int)
     # 't' is considered as global parameter for this function
     model_cl(x) = model(x, t)
     
-    grad_model(x, t_) = begin
+    grad_model(x, t_, g) = begin
 
         global t = t_
         
-        return ForwardDiff.gradient(model_cl, x)
+        return ForwardDiff.gradient!(g, model_cl, x)
 
     end
 
