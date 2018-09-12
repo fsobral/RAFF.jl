@@ -9,6 +9,8 @@ using Printf
 
 export LMlovo, raff, generateTestProblems
 
+include("utils.jl")
+
 """
     LMlovo(model::Function, data::Array{Float64, 2}, n::Int, p::Int [; kwargs...])
 
@@ -68,36 +70,31 @@ function LMlovo(model::Function, gmodel!::Function,
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
     
-    t = 0.0
     npun = length(data[:, 1])
     
-    #All evaluated instance depends of a sort function 
-    SortFun(V::Vector) = begin
-        aux=0
-        vaux=0.0
-        ind=[1:1:npun;]
-        for i=1:p
-            for j=i+1:npun
-                if (V[i]>V[j])
-                    aux=ind[j]
-                    ind[j]=ind[i]
-                    ind[i]=aux
-                    vaux=V[j]
-                    V[j]=V[i]
-                    V[i]=vaux
-                end
-            end
-        end
-        return ind[1:1:p]
-    end
-    
     # Main function - the LOVO function
-    LovoFun(x) = begin #return a ordered set index and lovo value 
-        F = zeros(npun)
-        for i = 1:npun 
-            F[i] = (model(x, data[i,1]) - data[i, 2])^2
+    LovoFun = let
+
+        npun_::Int = npun
+        
+        ind::Vector{Int} = Vector{Int}(undef, npun_)
+
+        F::Vector{Float64} = Vector{Float64}(undef, npun_)
+
+        p_::Int = p
+
+        # Return a ordered set index and lovo value
+        x -> begin
+        
+            for i = 1:npun_
+                F[i] = (model(x, data[i,1]) - data[i, 2])^2
+            end
+            
+            indF, orderedF = SortFun!(F, ind, p_)
+            
+            return indF, sum(orderedF)
         end
-        return SortFun(F), sum(F[SortFun(F)])
+
     end
     
     # This function returns the residue and Jacobian of residue 
