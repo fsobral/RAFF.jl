@@ -96,11 +96,17 @@ function LMlovo(model::Function, gmodel!::Function,
         end
 
     end
+
+    # Residue and Jacobian of residue
+    val_res::Vector{Float64} = Vector{Float64}(undef, p)
+
+    jac_res::Array{Float64, 2} = Array{Float64}(undef, p, n)
     
     # This function returns the residue and Jacobian of residue 
-    ResFun(x, ind) = begin
-        r = zeros(p)
-        rJ = zeros(p, n)
+    ResFun!(x::Vector{Float64}, ind,
+            r::Vector{Float64}, rJ::Array{Float64, 2}) = begin
+        # r = zeros(p)
+        # rJ = zeros(p, n)
         k = 1
         for i in ind
             t = data[i, 1]
@@ -111,7 +117,7 @@ function LMlovo(model::Function, gmodel!::Function,
 
             k = k + 1
         end
-        return r, rJ
+        # return r, rJ
     end
     
     # Levenberg-Marquardt algorithm
@@ -129,7 +135,7 @@ function LMlovo(model::Function, gmodel!::Function,
     d = zeros(n)
     y = zeros(n)
     (ind_lovo,val_lovo)=LovoFun(x)
-    (val_res,jac_res)=ResFun(x,ind_lovo)
+    ResFun!(x, ind_lovo, val_res, jac_res)
     grad_lovo=jac_res'*val_res
     safecount=1
     while (norm(grad_lovo,2) >= ε) && (safecount < MAXITER)
@@ -152,10 +158,11 @@ function LMlovo(model::Function, gmodel!::Function,
         (ind_lovo_new,val_lovo_new)=LovoFun(xnew)
         if  val_lovo_new<=val_lovo
             x=copy(xnew)
+            # TODO: Check these two operations
             val_lovo=copy(val_lovo_new)
             ind_lovo=copy(ind_lovo_new)
             λ=λ/(λ_down)
-            (val_res,jac_res)=ResFun(x,ind_lovo)
+            ResFun!(x, ind_lovo, val_res, jac_res)
             grad_lovo=jac_res'*val_res
         else
             λ=λ*(λ_up)
