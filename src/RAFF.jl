@@ -43,8 +43,8 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
   - `p`: number of trusted points
 
 """
-function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int;
-                MAXITER::Int=200)
+function LMlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
+                n::Int, p::Int; MAXITER::Int=200)
 
     # Define closures for derivative and initializations
 
@@ -59,11 +59,11 @@ function LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int;
 
     end
 
-    return LMlovo(model, grad_model, data, n, p, MAXITER=MAXITER)
+    return LMlovo(model, grad_model, x, data, n, p, MAXITER=MAXITER)
     
 end
 
-function LMlovo(model::Function, gmodel!::Function,
+function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200)
 
@@ -131,13 +131,12 @@ function LMlovo(model::Function, gmodel!::Function,
     λ_down = 2.0
     λ      = 1.0
 
-    x = zeros(n) #initial point
-
     # Allocation
     xnew = Vector{Float64}(undef, n)
     d = Vector{Float64}(undef, n)
     y = Vector{Float64}(undef, n)
     G = Array{Float64, 2}(undef, n, n)
+    grad_lovo = Vector{Float64}(undef, n)
     
     # Initial steps
     
@@ -145,7 +144,7 @@ function LMlovo(model::Function, gmodel!::Function,
 
     ResFun!(x, ind_lovo, val_res, jac_res)
 
-    grad_lovo = jac_res' * val_res
+    BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
     
     safecount = 1
 
@@ -174,7 +173,7 @@ function LMlovo(model::Function, gmodel!::Function,
         else 
             d .= ad
         end
-        #d=G\(-grad_lovo)
+
         xnew .= x .+ d
         
         ind_lovo, val_lovo = LovoFun(xnew)
@@ -245,11 +244,16 @@ function raff(model::Function, gmodel!::Function,
     plimsup = length(data[:, 1])
     
     v = Array{Any,1}(undef, plimsup - pliminf + 1)
-    
+
     k = 1
 
     for i = pliminf:plimsup
-        v[k] = LMlovo(model, gmodel!, data, n, i)
+        # Starting point
+        x = zeros(Float64, n)
+        
+        # Call function and store results
+        v[k] = LMlovo(model, gmodel!, x, data, n, i)
+        
         k += 1
     end
     

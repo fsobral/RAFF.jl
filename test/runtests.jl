@@ -39,44 +39,52 @@ using DelimitedFiles
 
     answer = [2.0, -0.5]
 
-    conv, x, iter, p = LMlovo(model, data, 2, 18)
+    x = [0.0, 0.0]
+
+    conv, x, iter, p = LMlovo(model, x, data, 2, 18)
 
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
     
+    x = [0.0, 0.0]
+
     conv, x, iter, p = raff(model, data, 2)
     
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 
-    @test_throws AssertionError LMlovo(model, data, 0, 1)
-    @test_throws AssertionError LMlovo(model, data, 2, -1)
+    @test_throws AssertionError LMlovo(model, x, data, 0, 1)
+    @test_throws AssertionError LMlovo(model, x, data, 2, -1)
 
-    conv, x, iter, p = LMlovo(model, data, 2, 0)
+    conv, x, iter, p = LMlovo(model, x, data, 2, 0)
 
     @test conv == 1
     @test iter == 1
 
     # LMlovo with function and gradient
 
-    conv, x, iter, p = LMlovo(model, gmodel!, data, 2, 18)
+    x = [0.0, 0.0]
+
+    conv, x, iter, p = LMlovo(model, gmodel!, x, data, 2, 18)
     
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
     
+    x = [0.0, 0.0]
+
     conv, x, iter, p = raff(model, gmodel!, data, 2)
     
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 
-    @test_throws AssertionError LMlovo(model, gmodel!, data, 0, 1)
-    @test_throws AssertionError LMlovo(model, gmodel!, data, 2, -1)
+    @test_throws AssertionError LMlovo(model, gmodel!, x, data, 0, 1)
+    @test_throws AssertionError LMlovo(model, gmodel!, x, data, 2, -1)
 
-    conv, x, iter, p = LMlovo(model, gmodel!, data, 2, 0)
+    conv, x, iter, p = LMlovo(model, gmodel!, x, data, 2, 0)
 
     @test conv == 1
     @test iter == 1
