@@ -105,9 +105,9 @@ function LMlovo(model::Function, gmodel!::Function,
     # This function returns the residue and Jacobian of residue 
     ResFun!(x::Vector{Float64}, ind,
             r::Vector{Float64}, rJ::Array{Float64, 2}) = begin
-        # r = zeros(p)
-        # rJ = zeros(p, n)
+
         k = 1
+                
         for i in ind
             t = data[i, 1]
             r[k] = model(x, t) - data[i, 2]
@@ -117,7 +117,7 @@ function LMlovo(model::Function, gmodel!::Function,
 
             k = k + 1
         end
-        # return r, rJ
+
     end
     
     # Levenberg-Marquardt algorithm
@@ -126,49 +126,81 @@ function LMlovo(model::Function, gmodel!::Function,
     Id = Matrix(1.0I, n, n)
     
     # Parameters
-    ε = 10.0^(-4)
-    λ_up = 2.0
+    ε      = 10.0^(-4)
+    λ_up   = 2.0
     λ_down = 2.0
-    λ = 1.0
+    λ      = 1.0
 
     x = zeros(n) #initial point
-    d = zeros(n)
-    y = zeros(n)
-    (ind_lovo,val_lovo)=LovoFun(x)
+
+    # Allocation
+    xnew = Vector{Float64}(undef, n)
+    d = Vector{Float64}(undef, n)
+    y = Vector{Float64}(undef, n)
+    G = Array{Float64, 2}(undef, n, n)
+    
+    # Initial steps
+    
+    ind_lovo, best_val_lovo = LovoFun(x)
+
     ResFun!(x, ind_lovo, val_res, jac_res)
-    grad_lovo=jac_res'*val_res
-    safecount=1
-    while (norm(grad_lovo,2) >= ε) && (safecount < MAXITER)
-        G = jac_res' * jac_res + λ * Id
-        F = qr(G)     
+
+    grad_lovo = jac_res' * val_res
+    
+    safecount = 1
+
+    # Main loop
+    
+    while (norm(grad_lovo, 2) >= ε) && (safecount < MAXITER)
+
+        G .= Id
+        
+        BLAS.gemm!('T', 'N', 1.0, jac_res, jac_res, λ, G)
+        
+        F = qr!(G)
+        
         ad = try
-            y = F.Q \ (- grad_lovo)
-            d = F.R \ y
+
+            ldiv!(d, F, grad_lovo)
+
+            d .*= -1.0
+            
         catch
             "error"
         end
         if ad == "error" #restarting if lapack fails
-            d = - grad_lovo 
-            x = rand(n)
+            d .= - 1.0 .* grad_lovo 
+            x .= rand(n)
         else 
-            d = ad
+            d .= ad
         end
         #d=G\(-grad_lovo)
-        xnew=x+d
-        (ind_lovo_new,val_lovo_new)=LovoFun(xnew)
-        if  val_lovo_new<=val_lovo
-            x=copy(xnew)
-            # TODO: Check these two operations
-            val_lovo=copy(val_lovo_new)
-            ind_lovo=copy(ind_lovo_new)
-            λ=λ/(λ_down)
+        xnew .= x .+ d
+        
+        ind_lovo, val_lovo = LovoFun(xnew)
+        
+        if  val_lovo <= best_val_lovo
+
+            x .= xnew
+            
+            best_val_lovo = val_lovo
+            
+            λ = λ / λ_down
+            
             ResFun!(x, ind_lovo, val_res, jac_res)
-            grad_lovo=jac_res'*val_res
+
+            BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
+            
         else
-            λ=λ*(λ_up)
+            
+            λ = λ * λ_up
+            
         end
-        safecount+=1
+        
+        safecount += 1
+        
     end
+    
     if safecount == MAXITER
     #    println("no solution was found in $safecount iterations")
         return 0, x, safecount, p
