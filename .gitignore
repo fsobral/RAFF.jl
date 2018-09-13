@@ -2,5 +2,9 @@
 \#*
 .\#*
 
+# Ignore profiling files
+*.cov
+*.mem
+
 # Test files automatically generated
 test/*.dat
