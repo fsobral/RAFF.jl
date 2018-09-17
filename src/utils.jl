@@ -107,3 +107,60 @@ function generateTestProblems(datFilename::String,
     close(data)
     
 end
+
+"""
+
+    generateNoisyData(model::Function, n::Int, np::Int, p::Int, xSol::Vector{Float64}=10.0 * rand(n),
+                      tMin::Float64=-10.0, tMax::Float64=10.0)
+
+Random generate a fitting one-dimensional data problem.
+
+This function receives a `model(x, t)` function, the number of parameters
+`n`, the number of points `np` to be generated and the number of
+trusted points `p`. 
+
+If the `n`-dimensional vector `xSol` is provided, the the exact
+solution will not be random generated. The interval `[tMin, tMax]` for
+generating the values to evaluate `model` can also be provided.
+
+It returns a tuple `(data, xSol)` where
+
+  - `data`: (`np` x `3`) array, where each row contains `t`,
+    `model(xSol, t)` and `noise`.
+
+  - `xSol`: `n`-dimensional vector with the exact solution.
+
+"""
+function generateNoisyData(model::Function, n, np, p, xSol::Vector{Float64}=10.0 * rand(n),
+                           tMin::Float64=-10.0, tMax::Float64=10.0)
+
+    @assert(tMin <= tMax, "Invalid interval for random number generation")
+    
+    #
+    # Generate (ti,yi) where tMin <= t_i <= tMax (data)
+    t = [tMin:(tMax - tMin) / (np - 1):tMax;]
+    
+    data = Array{Float64}(undef, np, 3)
+
+    v = rand([1:1:np;], np - p)
+
+    # Add noise to some random points
+    for k = 1:np
+            
+        y = model(xSol, t[k])
+
+        noise = 0.0
+            
+        if k in v 
+            noise = randn() * rand([1.0, 2.0, 3.0])
+        end
+            
+        data[k, 1] = t[k]
+        data[k, 2] = y + noise
+        data[k, 3] = noise
+
+    end
+
+    return data, xSol
+
+end

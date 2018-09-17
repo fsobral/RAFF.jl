@@ -12,15 +12,18 @@ export LMlovo, raff, generateTestProblems
 include("utils.jl")
 
 """
-    LMlovo(model::Function, data::Array{Float64, 2}, n::Int, p::Int [; kwargs...])
+    LMlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
+           n::Int, p::Int [; kwargs...])
 
-    LMlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int,
-           p::Int [; MAXITER::Int])
+    LMlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
+           data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int])
 
 Fit the `n`-parameter model `model` to the data given by matrix
 `data`. The strategy is based on the LOVO function, which means that
 only `p` (0 < `p` <= `n`) points are trusted. The Levenberg-Marquardt
 algorithm is implemented in this version.
+
+If 'x' is provided, the it is used as the starting point.
 
 The signature of function `model` should be given by
 
@@ -43,26 +46,6 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
   - `p`: number of trusted points
 
 """
-function LMlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
-                n::Int, p::Int; MAXITER::Int=200)
-
-    # Define closures for derivative and initializations
-
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
-    
-    grad_model(x, t_, g) = begin
-
-        global t = t_
-        
-        ForwardDiff.gradient!(g, model_cl, x)
-
-    end
-
-    return LMlovo(model, grad_model, x, data, n, p, MAXITER=MAXITER)
-    
-end
-
 function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200)
@@ -124,12 +107,16 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     # -----------------------------
     
     Id = Matrix(1.0I, n, n)
+
+    # Status = 1 means success
+    status = 1
     
     # Parameters
-    ε      = 10.0^(-4)
-    λ_up   = 2.0
-    λ_down = 2.0
-    λ      = 1.0
+    ε         = 10.0^(-4)
+    λ_up      = 2.0
+    λ_down    = 2.0
+    λ         = 1.0
+    MAXOUTIND = 5
 
     # Allocation
     xnew = Vector{Float64}(undef, n)
@@ -145,13 +132,22 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     ResFun!(x, ind_lovo, val_res, jac_res)
 
     BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
+
+    ngrad_lovo = norm(grad_lovo, 2)
     
     safecount = 1
 
     # Main loop
     
-    while (norm(grad_lovo, 2) >= ε) && (safecount < MAXITER)
+    while (ngrad_lovo >= ε) && (safecount < MAXITER)
 
+        @info("Iteration $(safecount)")
+        @info("  Current value:   $(best_val_lovo)")
+        @info("  ||grad_lovo||_2: $(ngrad_lovo)")
+        @info("  Current iterate: $(x)")
+        @info("  Best indices (first $(MAXOUTIND)): $(ind_lovo[1:MAXOUTIND])")
+        @info("  lambda: $(λ)")
+        
         G .= Id
         
         BLAS.gemm!('T', 'N', 1.0, jac_res, jac_res, λ, G)
@@ -168,6 +164,7 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             "error"
         end
         if ad == "error" #restarting if lapack fails
+            @warn "Failed to solve the linear system. Will try new point."
             d .= - 1.0 .* grad_lovo 
             x .= rand(n)
         else 
@@ -189,27 +186,67 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             ResFun!(x, ind_lovo, val_res, jac_res)
 
             BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
+
+            ngrad_lovo = norm(grad_lovo, 2)
+            
+            @info("  Better function value found, lambda changed to $(λ).")
             
         else
-            
+
             λ = λ * λ_up
             
+            @info("  No improvement, lambda changed to $(λ).")
+            
         end
-        
+
         safecount += 1
         
     end
     
     if safecount == MAXITER
-    #    println("no solution was found in $safecount iterations")
-        return 0, x, safecount, p
-    else
-    #    println("solution found::   $x " )
-    #    println("number of iterations:: $(safecount)")
-        return 1, x, safecount, p
+        @info("No solution was found in $(safecount) iterations.")
+        status = 0
     end
 
+    @info("""
+
+    Final iteration (STATUS=$(status))
+      Solution found:       $(x)
+      ||grad_lovo||_2:      $(ngrad_lovo)
+      Function value:       $(best_val_lovo)
+      Number of iterations: $(safecount)
+
+    """)
+    
+    return status, x, safecount, p
+
 end
+
+function LMlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
+                n::Int, p::Int; kwargs...)
+
+    # Define closures for derivative and initializations
+
+    # 't' is considered as global parameter for this function
+    model_cl(x) = model(x, t)
+    
+    grad_model(x, t_, g) = begin
+
+        global t = t_
+        
+        ForwardDiff.gradient!(g, model_cl, x)
+
+    end
+
+    return LMlovo(model, grad_model, x, data, n, p; kwargs...)
+    
+end
+
+LMlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    LMlovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
+
+LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    LMlovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
 """
     raff(model::Function, data::Array{Float64, 2}, n::Int)
