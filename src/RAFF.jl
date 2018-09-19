@@ -347,10 +347,10 @@ algorithm.
 """
 function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-               MSSEED::Int=1234)
+               SEEDMS::Int=1234)
 
     # Initializes random generator
-    seed = MersenneTwister(MSSEED)
+    seed = MersenneTwister(SEEDMS)
     
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
@@ -388,7 +388,7 @@ function praff(model::Function, gmodel!::Function,
         v[:, ind] .= bestx
         vf[ind]    = bestf
 
-        println("Finished. p = $(i) and f = $(bestf).")
+        println("Finished. p = $(i) and f = $(bestf).-> $(bestx)")
         
     end
 

@@ -1,6 +1,8 @@
 # This is a minimal working example for running praff on several
 # workers in Julia and saving them into a shared matrix
 
+using Random
+
 @everywhere using RAFF
 @everywhere using Base.CoreLogging
 
@@ -18,6 +20,9 @@ n = 2
 np = 100
 
 p = 70
+
+# Define a predictable random generator
+Random.seed!(123456789)
 
 data, xSol = RAFF.generateNoisyData(model, n, np, p)
 

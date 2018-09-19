@@ -1,6 +1,7 @@
 # This is a minimal working example for running LMlovo on several
 # workers in Julia and saving them into a shared matrix
 
+using Random
 using Revise
 using Distributed
 using SharedArrays
@@ -22,6 +23,9 @@ n = 2
 np = 1000
 
 p = 700
+
+# Set the seed for generating the same data
+Random.seed!(123456789)
 
 data, xSol = RAFF.generateNoisyData(model, n, np, p)
 
