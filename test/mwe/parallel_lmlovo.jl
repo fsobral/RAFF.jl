@@ -8,7 +8,7 @@ using SharedArrays
 @everywhere using RAFF
 @everywhere using Base.CoreLogging
 
-@everywhere CoreLogging.disable_logging(CoreLogging.Info)
+@everywhere CoreLogging._min_enabled_level[] = CoreLogging.Warn + 1
 
 @everywhere gmodel!(x, t_, g) = begin
     g[1] = exp(t_ * x[2])
@@ -27,7 +27,7 @@ data, xSol = RAFF.generateNoisyData(model, n, np, p)
 
 result = SharedArray{Float64, 2}(n, np)
 
-f = @sync @distributed for i = 1:10
+f = @sync @distributed for i = 1:np
 
     # Starting point
     x = zeros(Float64, 2)

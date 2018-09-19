@@ -114,7 +114,7 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     # Status = 1 means success
     status = 1
-    
+
     # Parameters
     ε         = 10.0^(-4)
     λ_up      = 2.0
@@ -136,7 +136,7 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     ResFun!(x, ind_lovo, val_res, jac_res)
 
     BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
-
+ 
     ngrad_lovo = norm(grad_lovo, 2)
     
     safecount = 1
@@ -370,9 +370,8 @@ function praff(model::Function, gmodel!::Function,
         for j = 1:MAXMS
 
             # New random starting point
-            # x  = randn(seed, n)
-            # x .= 10.0 .* x .+ bestx
-            x = copy(bestx)
+            x  = randn(seed, n)
+            x .= 10.0 .* x .+ bestx
         
             # Call function and store results
             s, x, iter, p, f = LMlovo(model, gmodel!, x, data, n, i)
@@ -393,8 +392,6 @@ function praff(model::Function, gmodel!::Function,
         
     end
 
-    println(v)
-    
     votsis = zeros(nInfo)
     
     for i = 1:nInfo
@@ -407,7 +404,7 @@ function praff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
 
-    println(v[mainind], ", ", vf[mainind], ",", pliminf + mainind - 1)
+    println(v[:, mainind], ", ", vf[mainind], ",", pliminf + mainind - 1)
     
     return v[:, mainind], vf[mainind], pliminf + mainind - 1
     

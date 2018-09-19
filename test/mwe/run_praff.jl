@@ -4,7 +4,7 @@
 @everywhere using RAFF
 @everywhere using Base.CoreLogging
 
-@everywhere CoreLogging.disable_logging(CoreLogging.Info)
+@everywhere CoreLogging._min_enabled_level[] = CoreLogging.Warn + 1
 
 @everywhere gmodel!(x, t_, g) = begin
     g[1] = exp(t_ * x[2])
@@ -15,10 +15,12 @@ end
 
 n = 2
 
-np = 10
+np = 100
 
-p = 7
+p = 70
 
 data, xSol = RAFF.generateNoisyData(model, n, np, p)
 
 praff(model, gmodel!, data, n)
+
+println("True sol: $(xSol).")
