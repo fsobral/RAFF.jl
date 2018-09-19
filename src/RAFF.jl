@@ -3,11 +3,14 @@ module RAFF
 __precompile__(false)
 
 # Dependencies
+using Distributed
 using ForwardDiff
 using LinearAlgebra
 using Printf
+using Random
+using SharedArrays
 
-export LMlovo, raff, generateTestProblems
+export LMlovo, raff, praff, generateTestProblems
 
 include("utils.jl")
 
@@ -44,6 +47,7 @@ Returns a tuple `s`, `x`, `iter`, `p`, where
   - `x`: vector with the parameters of the model
   - `iter`: number of iterations up to convergence
   - `p`: number of trusted points
+  - `f`: the residual value
 
 """
 function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
@@ -218,7 +222,7 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     """)
     
-    return status, x, safecount, p
+    return status, x, safecount, p, best_val_lovo
 
 end
 
@@ -282,16 +286,16 @@ function raff(model::Function, gmodel!::Function,
     
     v = Array{Any,1}(undef, plimsup - pliminf + 1)
 
-    k = 1
-
     for i = pliminf:plimsup
+
+        @debug("Running LMlovo for p = $(i).")
+        
         # Starting point
         x = zeros(Float64, n)
         
         # Call function and store results
-        v[k] = LMlovo(model, gmodel!, x, data, n, i)
+        v[i - pliminf + 1] = LMlovo(model, gmodel!, x, data, n, i)
         
-        k += 1
     end
     
     lv = length(v)
@@ -328,5 +332,86 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int)
     return raff(model, grad_model, data, n)
 
 end
+
+"""
+
+    praff(model::Function, gmodel!::Function,
+            data::Array{Float64, 2}, n::Int)
+
+Parallel and shared memory version of RAFF. See the description of the
+[raff](@ref) function.
+
+This function uses all available local workers to run the RAFF
+algorithm.
+
+"""
+function praff(model::Function, gmodel!::Function,
+               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+               MSSEED::Int=1234)
+
+    # Initializes random generator
+    seed = MersenneTwister(MSSEED)
+    
+    pliminf = Int(round(length(data[:, 1]) / 2.0))
+    plimsup = length(data[:, 1])
+
+    nInfo = plimsup - pliminf + 1
+    
+    v = SharedArray{Float64, 2}(n, nInfo)
+    vf = SharedArray{Float64, 1}(nInfo)
+
+    f = @sync @distributed for i = pliminf:plimsup
+
+        # Starting point
+        bestx = zeros(Float64, n)
+        bestf = Inf
+
+        # Multi-start strategy
+        for j = 1:MAXMS
+
+            # New random starting point
+            # x  = randn(seed, n)
+            # x .= 10.0 .* x .+ bestx
+            x = copy(bestx)
+        
+            # Call function and store results
+            s, x, iter, p, f = LMlovo(model, gmodel!, x, data, n, i)
+
+            if f < bestf
+                bestf = f
+                bestx .= x
+            end
+
+        end
+
+        ind = i - pliminf + 1
+        
+        v[:, ind] .= bestx
+        vf[ind]    = bestf
+
+        println("Finished. p = $(i) and f = $(bestf).")
+        
+    end
+
+    println(v)
+    
+    votsis = zeros(nInfo)
+    
+    for i = 1:nInfo
+        for j = 1:nInfo
+            if norm(v[:, i] - v[:, j]) < 10.0^(-3)
+                votsis[i] += 1
+            end
+        end
+    end
+    
+    mainind = findlast(x->x == maximum(votsis), votsis)
+
+    println(v[mainind], ", ", vf[mainind], ",", pliminf + mainind - 1)
+    
+    return v[:, mainind], vf[mainind], pliminf + mainind - 1
+    
+end
+
 
 end
