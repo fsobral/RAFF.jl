@@ -336,7 +336,8 @@ end
 """
 
     praff(model::Function, gmodel!::Function,
-            data::Array{Float64, 2}, n::Int)
+            data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+               SEEDMS::Int=123456789 )
 
 Parallel and shared memory version of RAFF. See the description of the
 [raff](@ref) function.
@@ -344,13 +345,18 @@ Parallel and shared memory version of RAFF. See the description of the
 This function uses all available local workers to run the RAFF
 algorithm.
 
+The optional arguments are
+
+  - `MAXMS`: number of multistart points to be used
+  - `SEEDMS`: integer seed for random multistart points
+
 """
 function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-               SEEDMS::Int=1234)
+               SEEDMS::Int=123456789)
 
     # Initializes random generator
-    seed = MersenneTwister(SEEDMS)
+    seedMS = MersenneTwister(SEEDMS)
     
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
@@ -370,7 +376,7 @@ function praff(model::Function, gmodel!::Function,
         for j = 1:MAXMS
 
             # New random starting point
-            x  = randn(seed, n)
+            x  = randn(seedMS, n)
             x .= 10.0 .* x .+ bestx
         
             # Call function and store results

@@ -21,11 +21,11 @@ np = 100
 
 p = 70
 
-# Define a predictable random generator
+# Set the seed for generating the same data
 Random.seed!(123456789)
 
 data, xSol = RAFF.generateNoisyData(model, n, np, p)
 
-praff(model, gmodel!, data, n)
+praff(model, gmodel!, data, n, MAXMS=2)
 
 println("True sol: $(xSol).")
