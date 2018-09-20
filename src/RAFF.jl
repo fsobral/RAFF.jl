@@ -14,6 +14,8 @@ export LMlovo, raff, praff, generateTestProblems
 
 include("utils.jl")
 
+include("dutils.jl")
+
 """
     LMlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
@@ -355,7 +357,7 @@ function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
                SEEDMS::Int=123456789)
 
-    # Initializes random generator
+    # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
     
     pliminf = Int(round(length(data[:, 1]) / 2.0))
@@ -365,44 +367,67 @@ function praff(model::Function, gmodel!::Function,
     
     v = SharedArray{Float64, 2}(n, nInfo)
     vf = SharedArray{Float64, 1}(nInfo)
+    vs = SharedArray{Int, 1}(nInfo)
+    bestx = SharedArray{Float64, 1}(n)
 
-    f = @sync @distributed for i = pliminf:plimsup
+    # Create a RemoteChannel to receive solutions
+    channel = RemoteChannel(() -> Channel{Tuple{Vector{Float64}, Float64}}(div(nInfo, 2)))
+
+    # Start updater Task
+    @async update_best(channel, bestx)
+
+    # Bind updater to channel to close it in case of failure
+    # bind(channel, updt_task)
+
+    # Start workers
+    for_task = @sync @distributed for i = pliminf:plimsup
 
         # Starting point
-        bestx = zeros(Float64, n)
-        bestf = Inf
+        wbestx = zeros(Float64, n)
+        wbestf = Inf
+        ws = 0
 
         # Multi-start strategy
         for j = 1:MAXMS
 
             # New random starting point
-            x  = randn(seedMS, n)
+            x = randn(seedMS, n)
             x .= 10.0 .* x .+ bestx
         
             # Call function and store results
             s, x, iter, p, f = LMlovo(model, gmodel!, x, data, n, i)
 
-            if f < bestf
-                bestf = f
-                bestx .= x
+            if f < wbestf
+                
+                # Send result to channel
+                put!(channel, (x, f))
+
+                # Save best
+                wbestx .= x
+                wbestf  = f
+                ws      = s
+
             end
 
         end
 
         ind = i - pliminf + 1
         
-        v[:, ind] .= bestx
-        vf[ind]    = bestf
+        v[:, ind] .= wbestx
+        vf[ind]    = wbestf
+        vs[ind]    = ws
 
-        println("Finished. p = $(i) and f = $(bestf).-> $(bestx)")
+        @debug("Finished. p = $(i) and f = $(wbestf).-> $(wbestx)")
         
     end
 
+    close(channel)
+    
     votsis = zeros(nInfo)
     
     for i = 1:nInfo
         for j = 1:nInfo
-            if norm(v[:, i] - v[:, j]) < 10.0^(-3)
+            if vs[i] == 1 && vs[j] == 1 && norm(v[:, i] - v[:, j]) < 10.0^(-3)
                 votsis[i] += 1
             end
         end
