@@ -2,11 +2,13 @@
 # workers in Julia and saving them into a shared matrix
 
 using Random
-
 @everywhere using RAFF
+
+# Set Debug for Logging
+@everywhere using Logging
 @everywhere using Base.CoreLogging
 
-@everywhere CoreLogging._min_enabled_level[] = CoreLogging.Warn + 1
+@everywhere global_logger(ConsoleLogger(stdout, Logging.Error))
 
 @everywhere gmodel!(x, t_, g) = begin
     g[1] = exp(t_ * x[2])
