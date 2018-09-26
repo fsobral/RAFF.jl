@@ -371,57 +371,50 @@ function praff(model::Function, gmodel!::Function,
     bestx = SharedArray{Float64, 1}(n)
 
     # Create a RemoteChannel to receive solutions
-    channel = RemoteChannel(() -> Channel{Tuple{Vector{Float64}, Float64}}(div(nInfo, 2)))
+    bqueue = RemoteChannel(() -> Channel{Tuple{Vector{Float64}, Float64}}(div(nInfo, 2)))
+    # Create another channel to assign tasks
+    tqueue = RemoteChannel(() -> Channel{Int}(0))
 
+    # This command selects only nodes which are local to myid()
+    futures = Vector{Future}(undef, length(procs(myid())))
+    
     # Start updater Task
-    @async update_best(channel, bestx)
+    @async update_best(bqueue, bestx)
 
-    # Bind updater to channel to close it in case of failure
-    # bind(channel, updt_task)
+    # Start workers Tasks
+    for (i, t) in enumerate(procs(myid()))
 
-    # Start workers
-    for_task = @sync @distributed for i = pliminf:plimsup
-
-        # Starting point
-        wbestx = zeros(Float64, n)
-        wbestf = Inf
-        ws = 0
-
-        # Multi-start strategy
-        for j = 1:MAXMS
-
-            # New random starting point
-            x = randn(seedMS, n)
-            x .= 10.0 .* x .+ bestx
-        
-            # Call function and store results
-            s, x, iter, p, f = LMlovo(model, gmodel!, x, data, n, i)
-
-            if f < wbestf
-                
-                # Send result to channel
-                put!(channel, (x, f))
-
-                # Save best
-                wbestx .= x
-                wbestf  = f
-                ws      = s
-
-            end
-
-        end
-
-        ind = i - pliminf + 1
-        
-        v[:, ind] .= wbestx
-        vf[ind]    = wbestf
-        vs[ind]    = ws
-
-        @debug("Finished. p = $(i) and f = $(wbestf).-> $(wbestx)")
+        futures[i] = @spawnat(t, consume_tqueue(
+            bqueue, tqueue, bestx, v, vs, vf, model, gmodel!, data, n,
+            pliminf, MAXMS, seedMS
+        ))
         
     end
 
-    close(channel)
+    # Bind updater to channel to close it in case of failure
+    # bind(bqueue, updt_task)
+
+    # Populate the task queue with jobs
+    for p = pliminf:plimsup
+
+        put!(tqueue, p)
+
+        @debug("Added problem $(p) to tasks queue.")
+                
+    end
+
+    # The task queue can be closed, since all the problems have been
+    # read
+    close(tqueue)
+
+    @debug("Waiting for workers to finish.")
+    for f in futures
+
+        wait(f)
+        
+    end
+    
+    close(bqueue)
     
     votsis = zeros(nInfo)
     
