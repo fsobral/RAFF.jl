@@ -3,14 +3,15 @@
 
 """
 
-    update_best()
+    update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
 
 Listen to a `channel` for results found by LMlovo. If there is an
 improvement for the objective function, the shared array `bestx` is
 updated.
 
 **Atention**: There might be an unstable state if there is a process
-  reading `bestx` while this function is updating it.
+  reading `bestx` while this function is updating it. This should not
+  be a problem, since it is used as a starting point.
 
 """
 function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
@@ -57,8 +58,22 @@ end
 
 """
 
+    consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
+                   bestx::SharedArray{Float64, 1},
+                   v::SharedArray{Float64, 2},
+                   vs::SharedArray{Int,1},
+                   vf::SharedArray{Float64, 1}, model::Function,
+                   gmodel!::Function, data::Array{Float64, 2}, n::Int,
+                   pliminf::Int, MAXMS::Int, seedMS::MersenneTwister)
+
 This function represents one worker, which runs LMlovo in a multistart
 fashion.
+
+It takes a job from the RemoteChannel `tqueue` and runs `LMlovo`
+function to it. Saves the best results found to the shared arrays `v`
+(best solution), `vs` (convergence status) and `vf` (objective
+function value at the best solution). All the other arguments are the
+same for `praff` function.
 
 """
 function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
