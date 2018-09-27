@@ -375,7 +375,7 @@ function praff(model::Function, gmodel!::Function,
     bestx = SharedArray{Float64, 1}(n)
 
     # Create a RemoteChannel to receive solutions
-    bqueue = RemoteChannel(() -> Channel{Tuple{Vector{Float64}, Float64}}(div(nInfo, 2)))
+    bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(div(nInfo, 2)))
     # Create another channel to assign tasks
     tqueue = RemoteChannel(() -> Channel{Int}(0))
 

@@ -23,7 +23,7 @@ function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
     
     while isopen(channel)
 
-        (x, f) = try
+        x = try
             
             take!(channel)
             
@@ -39,7 +39,7 @@ function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
             
         end
         
-        @debug("Updater has read values from channel. f = $(f).")
+        @debug("Updater has read values from channel.")
 
         for i = 1:n
         
@@ -111,7 +111,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                 # Send result to channel if success
                 if s == 0
 
-                    put!(bqueue, (x, f))
+                    put!(bqueue, x)
 
                     @debug("Added new point to queue.", x, f)
 
