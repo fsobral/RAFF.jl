@@ -337,15 +337,19 @@ end
 
 """
 
+    praff(model::Function, data::Array{Float64, 2}, n::Int;
+          MAXMS::Int=1, SEEDMS::Int=123456789 )
+
     praff(model::Function, gmodel!::Function,
-            data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-               SEEDMS::Int=123456789 )
+          data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+          SEEDMS::Int=123456789 )
 
-Parallel and shared memory version of RAFF. See the description of the
-[raff](@ref) function.
+Multicore shared memory version of RAFF. See the description of the
+[raff](@ref) function for the main (non-optional) arguments.
 
-This function uses all available local workers to run the RAFF
-algorithm.
+This function uses all available **local** workers to run RAFF
+algorithm. Note that this function does not use *Tasks*, so all the
+parallelism is based on the `Distributed` package.
 
 The optional arguments are
 
@@ -381,7 +385,7 @@ function praff(model::Function, gmodel!::Function,
     # Start updater Task
     @async update_best(bqueue, bestx)
 
-    # Start workers Tasks
+    # Start workers Tasks (CPU intensive)
     for (i, t) in enumerate(procs(myid()))
 
         futures[i] = @spawnat(t, consume_tqueue(
@@ -390,9 +394,6 @@ function praff(model::Function, gmodel!::Function,
         ))
         
     end
-
-    # Bind updater to channel to close it in case of failure
-    # bind(bqueue, updt_task)
 
     # Populate the task queue with jobs
     for p = pliminf:plimsup
@@ -404,13 +405,22 @@ function praff(model::Function, gmodel!::Function,
     end
 
     # The task queue can be closed, since all the problems have been
-    # read
+    # read, due to the size 0 of this channel
     close(tqueue)
 
     @debug("Waiting for workers to finish.")
+
     for f in futures
 
-        wait(f)
+        try
+
+            wait(f)
+
+        catch e
+
+            @error("Error in consumer for worker $(f.where)", e)
+
+        end
         
     end
     
@@ -432,6 +442,25 @@ function praff(model::Function, gmodel!::Function,
     
     return v[:, mainind], vf[mainind], pliminf + mainind - 1
     
+end
+
+function praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
+
+    # Define closures for derivative and initializations
+
+    # 't' is considered as global parameter for this function
+    model_cl(x) = model(x, t)
+    
+    grad_model(x, t_, g) = begin
+
+        global t = t_
+        
+        return ForwardDiff.gradient!(g, model_cl, x)
+
+    end
+
+    return praff(model, grad_model, data, n; kwargs...)
+
 end
 
 
