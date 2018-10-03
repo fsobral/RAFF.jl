@@ -3,6 +3,7 @@ using RAFF
 using Test
 using DelimitedFiles
 using Distributed
+using Random
 using SharedArrays
 using Logging
 using Base.CoreLogging
