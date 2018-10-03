@@ -64,7 +64,8 @@ end
                    vs::SharedArray{Int,1},
                    vf::SharedArray{Float64, 1}, model::Function,
                    gmodel!::Function, data::Array{Float64, 2}, n::Int,
-                   pliminf::Int, MAXMS::Int, seedMS::MersenneTwister)
+                   pliminf::Int, plimsup::Int, MAXMS::Int,
+                   seedMS::MersenneTwister)
 
 This function represents one worker, which runs LMlovo in a multistart
 fashion.
@@ -82,7 +83,8 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                         vs::SharedArray{Int, 1},
                         vf::SharedArray{Float64, 1}, model::Function,
                         gmodel!::Function, data::Array{Float64, 2},
-                        n::Int, pliminf::Int, MAXMS::Int, seedMS::MersenneTwister)
+                        n::Int, pliminf::Int, plimsup::Int,
+                        MAXMS::Int, seedMS::MersenneTwister)
 
     @debug("Started worker $(myid())")
 
@@ -105,6 +107,14 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
         end
 
         @debug("Received task $(p)")
+
+        if (p < pliminf) || (p > plimsup)
+
+            @warn("Invalid value for task: $(p). Will skip task.")
+
+            continue
+
+        end
         
         # Starting point
         wbestx = zeros(Float64, n)
@@ -124,11 +134,20 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
             if f < wbestf
             
                 # Send result to channel if success
-                if s == 0
+                if s == 1
 
-                    put!(bqueue, x)
+                    try
+                        
+                        put!(bqueue, x)
+                        
+                        @debug("Added new point to queue.", x, f)
 
-                    @debug("Added new point to queue.", x, f)
+                    catch e
+
+                        @warn(string("Problems when saving best point found in queue. ",
+                                     "Will skip this step"), e)
+
+                    end
 
                 end
                 
@@ -147,7 +166,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
         vf[ind]    = wbestf
         vs[ind]    = ws
 
-        @debug("Finished. p = $(p) and f = $(wbestf).-> $(wbestx)")
+        @debug("Finished. p = $(p) and f = $(wbestf). -> $(wbestx)")
 
     end
 
