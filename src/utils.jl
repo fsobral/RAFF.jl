@@ -113,6 +113,8 @@ end
     generateNoisyData(model::Function, n::Int, np::Int, p::Int, xSol::Vector{Float64}=10.0 * rand(n),
                       tMin::Float64=-10.0, tMax::Float64=10.0)
 
+    generateNoisyData(model::Function, n, np, p, tMin::Float64, tMax::Float64)
+
 Random generate a fitting one-dimensional data problem.
 
 This function receives a `model(x, t)` function, the number of parameters
@@ -164,3 +166,6 @@ function generateNoisyData(model::Function, n, np, p, xSol::Vector{Float64}=10.0
     return data, xSol
 
 end
+
+generateNoisyData(model::Function, n, np, p, tMin::Float64, tMax::Float64) =
+    generateNoisyData(model, n, np, p, 10.0 * rand(n), tMin, tMax)
