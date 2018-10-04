@@ -200,6 +200,64 @@
         
     end
 
+    @testset "Worker checker" begin
+
+        nworkers = 3
+
+        # Test if all workers are dead
+        
+        bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
+        
+        tqueue = RemoteChannel(() -> Channel{Int}(0))
+
+        futures = Vector{Future}(undef, nworkers)
+
+        for i = 1:nworkers
+
+            futures[i] = @spawn error()
+
+        end
+
+        RAFF.check_and_close(bqueue, tqueue, futures)
+
+        @test !isopen(bqueue)
+        @test !isopen(tqueue)
+
+        # Test if there is at least one live worker
+
+        bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
+        
+        tqueue = RemoteChannel(() -> Channel{Int}(0))
+
+        futures = Vector{Future}(undef, nworkers)
+
+        for i = 1:nworkers - 1
+
+            futures[i] = @spawn error()
+
+        end
+
+        futures[nworkers] = @spawn take!(tqueue)
+
+        RAFF.check_and_close(bqueue, tqueue, futures)
+
+        @test isopen(bqueue)
+        @test isopen(tqueue)
+
+        put!(tqueue, 1)
+
+        sleep(0.1)
+
+        close(bqueue)
+
+        close(tqueue)
+
+        @test fetch(futures[nworkers]) == 1
+        @test !isopen(bqueue)
+        @test !isopen(tqueue)
+        
+    end
+
     @testset "PRAFF" begin
 
         model(x, t) = x[1] * exp(t * x[2])

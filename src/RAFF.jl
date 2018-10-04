@@ -394,10 +394,23 @@ function praff(model::Function, gmodel!::Function,
         
     end
 
+    # Check asynchronously if there is at least one live worker
+    @async check_and_close(bqueue, tqueue, futures)
+    
     # Populate the task queue with jobs
     for p = pliminf:plimsup
 
-        put!(tqueue, p)
+        try
+            
+            put!(tqueue, p)
+
+        catch e
+
+            @warn("Tasks queue prematurely closed while inserting tasks. Will exit.")
+
+            break
+
+        end
 
         @debug("Added problem $(p) to tasks queue.")
                 

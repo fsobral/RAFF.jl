@@ -171,3 +171,47 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
     end
 
 end
+
+"""
+
+    check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
+                    futures::Vector{Future}; secs::Float64=0.1)
+
+Check if there is at least one worker process in the vector of
+`futures` that has not prematurely finished. If there is no alive
+worker, close task and best queues `tqueue` and `bqueue`,
+respectively.
+
+"""
+function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
+                         futures::Vector{Future}; secs::Float64=0.1)
+
+    n_alive = length(futures)
+
+    @debug("Checking worker status.")
+
+    for (i, f) in enumerate(futures)
+
+        if timedwait(()->isready(f), secs) == :ok
+
+            @warn("Worker $(i) has finished prematurely.")
+
+            n_alive -= 1
+
+        end
+
+    end
+
+    @debug("Workers online: $(n_alive)")
+    
+    if n_alive == 0
+
+        @error("No live worker found. Will close queues and finish.")
+
+        close(bqueue)
+
+        close(tqueue)
+
+    end
+
+end
