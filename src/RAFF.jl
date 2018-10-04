@@ -388,10 +388,9 @@ function praff(model::Function, gmodel!::Function,
     # Start workers Tasks (CPU intensive)
     for (i, t) in enumerate(procs(myid()))
 
-        futures[i] = @spawnat(t, consume_tqueue(
-            bqueue, tqueue, bestx, v, vs, vf, model, gmodel!, data, n,
-            pliminf, MAXMS, seedMS
-        ))
+        futures[i] = @spawnat(t, consume_tqueue( bqueue, tqueue,
+            bestx, v, vs, vf, model, gmodel!, data, n, pliminf,
+            plimsup, MAXMS, seedMS ))
         
     end
 
@@ -438,7 +437,11 @@ function praff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
 
-    println(v[:, mainind], ", ", vf[mainind], ",", pliminf + mainind - 1)
+    @info("""Solution from PRAFF:
+    x= $(v[:, mainind])
+    f= $(vf[mainind])
+    p= $(pliminf + mainind - 1)
+    """)
     
     return v[:, mainind], vf[mainind], pliminf + mainind - 1
     
