@@ -206,7 +206,7 @@ function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
     
     if n_alive == 0
 
-        @error("No live worker found. Will close queues and finish.")
+        @warn("No live worker found. Will close queues and finish.")
 
         close(bqueue)
 
