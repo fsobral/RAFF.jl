@@ -133,7 +133,8 @@ It returns a tuple `(data, xSol)` where
   - `xSol`: `n`-dimensional vector with the exact solution.
 
 """
-function generateNoisyData(model::Function, n, np, p, xSol::Vector{Float64}=10.0 * rand(n),
+function generateNoisyData(model::Function, n::Int, np::Int, p::Int,
+                           xSol::Vector{Float64}=10.0 * rand(n),
                            tMin::Float64=-10.0, tMax::Float64=10.0)
 
     @assert(tMin <= tMax, "Invalid interval for random number generation")
@@ -167,5 +168,5 @@ function generateNoisyData(model::Function, n, np, p, xSol::Vector{Float64}=10.0
 
 end
 
-generateNoisyData(model::Function, n, np, p, tMin::Float64, tMax::Float64) =
+generateNoisyData(model::Function, n::Int, np::Int, p::Int, tMin::Float64, tMax::Float64) =
     generateNoisyData(model, n, np, p, 10.0 * rand(n), tMin, tMax)
