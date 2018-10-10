@@ -380,13 +380,14 @@ function praff(model::Function, gmodel!::Function,
     tqueue = RemoteChannel(() -> Channel{Int}(0))
 
     # This command selects only nodes which are local to myid()
-    futures = Vector{Future}(undef, length(procs(myid())))
+    local_workers = intersect(workers(), procs(myid()))
+    futures = Vector{Future}(undef, length(local_workers))
     
     # Start updater Task
     @async update_best(bqueue, bestx)
 
     # Start workers Tasks (CPU intensive)
-    for (i, t) in enumerate(procs(myid()))
+    for (i, t) in enumerate(local_workers)
 
         futures[i] = @spawnat(t, consume_tqueue( bqueue, tqueue,
             bestx, v, vs, vf, model, gmodel!, data, n, pliminf,
