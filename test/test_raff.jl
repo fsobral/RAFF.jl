@@ -44,9 +44,9 @@
     
     x = [0.0, 0.0]
 
-    conv, x, iter, p = raff(model, data, 2)
+    x, f, p = raff(model, data, 2)
     
-    @test conv == 1
+    @test f ≈ 0.0 atol=1.0e-5
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 
@@ -67,12 +67,12 @@
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
     @test p == 18
-    
+
     x = [0.0, 0.0]
 
-    conv, x, iter, p = raff(model, gmodel!, data, 2)
+    x, f, p = raff(model, gmodel!, data, 2)
     
-    @test conv == 1
+    @test f ≈ 0.0 atol=1.0e-5
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 

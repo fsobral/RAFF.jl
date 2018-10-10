@@ -28,9 +28,8 @@
         close(fsol)
 
         # Call raff
-        conv, x, iter, p = raff(model, data, n)
+        x, f, p = raff(model, data, n)
 
-        @test conv == 1
         @test x ≈ answer atol=1.0e-2
 
     end 

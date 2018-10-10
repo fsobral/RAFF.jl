@@ -43,7 +43,7 @@ is not provided, then the function ForwardDiff.gradient! is called to
 compute it. **Note** that this choice has an impact in the
 computational performance of the algorithm.
 
-Returns a tuple `s`, `x`, `iter`, `p`, where
+Returns a tuple `s`, `x`, `iter`, `p`, `f` where
 
   - `s`: is 1 if converged and 0 if not
   - `x`: vector with the parameters of the model
@@ -312,7 +312,7 @@ function raff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    return v[mainind]
+    return v[mainind][2], v[mainind][5], v[mainind][4]
     
 end
 
@@ -355,6 +355,12 @@ The optional arguments are
 
   - `MAXMS`: number of multistart points to be used
   - `SEEDMS`: integer seed for random multistart points
+
+Returns a tuple `x`, `f`, `p` where
+
+  - `x` is the solution
+  - `f` is the value of the error at the solution
+  - `p` is the number of trusted points found by the voting system.
 
 """
 function praff(model::Function, gmodel!::Function,
