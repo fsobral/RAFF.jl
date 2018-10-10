@@ -108,65 +108,78 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
         @debug("Received task $(p)")
 
-        if (p < pliminf) || (p > plimsup)
+        if (p.start < pliminf) || (p.stop > plimsup) ||
+           (length(p) == 0)
 
             @warn("Invalid value for task: $(p). Will skip task.")
 
             continue
 
         end
+
+        for k in p
         
-        # Starting point
-        wbestx = zeros(Float64, n)
-        wbestf = Inf
-        ws = 0
-    
-        # Multi-start strategy
-        for j = 1:MAXMS
-
-            # New random starting point
-            x = randn(seedMS, n)
-            x .= 10.0 .* x .+ bestx
+            # Starting point
+            wbestx = zeros(Float64, n)
+            wbestf = Inf
+            ws = 0
             
-            # Call function and store results
-            s, x, iter, p_, f = LMlovo(model, gmodel!, x, data, n, p)
-            
-            if f < wbestf
-            
-                # Send result to channel if success
-                if s == 1
+            # Multi-start strategy
+            for j = 1:MAXMS
 
-                    try
-                        
-                        put!(bqueue, x)
-                        
-                        @debug("Added new point to queue.", x, f)
+                # New random starting point
+                # x = randn(seedMS, n)
+                # x .= 10.0 .* x .+ my_bestx
+                # Best results with this one
+                x = zeros(Float64, n)
+                
+                # Call function and store results
+                s, x, iter, p_, f = LMlovo(model, gmodel!, x, data, n, k)
+                
+                if f < wbestf
+                    
+                    # Send asynchronously the result to channel if success
+                    if s == 1
 
-                    catch e
+                        @async try
+                            
+                            put!(bqueue, x)
+                            
+                            @debug("Added new point to queue.", x, f)
 
-                        @warn(string("Problems when saving best point found in queue. ",
-                                     "Will skip this step"), e)
+                        catch e
+
+                            @warn(string("Problems when saving best point found in queue. ",
+                                         "Will skip this step"), e)
+
+                        end
 
                     end
-
+                    
+                    # Save best
+                    wbestx .= x
+                    wbestf  = f
+                    ws      = s
+                    
                 end
-                
-                # Save best
-                wbestx .= x
-                wbestf  = f
-                ws      = s
-                
+
             end
 
+            # @async my_bestx .= bestx
+
+            @async begin
+                
+                ind = k - pliminf + 1
+                
+                v[:, ind] .= wbestx
+                vf[ind]    = wbestf
+                vs[ind]    = ws
+
+            end
+
+            @debug("Finished. p = $(k) and f = $(wbestf). -> $(wbestx)")
+
         end
-
-        ind = p - pliminf + 1
-        
-        v[:, ind] .= wbestx
-        vf[ind]    = wbestf
-        vs[ind]    = ws
-
-        @debug("Finished. p = $(p) and f = $(wbestf). -> $(wbestx)")
 
     end
 

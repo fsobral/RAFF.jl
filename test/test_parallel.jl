@@ -33,7 +33,7 @@
 
         put!(bqueue, newbest1)
 
-        sleep(0.5)
+        sleep(0.1)
 
         @test bestx == newbest1
 
@@ -43,7 +43,7 @@
 
         put!(bqueue, newbest2)
 
-        sleep(0.5)
+        sleep(0.1)
 
         @test bestx == (newbest1 + newbest2) / 2.0
 
@@ -58,7 +58,7 @@
 
         close(bqueue)
 
-        sleep(0.5)
+        sleep(0.1)
 
         @test istaskdone(fut)
         
@@ -68,7 +68,7 @@
 
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(0))
 
-        tqueue = RemoteChannel(() -> Channel{Int}(0))
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         bestx = SharedArray{Float64, 1}(n)
 
@@ -89,14 +89,16 @@
         @test !istaskdone(worker1)
 
         # Should not do anything
-        put!(tqueue, p - 3)
+        put!(tqueue, p - 3:p)
 
         # Should work, since the problem is easy
-        put!(tqueue, p - 2)
+        vs[1] = 0
+        
+        put!(tqueue, p - 2:p - 2)
 
         x = take!(bqueue)
 
-        sleep(0.5)
+        sleep(0.2)
 
         @test !istaskdone(worker1)
         @test x == v[:, 1]
@@ -106,24 +108,37 @@
         
         bestx .= xSol
 
-        put!(tqueue, p)
+        put!(tqueue, p:p)
 
         x2 = take!(bqueue)
 
-        sleep(0.5)
+        sleep(0.1)
 
         @test vs[3] == 1
         @test vf[3] ≈ 0.0 atol=1.0e-1
         @test v[:, 3] ≈ xSol atol=1.0e-1
         @test v[:, 3] == x2
 
+        # Test with interval
+
+        vs[2] = 0
+        vs[3] = 0
+        
+        put!(tqueue, p - 1:p)
+
+        sleep(0.2)
+        
+        @test vs[2:3] == [1, 1]
+        @test v[:, 2] == take!(bqueue)
+        @test v[:, 3] == take!(bqueue)
+
         # Check if worker is alive when bqueue is closed
 
         close(bqueue)
 
-        put!(tqueue, p)
+        put!(tqueue, p:p)
 
-        sleep(0.5)
+        sleep(0.1)
         
         @test !istaskdone(worker1)
 
@@ -141,7 +156,7 @@
 
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
 
-        tqueue = RemoteChannel(() -> Channel{Int}(0))
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         bestx = SharedArray{Float64, 1}(n)
 
@@ -160,7 +175,7 @@
                          n, p - 2, np, MAXMS, seedMS)
 
 
-        put!(tqueue, p)
+        put!(tqueue, p:p)
 
         take!(bqueue)
         
@@ -175,7 +190,7 @@
         
         f1 = vf[3]
 
-        tqueue = RemoteChannel(() -> Channel{Int}(0))
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         MAXMS = 3
 
@@ -185,7 +200,7 @@
                         bestx, v, vs, vf, model, gmodel!, data,
                         n, p - 2, np, MAXMS, seedMS)
 
-        put!(tqueue, p)
+        put!(tqueue, p:p)
 
         close(tqueue)
 
@@ -208,7 +223,7 @@
         
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
         
-        tqueue = RemoteChannel(() -> Channel{Int}(0))
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         futures = Vector{Future}(undef, nworkers)
 
@@ -227,7 +242,7 @@
 
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
         
-        tqueue = RemoteChannel(() -> Channel{Int}(0))
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         futures = Vector{Future}(undef, nworkers)
 
@@ -244,7 +259,7 @@
         @test isopen(bqueue)
         @test isopen(tqueue)
 
-        put!(tqueue, 1)
+        put!(tqueue, 1:1)
 
         sleep(0.1)
 
@@ -252,7 +267,7 @@
 
         close(tqueue)
 
-        @test fetch(futures[nworkers]) == 1
+        @test fetch(futures[nworkers]) == 1:1
         @test !isopen(bqueue)
         @test !isopen(tqueue)
         

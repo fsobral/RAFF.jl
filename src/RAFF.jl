@@ -383,7 +383,7 @@ function praff(model::Function, gmodel!::Function,
     # Create a RemoteChannel to receive solutions
     bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(div(nInfo, 2)))
     # Create another channel to assign tasks
-    tqueue = RemoteChannel(() -> Channel{Int}(0))
+    tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
     # This command selects only nodes which are local to myid()
     local_workers = intersect(workers(), procs(myid()))
@@ -403,13 +403,15 @@ function praff(model::Function, gmodel!::Function,
 
     # Check asynchronously if there is at least one live worker
     @async check_and_close(bqueue, tqueue, futures)
+
+    batches = 4
     
     # Populate the task queue with jobs
-    for p = pliminf:plimsup
+    for p = pliminf:batches:plimsup
 
         try
             
-            put!(tqueue, p)
+            put!(tqueue, p:min(plimsup, p + batches))
 
         catch e
 
