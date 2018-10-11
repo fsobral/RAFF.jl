@@ -338,11 +338,11 @@ end
 """
 
     praff(model::Function, data::Array{Float64, 2}, n::Int;
-          MAXMS::Int=1, SEEDMS::Int=123456789 )
+          MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1 )
 
     praff(model::Function, gmodel!::Function,
           data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-          SEEDMS::Int=123456789 )
+          SEEDMS::Int=123456789, batches::Int=1 )
 
 Multicore shared memory version of RAFF. See the description of the
 [raff](@ref) function for the main (non-optional) arguments.
@@ -355,6 +355,7 @@ The optional arguments are
 
   - `MAXMS`: number of multistart points to be used
   - `SEEDMS`: integer seed for random multistart points
+  - `batches`: size of batches to be send to each worker
 
 Returns a tuple `x`, `f`, `p` where
 
@@ -365,7 +366,7 @@ Returns a tuple `x`, `f`, `p` where
 """
 function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-               SEEDMS::Int=123456789)
+               SEEDMS::Int=123456789, batches::Int=1)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -404,8 +405,6 @@ function praff(model::Function, gmodel!::Function,
     # Check asynchronously if there is at least one live worker
     @async check_and_close(bqueue, tqueue, futures)
 
-    batches = 4
-    
     # Populate the task queue with jobs
     for p = pliminf:batches:plimsup
 
