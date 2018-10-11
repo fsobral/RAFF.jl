@@ -88,6 +88,8 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
     @debug("Started worker $(myid())")
 
+    # my_bestx::Vector{Float64} = zeros(Float64, n)
+    
     while isopen(tqueue)
 
         p = try
