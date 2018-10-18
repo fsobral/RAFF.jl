@@ -36,7 +36,7 @@
 
     x = [0.0, 0.0]
 
-    conv, x, iter, p = LMlovo(model, x, data, 2, 18)
+    conv, x, iter, p = lmlovo(model, x, data, 2, 18)
 
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
@@ -50,19 +50,19 @@
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 
-    @test_throws AssertionError LMlovo(model, x, data, 0, 1)
-    @test_throws AssertionError LMlovo(model, x, data, 2, -1)
+    @test_throws AssertionError lmlovo(model, x, data, 0, 1)
+    @test_throws AssertionError lmlovo(model, x, data, 2, -1)
 
-    conv, x, iter, p = LMlovo(model, x, data, 2, 0)
+    conv, x, iter, p = lmlovo(model, x, data, 2, 0)
 
     @test conv == 1
     @test iter == 1
 
-    # LMlovo with function and gradient
+    # lmlovo with function and gradient
 
     x = [0.0, 0.0]
 
-    conv, x, iter, p = LMlovo(model, gmodel!, x, data, 2, 18)
+    conv, x, iter, p = lmlovo(model, gmodel!, x, data, 2, 18)
     
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
@@ -76,10 +76,10 @@
     @test x ≈ answer atol=1.0e-5
     @test p == 18
 
-    @test_throws AssertionError LMlovo(model, gmodel!, x, data, 0, 1)
-    @test_throws AssertionError LMlovo(model, gmodel!, x, data, 2, -1)
+    @test_throws AssertionError lmlovo(model, gmodel!, x, data, 0, 1)
+    @test_throws AssertionError lmlovo(model, gmodel!, x, data, 2, -1)
 
-    conv, x, iter, p = LMlovo(model, gmodel!, x, data, 2, 0)
+    conv, x, iter, p = lmlovo(model, gmodel!, x, data, 2, 0)
 
     @test conv == 1
     @test iter == 1

@@ -10,17 +10,17 @@ using Printf
 using Random
 using SharedArrays
 
-export LMlovo, raff, praff, generateTestProblems
+export lmlovo, raff, praff, generateTestProblems
 
 include("utils.jl")
 
 include("dutils.jl")
 
 """
-    LMlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
+    lmlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
 
-    LMlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
+    lmlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
            data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int])
 
 Fit the `n`-parameter model `model` to the data given by matrix
@@ -52,7 +52,7 @@ Returns a tuple `s`, `x`, `iter`, `p`, `f` where
   - `f`: the residual value
 
 """
-function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
+function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200)
 
@@ -228,7 +228,7 @@ function LMlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
 end
 
-function LMlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
+function lmlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
                 n::Int, p::Int; kwargs...)
 
     # Define closures for derivative and initializations
@@ -244,15 +244,15 @@ function LMlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
 
     end
 
-    return LMlovo(model, grad_model, x, data, n, p; kwargs...)
+    return lmlovo(model, grad_model, x, data, n, p; kwargs...)
     
 end
 
-LMlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
-    LMlovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
+lmlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    lmlovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
 
-LMlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
-    LMlovo(model, zeros(Float64, n), data, n, p; kwargs...)
+lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
 """
     raff(model::Function, data::Array{Float64, 2}, n::Int)
@@ -290,13 +290,13 @@ function raff(model::Function, gmodel!::Function,
 
     for i = pliminf:plimsup
 
-        @debug("Running LMlovo for p = $(i).")
+        @debug("Running lmlovo for p = $(i).")
         
         # Starting point
         x = zeros(Float64, n)
         
         # Call function and store results
-        v[i - pliminf + 1] = LMlovo(model, gmodel!, x, data, n, i)
+        v[i - pliminf + 1] = lmlovo(model, gmodel!, x, data, n, i)
         
     end
     

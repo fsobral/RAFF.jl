@@ -5,7 +5,7 @@
 
     update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
 
-Listen to a `channel` for results found by LMlovo. If there is an
+Listen to a `channel` for results found by lmlovo. If there is an
 improvement for the objective function, the shared array `bestx` is
 updated.
 
@@ -67,10 +67,10 @@ end
                    pliminf::Int, plimsup::Int, MAXMS::Int,
                    seedMS::MersenneTwister)
 
-This function represents one worker, which runs LMlovo in a multistart
+This function represents one worker, which runs lmlovo in a multistart
 fashion.
 
-It takes a job from the RemoteChannel `tqueue` and runs `LMlovo`
+It takes a job from the RemoteChannel `tqueue` and runs `lmlovo`
 function to it. Saves the best results found to the shared arrays `v`
 (best solution), `vs` (convergence status) and `vf` (objective
 function value at the best solution). All the other arguments are the
@@ -136,7 +136,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                 x = zeros(Float64, n)
                 
                 # Call function and store results
-                s, x, iter, p_, f = LMlovo(model, gmodel!, x, data, n, k)
+                s, x, iter, p_, f = lmlovo(model, gmodel!, x, data, n, k)
                 
                 if f < wbestf
                     
