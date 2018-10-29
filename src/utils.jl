@@ -65,38 +65,56 @@ function generateTestProblems(datFilename::String,
                               solFilename::String, model::Function,
                               modelStr::String,
                               n::Int, np::Int, p::Int;
-                              tmin=-10.0, tmax=10.0)
-                           
-    # Generate parameters x (solution)
-    x = 10.0 * randn(n)
+                              tMin=-10.0, tMax=10.0,
+                              xSol=10.0 * randn(n))
     
     open(solFilename, "w") do sol
     
         println(sol, n) # number of variables
 
-        println(sol, x) # parameters
+        println(sol, xSol) # parameters
         
         println(sol, modelStr) # function expression
 
     end
 
+    # Choose exactly np - p random points to be perturbed
+    v = Vector{Int}(undef, np - p)
+
+    ntp = 0
+
+    points = [1:np;]
+
+    while ntp < np - p
+        
+        u = rand(points, np - p - ntp)
+
+        unique!(u)
+
+        for i in u
+            v[ntp + 1] = i
+            ntp += 1
+        end
+
+        setdiff!(points, u)
+        
+    end
+
     #
-    # Generate (ti,yi) where tmin <= t_i <= tmax (data)
-    t = [tmin:(tmax - tmin) / (np - 1):tmax;]
+    # Generate (ti,yi) where tMin <= t_i <= tMax (data)
+    t = [tMin:(tMax - tMin) / (np - 1):tMax;]
     
     data = open(datFilename, "w")
-
-    v = rand([1:1:np;], np - p)
 
     # Add noise to some random points
     for k = 1:np
             
-        y = model(x, t[k])
+        y = model(xSol, t[k])
 
         noise = 0.0
             
         if k in v 
-            noise = randn() * rand([1.0, 2.0, 3.0])
+            noise = randn() * rand([0.1, 0.2, 0.4]) * (tMax - tMin)
         end
             
         @printf(data, "%20.15f %20.15f %20.15f\n",
