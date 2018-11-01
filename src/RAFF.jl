@@ -1,7 +1,5 @@
 module RAFF
 
-__precompile__(false)
-
 # Dependencies
 using Distributed
 using ForwardDiff
