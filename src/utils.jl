@@ -109,12 +109,12 @@ function generateTestProblems(datFilename::String,
     # Add noise to some random points
     for k = 1:np
             
-        y = model(xSol, t[k])
+        y = model(xSol, t[k]) + randn()
 
         noise = 0.0
             
         if k in v 
-            noise = randn() * rand([0.1, 0.2, 0.4]) * (tMax - tMin)
+            noise = randn() * 2.0 * abs(y)
         end
             
         @printf(data, "%20.15f %20.15f %20.15f\n",
