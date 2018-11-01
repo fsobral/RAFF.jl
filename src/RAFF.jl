@@ -54,7 +54,7 @@ Returns a tuple `s`, `x`, `iter`, `p`, `f` where
 """
 function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
-                MAXITER::Int=200)
+                MAXITER::Int=200, ε::Float64=10.0^-4)
 
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
@@ -113,12 +113,12 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     # -----------------------------
     
     Id = Matrix(1.0I, n, n)
-
+    
     # Status = 1 means success
     status = 1
 
     # Parameters
-    ε         = 10.0^(-4)
+    
     λ_up      = 2.0
     λ_down    = 2.0
     λ         = 1.0
@@ -153,12 +153,13 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         @info("  Current iterate: $(x)")
         @info("  Best indices (first $(MAXOUTIND)): $(ind_lovo[1:MAXOUTIND])")
         @info("  lambda: $(λ)")
-        
+
         G .= Id
-        
+
         BLAS.gemm!('T', 'N', 1.0, jac_res, jac_res, λ, G)
         
         F = qr!(G)
+        #F = cholesky!(G, Val(true))
         
         ad = try
 
@@ -302,13 +303,23 @@ function raff(model::Function, gmodel!::Function,
     
     lv = length(v)
     votsis = zeros(lv)
-    for i = 1:lv
-        for j = 1:lv
-            if norm(v[i][2] - v[j][2]) < 10.0^(-3)
-                votsis[i] += 1
+    dmatrix = zeros(lv, lv)
+    for j = 1:lv
+        for i = 1:lv
+            if v[i][1] == 1 && v[j][1] == 1
+                dmatrix[i, j] = norm(v[i][2] - v[j][2])
+#                println(norm(v[i][2] - v[j][2]))
+                if norm(v[i][2] - v[j][2]) < 29.0
+#                    println("Entrou")
+#                    votsis[j] += 1
+                    votsis[i] += 1
+                end
             end
         end
     end
+
+    @debug("Voting vector:", votsis)
+    @debug("Distance matrix:", dmatrix)
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
