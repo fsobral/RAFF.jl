@@ -4,13 +4,19 @@ using ArgParse
 
 datafile = "/tmp/output.txt"
 
-M = readdlm(datafile)
+fp = open(datafile, "r")
+
+N = parse(Int, readline(fp))
+
+M = readdlm(fp)
+
+close(fp)
 
 x = M[:, 1]
 y = M[:, 2]
-c = [Int(i) for i in (M[:, 3] .!= 0.0)] * 1.0
+c = 1.0 .- M[:, 3]
 
-sol = [2.03607, 0.7784, -7.0366, -68.5755]
+sol = [1.99986, -0.00206837, -3.95703, -10.2314]
 model = (x, t) -> x[1] .* t.^3 + x[2] .* t.^2 + x[3] .* t .+ x[4]
 t = minimum(x):0.01:maximum(x)
 PyPlot.plot(t, model(sol, t), "r")

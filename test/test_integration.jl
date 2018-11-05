@@ -11,7 +11,14 @@
         dname, sname = split(prob)
 
         # Data file
-        data = readdlm(dir * dname)[:, [1, 2]]
+
+        open(dir * dname, "r") do fp
+
+            global N = parse(Int, readline(fp))
+            
+            global data = readdlm(fp)[:, [1, 2]]
+
+        end
 
         # Solution file
         fsol = open(dir * sname, "r")

@@ -16,7 +16,13 @@ np = 10
 
 p = 9
 
-data = readdlm("/tmp/output.txt")
+open("/tmp/output.txt") do fp
+
+    global N = parse(Int, readline(fp))
+
+    global data = readdlm(fp)
+
+end
 
 xbest, fbest, p = raff(model, data, n)
 

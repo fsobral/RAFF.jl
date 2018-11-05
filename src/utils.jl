@@ -106,6 +106,9 @@ function generateTestProblems(datFilename::String,
     
     data = open(datFilename, "w")
 
+    # Dimension of the domain of the function to fit
+    @printf(data, "%d\n", 1)
+    
     # Add noise to some random points
     for k = 1:np
             
@@ -117,8 +120,8 @@ function generateTestProblems(datFilename::String,
             noise = randn() * 2.0 * abs(y)
         end
             
-        @printf(data, "%20.15f %20.15f %20.15f\n",
-                t[k], y + noise, noise)
+        @printf(data, "%20.15f %20.15f %1d\n",
+                t[k], y + noise, Int(noise == 0))
 
     end
 

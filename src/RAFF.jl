@@ -307,7 +307,7 @@ function raff(model::Function, gmodel!::Function,
             if v[i][1] == 1 && v[j][1] == 1
                 dmatrix[i, j] = norm(v[i][2] - v[j][2])
 #                println(norm(v[i][2] - v[j][2]))
-                if norm(v[i][2] - v[j][2]) < 29.0
+                if norm(v[i][2] - v[j][2]) < 1.0e-3
 #                    println("Entrou")
 #                    votsis[j] += 1
                     votsis[i] += 1

@@ -82,12 +82,19 @@ end
 
     nLines = 0
     nNoise = 0
-    
-    for line in eachline(datf)
 
-        nLines += 1
+    open(datf, "r") do fp
 
-        (parse(Float64, split(line)[3]) != 0.0) && (nNoise += 1)
+        # Check the dimension of the problem
+        @test 1 == parse(Int, readline(fp))
+        
+        for line in eachline(fp)
+
+            nLines += 1
+
+            (parse(Int, split(line)[3]) != 0.0) && (nNoise += 1)
+
+        end
 
     end
 

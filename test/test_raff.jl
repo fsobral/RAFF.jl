@@ -36,7 +36,7 @@
 
     x = [0.0, 0.0]
 
-    conv, x, iter, p = lmlovo(model, x, data, 2, 18)
+    conv, x, iter, p, f = lmlovo(model, x, data, 2, 18)
 
     @test conv == 1
     @test x ≈ answer atol=1.0e-5
