@@ -4,6 +4,7 @@ module RAFF
 using Distributed
 using ForwardDiff
 using LinearAlgebra
+using Statistics
 using Printf
 using Random
 using SharedArrays
@@ -213,6 +214,9 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         status = 0
     end
 
+    outliers = [1:npun;]
+    setdiff!(outliers, ind_lovo)
+    
     @info("""
 
     Final iteration (STATUS=$(status))
@@ -220,10 +224,11 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
       ||grad_lovo||_2:      $(ngrad_lovo)
       Function value:       $(best_val_lovo)
       Number of iterations: $(safecount)
-
+      Outliers:             $(outliers)
+    
     """)
     
-    return status, x, safecount, p, best_val_lovo
+    return status, x, safecount, p, best_val_lovo, outliers
 
 end
 
@@ -300,20 +305,33 @@ function raff(model::Function, gmodel!::Function,
     end
     
     lv = length(v)
-    votsis = zeros(lv)
+    dvector = zeros(Int(lv * (lv - 1) / 2))
     dmatrix = zeros(lv, lv)
+    pos = 1
+    threshold = Inf
     for j = 1:lv
         for i = j + 1:lv
             if v[i][1] == 1 && v[j][1] == 1
                 dmatrix[i, j] = norm(v[i][2] - v[j][2])
-                if norm(v[i][2] - v[j][2]) < 0.6
-                    votsis[j] += 1
-                    votsis[i] += 1
-                end
+                dvector[pos] = dmatrix[i, j]
+                pos += 1
             end
         end
     end
 
+    threshold = minimum(dvector) + mean(dvector) / (1.0 + sqrt(plimsup))
+    
+    votsis = zeros(lv)
+    @debug("Threshold: $(threshold)")
+    for j = 1:lv
+        for i = j + 1:lv
+            if dmatrix[i, j] <=  threshold
+                votsis[j] += 1
+                votsis[i] += 1
+            end
+        end
+    end
+    
     @debug("Voting vector:", votsis)
     @debug("Distance matrix:", dmatrix)
     
