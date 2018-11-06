@@ -6,7 +6,9 @@ const model_list = Dict(
     "linear" => (2, (x, t) -> x[1] * t + x[2],
                  "(x, t) -> x[1] * t + x[2]"),
     "cubic" => (2, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
-                "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]")
+                "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]"),
+    "expon" => (2, (x, t) -> x[1] * exp(- x[2] * t),
+                "(x, t) -> x[1] * exp(- x[2] * t)")
 )
 
 function main()
@@ -47,11 +49,11 @@ function main()
 
     n, model, modelStr = model_list[parsed_args["m"]]
 
-    tMin = - 10.0
+    tMin = - 0.0
 
-    tMax =   10.0
+    tMax =   30.0
 
-    xSol = [2.0, 0.0, -4.0, -10.0]
+    xSol = [2.0, 2.0]
 
     fname = parsed_args["fname"]
 

@@ -14,15 +14,19 @@ close(fp)
 
 x = M[:, 1]
 y = M[:, 2]
-c = 1.0 .- M[:, 3]
+c = M[:, 3]
 
-sol = [1.99986, -0.00206837, -3.95703, -10.2314]
-model = (x, t) -> x[1] .* t.^3 + x[2] .* t.^2 + x[3] .* t .+ x[4]
+#sol = [2.07816, 1.08284, -5.55829, -20.9451]
+
+#model = (x, t) -> x[1] .* t.^3 + x[2] .* t.^2 + x[3] .* t .+ x[4]
+model = (x, t) -> x[1] .* exp.(- x[2] .* t)
+
 t = minimum(x):0.01:maximum(x)
-PyPlot.plot(t, model(sol, t), "r")
+#PyPlot.plot(t, model(sol, t), "r")
 
-#xSol = [2.0, 0.0, -4.0, -10.0]
-#PyPlot.plot(t, model(xSol, t), "b")
+xSol = [2.0, 2.0]
+PyPlot.plot(t, model(xSol, t), "b--")
+
 
 PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
                cmap=PyPlot.cm["Paired"], alpha=0.6)
