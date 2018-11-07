@@ -66,7 +66,7 @@ function generateTestProblems(datFilename::String,
                               modelStr::String,
                               n::Int, np::Int, p::Int;
                               tMin=-10.0, tMax=10.0,
-                              xSol=10.0 * randn(n))
+                              xSol=10.0 * randn(n), std=200.0, outTimes=7.0)
     
     open(solFilename, "w") do sol
     
@@ -112,16 +112,17 @@ function generateTestProblems(datFilename::String,
     # Add noise to some random points
     for k = 1:np
             
-        y = model(xSol, t[k]) + randn()
+        y = model(xSol, t[k]) + randn() * std
 
         noise = 0.0
             
         if k in v 
-            noise = randn() * 2.0 * abs(y)
+            y = model(xSol, t[k])
+            noise = outTimes * std * sign(randn())
         end
             
         @printf(data, "%20.15f %20.15f %1d\n",
-                t[k], y + noise, Int(noise == 0))
+                t[k], y + noise, Int(noise != 0))
 
     end
 
