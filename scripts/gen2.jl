@@ -7,8 +7,10 @@ const model_list = Dict(
                  "(x, t) -> x[1] * t + x[2]"),
     "cubic" => (2, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
                 "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]"),
-    "expon" => (2, (x, t) -> x[1] * exp(- x[2] * t),
-                "(x, t) -> x[1] * exp(- x[2] * t)")
+    "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t),
+                "(x, t) -> x[1] + x[2] * exp(- x[3] * t)"),
+    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4]))),
+                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4])))")
 )
 
 function main()
@@ -53,7 +55,7 @@ function main()
 
     tMax =   30.0
 
-    xSol = [2.0, 2.0]
+    xSol = [1000.0, 5000.0, 0.2, 15.0]
 
     fname = parsed_args["fname"]
 
@@ -64,7 +66,7 @@ function main()
         
         generateTestProblems(ffname, fsname, model, modelStr, n,
                              parsed_args["np"], parsed_args["p"];
-                             tMin=tMin, tMax=tMax, xSol=xSol)
+                             tMin=tMin, tMax=tMax, xSol=xSol, std=200.0)
 
         @printf("Created problem and solution files.\n")
 
