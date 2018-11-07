@@ -307,23 +307,48 @@ function raff(model::Function, gmodel!::Function,
     lv = length(v)
     dvector = zeros(Int(lv * (lv - 1) / 2))
     dmatrix = zeros(lv, lv)
-    pos = 1
-    threshold = Inf
+    pos = 0
+
     for j = 1:lv
+
         for i = j + 1:lv
+
+            dmatrix[i, j] = Inf
+
             if v[i][1] == 1 && v[j][1] == 1
+
                 dmatrix[i, j] = norm(v[i][2] - v[j][2])
-                dvector[pos] = dmatrix[i, j]
+
                 pos += 1
+
+                dvector[pos] = dmatrix[i, j]
+
             end
+
         end
+
     end
 
-    threshold = minimum(dvector) + mean(dvector) / (1.0 + sqrt(plimsup))
+    threshold = Inf
+
+    if pos > 0
+        
+        dvv = @view dvector[1:pos]
+        
+        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
+
+    else
+        
+        @warn("No convergence for any 'p'. Returning largest.")
+
+    end
     
     votsis = zeros(lv)
     @debug("Threshold: $(threshold)")
     for j = 1:lv
+        # Count +1 if converged
+        (v[j][1] == 1) && (votsis[j] += 1)
+        # Check other distances
         for i = j + 1:lv
             if dmatrix[i, j] <=  threshold
                 votsis[j] += 1
