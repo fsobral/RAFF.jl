@@ -287,26 +287,42 @@ points to fit the `model`.
 
 """
 function raff(model::Function, gmodel!::Function,
-              data::Array{Float64, 2}, n::Int)
+              data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+              SEEDMS::Int=123456789)
+
+    # Initialize random generator
+    seedMS = MersenneTwister(SEEDMS)
 
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
     
-    v = Array{Any,1}(undef, plimsup - pliminf + 1)
+    sols = Vector{Any}(undef, plimsup - pliminf + 1)
 
     for i = pliminf:plimsup
 
-        @debug("Running lmlovo for p = $(i).")
+        vbest = [0, zeros(Float64, n), -1, i, Inf, []]
         
-        # Starting point
-        x = zeros(Float64, n)
+        ind = i - pliminf + 1
         
-        # Call function and store results
-        v[i - pliminf + 1] = lmlovo(model, gmodel!, x, data, n, i)
+        for j = 1:MAXMS
+            
+            @debug("Running lmlovo for p = $(i). Repetition $(j).")
         
+            # Starting point
+            x = randn(seedMS, Float64, n)
+            x .= x .+ vbest[2]
+        
+            # Call function and store results
+            sols[ind] = lmlovo(model, gmodel!, x, data, n, i)
+
+            # Update the best point and functional value
+            (sols[ind][1] == 1) && (sols[ind][5] < vbest[5]) && (vbest .= sols[ind])
+            
+        end
+
     end
     
-    lv = length(v)
+    lv = plimsup - pliminf + 1
     dvector = zeros(Int(lv * (lv - 1) / 2))
     dmatrix = zeros(lv, lv)
     pos = 0
@@ -317,9 +333,9 @@ function raff(model::Function, gmodel!::Function,
 
             dmatrix[i, j] = Inf
 
-            if v[i][1] == 1 && v[j][1] == 1
+            if sols[i][1] == 1 && sols[j][1] == 1
 
-                dmatrix[i, j] = norm(v[i][2] - v[j][2])
+                dmatrix[i, j] = norm(sols[i][2] - sols[j][2])
 
                 pos += 1
 
@@ -347,9 +363,12 @@ function raff(model::Function, gmodel!::Function,
     
     votsis = zeros(lv)
     @debug("Threshold: $(threshold)")
+
+    # Actual votation
+    
     for j = 1:lv
         # Count +1 if converged
-        (v[j][1] == 1) && (votsis[j] += 1)
+        (sols[j][1] == 1) && (votsis[j] += 1)
         # Check other distances
         for i = j + 1:lv
             if dmatrix[i, j] <=  threshold
@@ -364,11 +383,11 @@ function raff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    return v[mainind][2], v[mainind][5], v[mainind][4]
+    return sols[mainind][2], sols[mainind][5], sols[mainind][4]
     
 end
 
-function raff(model::Function, data::Array{Float64, 2}, n::Int)
+function raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
@@ -383,7 +402,7 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int)
 
     end
 
-    return raff(model, grad_model, data, n)
+    return raff(model, grad_model, data, n; kwargs...)
 
 end
 
