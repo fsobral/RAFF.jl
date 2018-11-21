@@ -49,6 +49,8 @@ Returns a tuple `s`, `x`, `iter`, `p`, `f` where
   - `iter`: number of iterations up to convergence
   - `p`: number of trusted points
   - `f`: the residual value
+  - `outliers`: the possible outliers detected by the method, for the
+    given `p`
 
 """
 function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
