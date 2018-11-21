@@ -1,6 +1,5 @@
 using DelimitedFiles
 using PyPlot
-using ArgParse
 
 datafile = "/tmp/output.txt"
 
@@ -16,7 +15,7 @@ x = M[:, 1]
 y = M[:, 2]
 c = M[:, 3]
 
-sol = [533.077, 5389.48, 0.153425, 13.3359]
+sol = [1486.09, 1868.37, -192.356, 247.917]
 
 #model = (x, t) -> x[1] .* t.^3 + x[2] .* t.^2 + x[3] .* t .+ x[4]
 #model = (x, t) -> x[1] .+ x[2] .* exp.(- x[3] .* t)
