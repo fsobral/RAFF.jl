@@ -261,9 +261,11 @@ lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
     lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
 """
-    raff(model::Function, data::Array{Float64, 2}, n::Int)
+    raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+         SEEDMS::Int=123456789, initguess=zeros(Float64, n))
 
-    raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int)
+    raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
+         MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n))
 
 Robust Algebric Fitting Function (RAFF) algorithm. This function uses
 a voting system to automatically find the number of trusted data
@@ -285,10 +287,23 @@ points to fit the `model`.
   - `data`: data to be fit
   - `n`: dimension of the parameter vector in the model function
 
+The optional arguments are
+
+  - `MAXMS`: number of multistart points to be used
+  - `SEEDMS`: integer seed for random multistart points
+  - `initialguess`: a good guess for the starting point and for
+    generating random points in the multistart strategy
+
+Returns a tuple `x`, `f`, `p` where
+
+  - `x` is the solution
+  - `f` is the value of the error at the solution
+  - `p` is the number of trusted points found by the voting system.
+
 """
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789)
+              SEEDMS::Int=123456789, initguess=zeros(Float64, n))
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -300,7 +315,7 @@ function raff(model::Function, gmodel!::Function,
 
     for i = pliminf:plimsup
 
-        vbest = [0, zeros(Float64, n), -1, i, Inf, []]
+        vbest = [0, initguess, -1, i, Inf, []]
         
         ind = i - pliminf + 1
         
