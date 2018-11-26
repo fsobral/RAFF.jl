@@ -44,6 +44,14 @@
     
     x = [0.0, 0.0]
 
+    # Test with small p
+    conv, x, iter, p, f = lmlovo(model, x, data, 2, 3)
+
+    @test conv == 1
+    @test p == 3
+
+    x = [0.0, 0.0]
+
     x, f, p = raff(model, data, 2)
     
     @test f ≈ 0.0 atol=1.0e-5
@@ -84,4 +92,32 @@
     @test conv == 1
     @test iter == 1
 
+end
+
+@testset "Error in printing" begin
+
+    model(x, t) = x[1] * t^2 + x[2]
+
+    A = [ -2.0  5.00;
+          -1.5  3.25;
+          -1.0  2.00;
+          -0.5  1.25;
+           0.0  1.00;
+           0.5  1.25;
+           1.0  2.00;
+           1.5  3.25;
+           2.0  5.00 ]
+
+    x = [0.0, 0.0]
+
+    # Changes log just for this test
+    conv, x, iter, p, f, outliers = with_logger(NullLogger()) do
+    
+        lmlovo(model, x, A, 2, 4)
+
+    end
+
+    @test conv == 1
+    @test p == 4
+    
 end

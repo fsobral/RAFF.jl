@@ -123,7 +123,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     λ_up      = 2.0
     λ_down    = 2.0
     λ         = 1.0
-    MAXOUTIND = 5
+    maxoutind = min(p, 5)
 
     # Allocation
     xnew = Vector{Float64}(undef, n)
@@ -152,7 +152,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         @info("  Current value:   $(best_val_lovo)")
         @info("  ||grad_lovo||_2: $(ngrad_lovo)")
         @info("  Current iterate: $(x)")
-        @info("  Best indices (first $(MAXOUTIND)): $(ind_lovo[1:MAXOUTIND])")
+        @info("  Best indices (first $(maxoutind)): $(ind_lovo[1:maxoutind])")
         @info("  lambda: $(λ)")
 
         G .= Id
