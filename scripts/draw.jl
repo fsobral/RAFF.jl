@@ -19,7 +19,7 @@ sol = [699.522, 5476.89, 0.16228, 14.3365]
 
 #model = (x, t) -> x[1] .* t.^3 + x[2] .* t.^2 + x[3] .* t .+ x[4]
 #model = (x, t) -> x[1] .+ x[2] .* exp.(- x[3] .* t)
-model = (x, t) -> x[1] .+ x[2] ./ (1.0 .+ exp.(- x[3] .* (t .- x[4])))
+model = (x, t) -> x[1] .+ x[2] ./ (1.0 .+ exp.(- x[3] .* t .- x[4]))
 
 t = minimum(x):0.01:maximum(x)
 PyPlot.plot(t, model(sol, t), "r")

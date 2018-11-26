@@ -12,7 +12,7 @@ function run_raff(maxms=1, initguess=nothing)
 
     # model = (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]
     # model = (x, t) -> x[1] + x[2] * exp(- x[3] * t)
-    model = (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4])))
+    model = (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t - x[4]))
 
     n = 4
     
