@@ -30,12 +30,11 @@ function run_raff(maxms=1, initguess=nothing)
 
     end
 
-    xbest, fbest, p = raff(model, data, n; MAXMS=maxms,
-                           initguess=initguess)
+    rsol = raff(model, data, n; MAXMS=maxms, initguess=initguess)
     
     @printf("Solution found:
             fbest = %f
-            p     = %d\n", fbest, p)
-    println(xbest)
+            p     = %d\n", rsol.f, rsol.p)
+    println(rsol.solution)
 
 end

@@ -1,3 +1,34 @@
+export RAFFOutput, generateTestProblems
+
+"""
+
+This type defines the output file for the RAFF algorithm.
+
+    RAFFOutput(status :: Int solution :: Vector{Float64} iter :: Int
+               p :: Int f :: Float64 outliers :: Vector{Int})
+
+where
+
+  - `status`: is 1 if converged and 0 if not
+  - `solution`: vector with the parameters of the model
+  - `iter`: number of iterations up to convergence
+  - `p`: number of trusted points
+  - `f`: the residual value
+  - `outliers`: the possible outliers detected by the method, for the
+    given `p`
+
+"""
+struct RAFFOutput
+
+    status :: Int
+    solution :: Vector{Float64}
+    iter :: Int
+    p :: Int
+    f :: Float64
+    outliers :: Vector{Int}
+    
+end
+
 """
 
 This function is an auxiliary function. It finds the `p` smallest

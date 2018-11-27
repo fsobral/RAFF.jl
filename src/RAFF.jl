@@ -1,5 +1,7 @@
 module RAFF
 
+__precompile__(false)
+
 # Dependencies
 using Distributed
 using ForwardDiff
@@ -9,7 +11,7 @@ using Printf
 using Random
 using SharedArrays
 
-export lmlovo, raff, praff, generateTestProblems
+export lmlovo, raff, praff
 
 include("utils.jl")
 
@@ -42,15 +44,7 @@ is not provided, then the function ForwardDiff.gradient! is called to
 compute it. **Note** that this choice has an impact in the
 computational performance of the algorithm.
 
-Returns a tuple `s`, `x`, `iter`, `p`, `f` where
-
-  - `s`: is 1 if converged and 0 if not
-  - `x`: vector with the parameters of the model
-  - `iter`: number of iterations up to convergence
-  - `p`: number of trusted points
-  - `f`: the residual value
-  - `outliers`: the possible outliers detected by the method, for the
-    given `p`
+Returns a RAFFOutput object.
 
 """
 function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
@@ -230,7 +224,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     
     """)
     
-    return status, x, safecount, p, best_val_lovo, outliers
+    return RAFFOutput(status, x, safecount, p, best_val_lovo, outliers)
 
 end
 
@@ -294,11 +288,7 @@ The optional arguments are
   - `initialguess`: a good guess for the starting point and for
     generating random points in the multistart strategy
 
-Returns a tuple `x`, `f`, `p` where
-
-  - `x` is the solution
-  - `f` is the value of the error at the solution
-  - `p` is the number of trusted points found by the voting system.
+Returns a RAFFOutput object with the best parameter found.
 
 """
 function raff(model::Function, gmodel!::Function,
@@ -311,11 +301,11 @@ function raff(model::Function, gmodel!::Function,
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
     
-    sols = Vector{Any}(undef, plimsup - pliminf + 1)
+    sols = Vector{RAFFOutput}(undef, plimsup - pliminf + 1)
 
     for i = pliminf:plimsup
 
-        vbest = [0, initguess, -1, i, Inf, []]
+        vbest = RAFFOutput(0, initguess, -1, i, Inf, [])
         
         ind = i - pliminf + 1
         
@@ -325,13 +315,13 @@ function raff(model::Function, gmodel!::Function,
         
             # Starting point
             x = randn(seedMS, Float64, n)
-            x .= x .+ vbest[2]
+            x .= x .+ vbest.solution
         
             # Call function and store results
             sols[ind] = lmlovo(model, gmodel!, x, data, n, i)
 
             # Update the best point and functional value
-            (sols[ind][1] == 1) && (sols[ind][5] < vbest[5]) && (vbest .= sols[ind])
+            (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
             
         end
 
@@ -348,9 +338,9 @@ function raff(model::Function, gmodel!::Function,
 
             dmatrix[i, j] = Inf
 
-            if sols[i][1] == 1 && sols[j][1] == 1
+            if sols[i].status == 1 && sols[j].status == 1
 
-                dmatrix[i, j] = norm(sols[i][2] - sols[j][2])
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
 
                 pos += 1
 
@@ -383,7 +373,7 @@ function raff(model::Function, gmodel!::Function,
     
     for j = 1:lv
         # Count +1 if converged
-        (sols[j][1] == 1) && (votsis[j] += 1)
+        (sols[j].status == 1) && (votsis[j] += 1)
         # Check other distances
         for i = j + 1:lv
             if dmatrix[i, j] <=  threshold
@@ -398,7 +388,7 @@ function raff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    return sols[mainind][2], sols[mainind][5], sols[mainind][4]
+    return sols[mainind]
     
 end
 
