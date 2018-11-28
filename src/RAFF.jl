@@ -433,7 +433,11 @@ The optional arguments are
   - `SEEDMS`: integer seed for random multistart points
   - `batches`: size of batches to be send to each worker
 
-Returns a RAFFOutput object with the best parameter found.
+Returns a tuple `x`, `f`, `p` where
+
+  - `x` is the solution
+  - `f` is the value of the error at the solution
+  - `p` is the number of trusted points found by the voting system.
 
 """
 function praff(model::Function, gmodel!::Function,
