@@ -36,88 +36,98 @@
 
     x = [0.0, 0.0]
 
-    conv, x, iter, p, f = lmlovo(model, x, data, 2, 18)
+    rout = lmlovo(model, x, data, 2, 18)
 
-    @test conv == 1
-    @test x ≈ answer atol=1.0e-5
-    @test p == 18
+    @test rout.status == 1
+    @test rout.solution ≈ answer atol=1.0e-5
+    @test rout.p == 18
     
     x = [0.0, 0.0]
 
     # Test with small p
-    conv, x, iter, p, f = lmlovo(model, x, data, 2, 3)
+    rout = lmlovo(model, x, data, 2, 3)
 
-    @test conv == 1
-    @test p == 3
+    @test rout.status == 1
+    @test rout.p == 3
 
     x = [0.0, 0.0]
 
-    x, f, p = raff(model, data, 2)
+    rout = raff(model, data, 2)
     
-    @test f ≈ 0.0 atol=1.0e-5
-    @test x ≈ answer atol=1.0e-5
-    @test p == 18
+    @test rout.f ≈ 0.0 atol=1.0e-5
+    @test rout.solution ≈ answer atol=1.0e-5
+    @test rout.p == 18
 
     @test_throws AssertionError lmlovo(model, x, data, 0, 1)
     @test_throws AssertionError lmlovo(model, x, data, 2, -1)
 
-    conv, x, iter, p = lmlovo(model, x, data, 2, 0)
+    rout = lmlovo(model, x, data, 2, 0)
 
-    @test conv == 1
-    @test iter == 1
+    @test rout.status == 1
+    @test rout.iter == 1
 
     # lmlovo with function and gradient
 
     x = [0.0, 0.0]
 
-    conv, x, iter, p = lmlovo(model, gmodel!, x, data, 2, 18)
+    rout = lmlovo(model, gmodel!, x, data, 2, 18)
     
-    @test conv == 1
-    @test x ≈ answer atol=1.0e-5
-    @test p == 18
+    @test rout.status == 1
+    @test rout.solution ≈ answer atol=1.0e-5
+    @test rout.p == 18
 
     x = [0.0, 0.0]
 
-    x, f, p = raff(model, gmodel!, data, 2)
+    rout = raff(model, gmodel!, data, 2)
     
-    @test f ≈ 0.0 atol=1.0e-5
-    @test x ≈ answer atol=1.0e-5
-    @test p == 18
+    @test rout.f ≈ 0.0 atol=1.0e-5
+    @test rout.solution ≈ answer atol=1.0e-5
+    @test rout.p == 18
 
     @test_throws AssertionError lmlovo(model, gmodel!, x, data, 0, 1)
     @test_throws AssertionError lmlovo(model, gmodel!, x, data, 2, -1)
 
-    conv, x, iter, p = lmlovo(model, gmodel!, x, data, 2, 0)
+    rout = lmlovo(model, gmodel!, x, data, 2, 0)
 
-    @test conv == 1
-    @test iter == 1
+    @test rout.status == 1
+    @test rout.iter == 1
 
-end
-
-@testset "Error in printing" begin
-
-    model(x, t) = x[1] * t^2 + x[2]
-
-    A = [ -2.0  5.00;
-          -1.5  3.25;
-          -1.0  2.00;
-          -0.5  1.25;
-           0.0  1.00;
-           0.5  1.25;
-           1.0  2.00;
-           1.5  3.25;
-           2.0  5.00 ]
-
-    x = [0.0, 0.0]
-
-    # Changes log just for this test
-    conv, x, iter, p, f, outliers = with_logger(NullLogger()) do
+    # Test to check Issue #1
     
-        lmlovo(model, x, A, 2, 4)
+    @testset "Error in printing" begin
 
+        model(x, t) = x[1] * t^2 + x[2]
+
+        A = [ -2.0  5.00;
+              -1.5  3.25;
+              -1.0  2.00;
+              -0.5  1.25;
+              0.0  1.00;
+              0.5  1.25;
+              1.0  2.00;
+              1.5  3.25;
+              2.0  5.00 ]
+
+        x = [0.0, 0.0]
+
+        # Changes log just for this test
+        rout = with_logger(NullLogger()) do
+            
+            lmlovo(model, x, A, 2, 4)
+
+        end
+
+        @test rout.status == 1
+        @test rout.p == 4
+        
     end
 
-    @test conv == 1
-    @test p == 4
+    # Tests for RAFFOutput
     
+    @testset "RAFFOutput tests" begin
+
+        
+        
+    end
+
 end

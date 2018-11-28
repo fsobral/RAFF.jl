@@ -35,9 +35,9 @@
         close(fsol)
 
         # Call raff
-        x, f, p = raff(model, data, n)
+        rout = raff(model, data, n)
 
-        @test x ≈ answer atol=1.0e-2
+        @test rout.solution ≈ answer atol=1.0e-2
 
     end 
 

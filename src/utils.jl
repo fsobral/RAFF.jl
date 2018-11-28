@@ -17,6 +17,15 @@ where
   - `outliers`: the possible outliers detected by the method, for the
     given `p`
 
+
+    RAFFOutput()
+
+Creates a null version of output, equivalent to `RAFFOutput(0, [], -1, 0, Inf, [])`
+
+    RAFFOuput(p::Int)
+
+Creates a null version of output for the given `p`.
+
 """
 struct RAFFOutput
 
@@ -28,6 +37,10 @@ struct RAFFOutput
     outliers :: Vector{Int}
     
 end
+
+RAFFOutput(p) = RAFFOutput(0, [], -1, p, Inf, [])
+
+RAFFOutput() = RAFFOutput(0)
 
 """
 
