@@ -337,6 +337,13 @@ function raff(model::Function, gmodel!::Function,
         sols[ind] = vbest
 
     end
+
+    # Remove possible stationary points, i.e., points with lower
+    # values for 'p' and higher 'f'.
+
+    eliminate_local_min!(model, data, sols)
+
+    # Voting strategy
     
     dvector = zeros(Int(lv * (lv - 1) / 2))
     dmatrix = zeros(lv, lv)

@@ -2,6 +2,112 @@ export generateTestProblems
 
 """
 
+    eliminate_local_min!(sols::Vector{RAFFOutput})
+
+Check if the function value of the solution found by smaller values of
+`p` is not greater when compared with larger ones. This certainly
+indicates that a local minimizer was found by the smaller `p`.
+
+"""
+function eliminate_local_min!(model::Function, data::Array{Float64, 2},
+                              sols::Vector{RAFFOutput})
+
+    lv = length(sols)
+
+    sec_sol_ind = -1
+
+    # Start from the largest p
+    for i = lv:-1:1
+
+        (sols[i].status != 1) && continue
+        
+        for j = i - 1:-1:1
+
+            if (sols[j].status == 1) && (sols[j].f > sols[i].f)
+
+                @debug("  Possible local minimizer for p = $(sols[j].p) " *
+                       "with f = $(sols[j].f). Removing it.")
+                
+                sols[j] = RAFFOutput(0)
+
+            end
+
+        end
+
+    end
+
+    # Test the maximum 'p'
+
+    nump, = size(data)
+    
+    maxp = sols[lv]
+        
+    if (lv > 1) && (maxp.status == 1)
+
+        i = lv - 1
+
+        # while (i > 0) && (sols[i].status != 1)
+
+        #     i -= 1
+
+        # end
+
+        bestf = maxp.f
+        j = 0
+        
+        while (i > 0)
+
+            if  (sols[i].status == 1) && (sols[i].f < bestf)
+
+                bestf = sols[i].f
+
+                j = i
+
+            end
+
+            i -= 1
+
+        end
+
+        if j == 0
+            
+            @debug("  Nobody to reject p = $(maxp.p).")
+
+        else
+
+            sec_sol = sols[j]
+            
+            @debug("  p = $(sec_sol.p) will try to reject p = $(maxp.p).")
+
+            nmin = 0
+
+            for i = 1:nump
+
+                y  = data[i, 2]
+                y1 = model(maxp.solution, data[i, 1])
+                y2 = model(sec_sol.solution, data[i, 1])
+                
+                (abs(y - y1) < abs(y - y2)) && (nmin += 1)
+
+            end
+
+            if nmin < lv / 2
+
+                @debug("  nmin = $(nmin). Rejecting p = $(maxp.p).")
+
+                sols[lv] = RAFFOutput(0)
+
+            end
+
+        end
+        
+    end
+    
+end
+
+
+"""
+
 This function is an auxiliary function. It finds the `p` smallest
 values of vector `V` and brings them to the first `p` positions. The
 indexes associated with the `p` smallest values are stored in `ind`.
