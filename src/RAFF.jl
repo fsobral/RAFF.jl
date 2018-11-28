@@ -212,6 +212,12 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         status = 0
     end
 
+    # TODO: Create a test for this case
+    if isnan(ngrad_lovo)
+        @info("Incorrect value for gradient norm $(ngrad_lovo).")
+        status = 0
+    end
+
     outliers = [1:npun;]
     setdiff!(outliers, ind_lovo)
     
@@ -302,8 +308,9 @@ function raff(model::Function, gmodel!::Function,
 
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
+    lv = plimsup - pliminf + 1
     
-    sols = Vector{RAFFOutput}(undef, plimsup - pliminf + 1)
+    sols = Vector{RAFFOutput}(undef, lv)
 
     for i = pliminf:plimsup
 
@@ -327,15 +334,20 @@ function raff(model::Function, gmodel!::Function,
             
         end
 
+        sols[ind] = vbest
+
     end
     
-    lv = plimsup - pliminf + 1
     dvector = zeros(Int(lv * (lv - 1) / 2))
     dmatrix = zeros(lv, lv)
     pos = 0
+    n_conv = 0
 
     for j = 1:lv
 
+        # Count how many have successfully converged
+        (sols[j].status == 1) && (n_conv += 1)
+        
         for i = j + 1:lv
 
             dmatrix[i, j] = Inf
@@ -362,7 +374,7 @@ function raff(model::Function, gmodel!::Function,
         
         threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
 
-    else
+    elseif n_conv == 0
         
         @warn("No convergence for any 'p'. Returning largest.")
 
