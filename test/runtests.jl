@@ -10,9 +10,9 @@ using Base.CoreLogging
 
 global_logger(ConsoleLogger(stdout, Logging.Error))
 
-include("test_utils.jl")
-
 include("test_raff.jl")
+
+include("test_utils.jl")
 
 include("test_integration.jl")
 

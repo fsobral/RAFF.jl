@@ -13,6 +13,8 @@ using SharedArrays
 
 export lmlovo, raff, praff
 
+include("raffoutput.jl")
+
 include("utils.jl")
 
 include("dutils.jl")
