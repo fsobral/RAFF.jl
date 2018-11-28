@@ -4,8 +4,8 @@ export RAFFOutput
 
 This type defines the output file for the RAFF algorithm.
 
-    RAFFOutput(status :: Int solution :: Vector{Float64} iter :: Int
-               p :: Int f :: Float64 outliers :: Vector{Int})
+    RAFFOutput(status::Int, solution::Vector{Float64}, iter::Int,
+               p::Int, f::Float64, outliers::Vector{Int})
 
 where
 
@@ -46,6 +46,6 @@ RAFFOutput() = RAFFOutput(0)
 
 import Base.==
 
-==(a::RAFFOutput, b::RAFFOutput) = (a.status == b.status) &&
-    (a.solution == b.solution) && (a.iter == b.iter) &&
-    (a.p == b.p) && (a.f == b.f) && (a.outliers == b.outliers)
+==(a::RAFFOutput, b::RAFFOutput) = ((a.status == b.status) &&
+     (a.solution == b.solution) && (a.iter == b.iter) &&
+     (a.p == b.p) && (a.f == b.f) && (a.outliers == b.outliers))
