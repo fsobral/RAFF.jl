@@ -136,18 +136,18 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                 x = zeros(Float64, n)
                 
                 # Call function and store results
-                s, x, iter, p_, f = lmlovo(model, gmodel!, x, data, n, k)
+                rout = lmlovo(model, gmodel!, x, data, n, k)
                 
-                if f < wbestf
+                if rout.f < wbestf
                     
                     # Send asynchronously the result to channel if success
-                    if s == 1
+                    if rout.status == 1
 
                         @async try
                             
-                            put!(bqueue, x)
+                            put!(bqueue, rout.solution)
                             
-                            @debug("Added new point to queue.", x, f)
+                            @debug("Added new point to queue.", rout.solution, rout.f)
 
                         catch e
 
@@ -159,9 +159,9 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                     end
                     
                     # Save best
-                    wbestx .= x
-                    wbestf  = f
-                    ws      = s
+                    wbestx .= rout.solution
+                    wbestf  = rout.f
+                    ws      = rout.status
                     
                 end
 
