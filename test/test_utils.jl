@@ -98,7 +98,37 @@ end
 
     end
 
-    @test (np - p) >= nNoise
-    @test np == nLines        
+    @test (np - p) == nNoise
+    @test np == nLines
+
+    @testset "Unique" begin
+
+        @test length(RAFF.get_unique_random_points(5,  2)) == 2
+
+        @test length(RAFF.get_unique_random_points(0, -1)) == 0
+
+        @test length(RAFF.get_unique_random_points(5,  0)) == 0
+
+        @test length(RAFF.get_unique_random_points(1,  2)) == 1
+
+        v = RAFF.get_unique_random_points(5, 5)
+
+        @test length(v) == 5
+
+        cnt = 0
+        
+        for i = 1:length(v)
+            
+            (i in v) && (cnt += 1)
+
+        end
+
+        @test cnt == 5
+
+        @test length(RAFF.get_unique_random_points(1, -1)) == 0
+        
+        @test length(RAFF.get_unique_random_points(-1, 1)) == 0
+
+    end
     
 end

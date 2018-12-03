@@ -19,6 +19,8 @@ include("utils.jl")
 
 include("dutils.jl")
 
+include("generator.jl")
+
 """
     lmlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
