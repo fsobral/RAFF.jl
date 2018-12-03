@@ -5,12 +5,12 @@ export generateTestProblems, generateNoisyData
 const model_list = Dict(
     "linear" => (2, (x, t) -> x[1] * t + x[2],
                  "(x, t) -> x[1] * t + x[2]"),
-    "cubic" => (2, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
+    "cubic" => (4, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
                 "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]"),
     "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t),
                 "(x, t) -> x[1] + x[2] * exp(- x[3] * t)"),
-    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4]))),
-                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4])))")
+    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t + x[4])),
+                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t + x[4]))")
 )
 
 
@@ -44,6 +44,8 @@ function generateTestProblems(datFilename::String,
                               n::Int, np::Int, p::Int;
                               tMin=-10.0, tMax=10.0,
                               xSol=10.0 * randn(n), std=200.0, outTimes=7.0)
+
+    # Generate solution file
     
     open(solFilename, "w") do sol
     
@@ -55,35 +57,25 @@ function generateTestProblems(datFilename::String,
 
     end
 
-    # Points selected to be outliers
-    v = get_unique_random_points(np, np - p)
+    # Generate data file
     
-    # Generate (ti,yi) where tMin <= t_i <= tMax (data)
-    t = [tMin:(tMax - tMin) / (np - 1):tMax;]
+    open(datFilename, "w") do data
     
-    data = open(datFilename, "w")
+        vdata, xsol, outliers = generateNoisyData(model, n, np, p;
+                                   tMin=tMin, tMax=tMax, xSol=xSol,
+                                   std=std, outTimes=outTimes)
+    
+        # Dimension of the domain of the function to fit
+        @printf(data, "%d\n", 1)
 
-    # Dimension of the domain of the function to fit
-    @printf(data, "%d\n", 1)
-    
-    # Add noise to some random points
-    for k = 1:np
-            
-        y = model(xSol, t[k]) + randn() * std
+        for k = 1:np
 
-        noise = 0.0
-            
-        if k in v 
-            y = model(xSol, t[k])
-            noise = outTimes * std * sign(randn())
+            @printf(data, "%20.15f %20.15f %1d\n",
+                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
+
         end
-            
-        @printf(data, "%20.15f %20.15f %1d\n",
-                t[k], y + noise, Int(k in v))
 
     end
-
-    close(data)
     
 end
 

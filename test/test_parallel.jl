@@ -15,7 +15,7 @@
 
     Random.seed!(123456789)
     
-    data, xSol = RAFF.generateNoisyData(model, n, np, p)
+    data, xSol, = RAFF.generateNoisyData(model, n, np, p; std=0.0)
 
     @testset "Updater" begin
 

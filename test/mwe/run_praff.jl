@@ -26,7 +26,7 @@ p = 70
 # Set the seed for generating the same data
 Random.seed!(123456789)
 
-data, xSol = RAFF.generateNoisyData(model, n, np, p)
+data, xSol, = RAFF.generateNoisyData(model, n, np, p)
 
 praff(model, gmodel!, data, n, MAXMS=2)
 

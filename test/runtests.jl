@@ -14,6 +14,6 @@ include("test_raff.jl")
 
 include("test_utils.jl")
 
-include("test_integration.jl")
-
 include("test_parallel.jl")
+
+include("test_integration.jl")
