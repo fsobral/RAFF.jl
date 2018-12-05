@@ -58,7 +58,9 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
     
-    npun = length(data[:, 1])
+    npun, = size(data)
+
+    @debug("Size of data matrix ", size(data))
     
     # Main function - the LOVO function
     LovoFun = let
@@ -66,44 +68,44 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         npun_::Int = npun
         
         ind::Vector{Int} = Vector{Int}(undef, npun_)
-
+        
         F::Vector{Float64} = Vector{Float64}(undef, npun_)
-
+        
         p_::Int = p
-
+        
         # Return a ordered set index and lovo value
         x -> begin
-        
-            for i = 1:npun_
-                F[i] = (model(x, data[i,1]) - data[i, 2])^2
+            
+            @views for i = 1:npun_
+                F[i] = (model(x, data[i,1:(end - 1)]) - data[i, end])^2
             end
             
             indF, orderedF = SortFun!(F, ind, p_)
             
             return indF, sum(orderedF)
         end
-
+        
     end
-
+    
     # Residue and Jacobian of residue
     val_res::Vector{Float64} = Vector{Float64}(undef, p)
-
+    
     jac_res::Array{Float64, 2} = Array{Float64}(undef, p, n)
     
-    # This function returns the residue and Jacobian of residue 
-    ResFun!(x::Vector{Float64}, ind,
-            r::Vector{Float64}, rJ::Array{Float64, 2}) = begin
-
-        k = 1
+    # This function returns the residue and Jacobian of residue
+    ResFun!(x::Vector{Float64}, ind, r::Vector{Float64},
+            rJ::Array{Float64, 2}) = begin
                 
-        for i in ind
-            t = data[i, 1]
-            r[k] = model(x, t) - data[i, 2]
-
+        for (k, i) in enumerate(ind)
+            
+            t = data[i, 1:(end - 1)]
+            
+            r[k] = model(x, t) - data[i, end]
+            
             v = @view(rJ[k, :])
+            
             gmodel!(x, t, v)
 
-            k = k + 1
         end
 
     end

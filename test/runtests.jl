@@ -16,4 +16,6 @@ include("test_utils.jl")
 
 include("test_parallel.jl")
 
+include("test_multivariate.jl")
+
 include("test_integration.jl")
