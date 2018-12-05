@@ -26,27 +26,45 @@ include("generator.jl")
            n::Int, p::Int [; kwargs...])
 
     lmlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
-           data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int])
+           data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int=200,
+           ε::Float64=10.0^-4])
 
 Fit the `n`-parameter model `model` to the data given by matrix
 `data`. The strategy is based on the LOVO function, which means that
-only `p` (0 < `p` <= `n`) points are trusted. The Levenberg-Marquardt
-algorithm is implemented in this version.
+only `p` (0 < `p` <= rows of `data`) points are trusted. The
+Levenberg-Marquardt algorithm is implemented in this version.
+
+Matriz `data` is the data to be fit. This matrix should be in the form
+
+    t11 t12 ... t1N y1
+    t21 t22 ... t2N y2
+    :
+
+where `N` is the dimension of the argument of the model
+(i.e. dimension of `t`).
 
 If 'x' is provided, the it is used as the starting point.
 
 The signature of function `model` should be given by
 
-    model(x::Vector{Float64}, t::Float64)
+    model(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray})
 
 where `x` is a `n`-dimensional vector of parameters and `t` is the
 argument. If the gradient of the model `gmodel!`
 
-    gmodel!(x::Vector{Float64}, t::Float64, g::Vector{Float64})
+    gmodel!(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray},
+            g::Vector{Float64})
 
 is not provided, then the function ForwardDiff.gradient! is called to
-compute it. **Note** that this choice has an impact in the
-computational performance of the algorithm.
+compute it.  **Note** that this choice has an impact in the
+computational performance of the algorithm. In addition, if
+ForwardDiff is being used, then one **MUST** remove the signature of
+vector `x` from the model.
+
+The optional arguments are
+
+  - `MAXITER`: maximum number of iterations
+  - `ε`: tolerance for the gradient of the function
 
 Returns a RAFFOutput object.
 
@@ -271,7 +289,8 @@ lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
          SEEDMS::Int=123456789, initguess=zeros(Float64, n))
 
     raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
-         MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n))
+         [MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n),
+          kwargs...])
 
 Robust Algebric Fitting Function (RAFF) algorithm. This function uses
 a voting system to automatically find the number of trusted data
@@ -279,18 +298,28 @@ points to fit the `model`.
 
   - `model`: function to fit data. Its signature should be given by
 
-      model(x, t)
+        model(x, t)
 
     where `x` is a `n`-dimensional vector of parameters and `t` is the
-    argument
+    multidimensional argument
+
   - `gmodel!`: gradient of the model function. Its signature should be
     given by
 
-      gmodel!(x, t, g)
+        gmodel!(x, t, g)
 
-    where `x` is a `n`-dimensional vector of parameters and `t` is the
-    argument and the gradient is written in `g`.
-  - `data`: data to be fit
+    where `x` is a `n`-dimensional vector of parameters, `t` is the
+    multidimensional argument and the gradient is written in `g`.
+
+  - `data`: data to be fit. This matrix should be in the form
+
+        t11 t12 ... t1N y1
+        t21 t22 ... t2N y2
+        :
+
+    where `N` is the dimension of the argument of the model
+    (i.e. dimension of `t`).
+
   - `n`: dimension of the parameter vector in the model function
 
 The optional arguments are
@@ -299,6 +328,7 @@ The optional arguments are
   - `SEEDMS`: integer seed for random multistart points
   - `initialguess`: a good guess for the starting point and for
     generating random points in the multistart strategy
+  - `kwargs...`: extra arguments sent to `lmlovo`
 
 Returns a RAFFOutput object with the best parameter found.
 
