@@ -305,7 +305,7 @@ Returns a RAFFOutput object with the best parameter found.
 """
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789, initguess=zeros(Float64, n))
+              SEEDMS::Int=123456789, initguess=zeros(Float64, n), kwargs...)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -331,7 +331,7 @@ function raff(model::Function, gmodel!::Function,
             x .= x .+ vbest.solution
         
             # Call function and store results
-            sols[ind] = lmlovo(model, gmodel!, x, data, n, i)
+            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; kwargs...)
 
             # Update the best point and functional value
             (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
