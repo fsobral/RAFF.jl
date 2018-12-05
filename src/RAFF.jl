@@ -328,14 +328,14 @@ The optional arguments are
   - `SEEDMS`: integer seed for random multistart points
   - `initialguess`: a good guess for the starting point and for
     generating random points in the multistart strategy
-  - `kwargs...`: extra arguments sent to `lmlovo`
+  - `ε`: gradient stopping criteria to `lmlovo`
 
 Returns a RAFFOutput object with the best parameter found.
 
 """
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789, initguess=zeros(Float64, n), kwargs...)
+              SEEDMS::Int=123456789, initguess=zeros(Float64, n), ε=1.0e-4)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -361,7 +361,7 @@ function raff(model::Function, gmodel!::Function,
             x .= x .+ vbest.solution
         
             # Call function and store results
-            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; kwargs...)
+            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; ε=ε)
 
             # Update the best point and functional value
             (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
