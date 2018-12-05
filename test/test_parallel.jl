@@ -2,10 +2,10 @@
 
     gmodel!(x, t_, g) = begin
         g[1] = 1.0
-        g[2] = t_
+        g[2] = t_[1]
     end
 
-    model(x, t) = x[1]  + x[2] * t
+    model(x, t) = x[1]  + x[2] * t[1]
 
     n = 2
 
@@ -16,6 +16,9 @@
     Random.seed!(123456789)
     
     data, xSol, = RAFF.generateNoisyData(model, n, np, p; std=0.0)
+
+    # Remove outlier information
+    data = data[:, 1:2]
 
     @testset "Updater" begin
 
@@ -275,12 +278,12 @@
 
     @testset "PRAFF" begin
 
-        model(x, t) = x[1] * exp(t * x[2])
+        model(x, t) = x[1] * exp(t[1] * x[2])
         
         gmodel!(x, t, g) = begin
             
-            g[1] = exp(t * x[2])
-            g[2] = t * x[1] * exp(t * x[2])
+            g[1] = exp(t[1] * x[2])
+            g[2] = t[1] * x[1] * exp(t[1] * x[2])
 
         end
 

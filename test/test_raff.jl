@@ -1,11 +1,11 @@
 @testset "Simple tests" begin
 
-    model(x, t) = x[1] * exp(t * x[2])
+    model(x, t) = x[1] * exp(t[1] * x[2])
 
     gmodel!(x, t, g) = begin
 
-        g[1] = exp(t * x[2])
-        g[2] = t * x[1] * exp(t * x[2])
+        g[1] = exp(t[1] * x[2])
+        g[2] = t[1] * x[1] * exp(t[1] * x[2])
 
     end
 
@@ -100,7 +100,7 @@
     
     @testset "Error in printing" begin
 
-        model(x, t) = x[1] * t^2 + x[2]
+        model(x, t) = x[1] * t[1]^2 + x[2]
 
         A = [ -2.0  5.00;
               -1.5  3.25;
