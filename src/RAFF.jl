@@ -358,10 +358,10 @@ function raff(model::Function, gmodel!::Function,
         
             # Starting point
             x = randn(seedMS, Float64, n)
-            x .= x .+ vbest.solution
+            # x .= x .+ vbest.solution
         
             # Call function and store results
-            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; ε=ε)
+            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; ε=ε, MAXITER=400)
 
             # Update the best point and functional value
             (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
