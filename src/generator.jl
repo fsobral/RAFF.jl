@@ -5,12 +5,12 @@ export generateTestProblems, generateNoisyData
 const model_list = Dict(
     "linear" => (2, (x, t) -> x[1] * t + x[2],
                  "(x, t) -> x[1] * t + x[2]"),
-    "cubic" => (4, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
-                "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]"),
+    "cubic" => (4, (x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4],
+                "(x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4]"),
     "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t),
                 "(x, t) -> x[1] + x[2] * exp(- x[3] * t)"),
-    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t + x[4])),
-                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t + x[4]))")
+    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4])),
+                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4]))")
 )
 
 
