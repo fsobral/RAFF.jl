@@ -3,12 +3,12 @@ export generateTestProblems, generateNoisyData
 # This dictionary represents the list of models used in the tests
 # Return the tuple (n, model, model_str)
 const model_list = Dict(
-    "linear" => (2, (x, t) -> x[1] * t + x[2],
-                 "(x, t) -> x[1] * t + x[2]"),
+    "linear" => (2, (x, t) -> x[1] * t[1] + x[2],
+                 "(x, t) -> x[1] * t[1] + x[2]"),
     "cubic" => (4, (x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4],
                 "(x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4]"),
-    "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t),
-                "(x, t) -> x[1] + x[2] * exp(- x[3] * t)"),
+    "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t[1]),
+                "(x, t) -> x[1] + x[2] * exp(- x[3] * t[1])"),
     "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4])),
                    "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4]))")
 )
@@ -27,11 +27,11 @@ Generate random data files for testing fitting problems.
   - `model` is the model function and `modelStr` is a string
     representing this model function, e.g.
 
-         model = (x, t) -> x[1] * t + x[2]
-         modelStr = "(x, t) -> x[1] * t + x[2]"
+         model = (x, t) -> x[1] * t[1] + x[2]
+         modelStr = "(x, t) -> x[1] * t[1] + x[2]"
 
-    where `x` represents the parameters (to be found) of the model and
-    `t` is the variable of the model.
+    where vector `x` represents the parameters (to be found) of the
+    model and vector `t` are the variables of the model.
   - `n` is the number of parameters
   - `np` is the number of points to be generated.
   - `p` is the number of trusted points to be used in the LOVO
