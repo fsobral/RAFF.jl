@@ -66,7 +66,10 @@
         rout = lmlovo(model, x, data, 2, 0)
 
         @test rout.status == 1
-        @test rout.iter == 1
+        @test rout.iter == 0
+        @test rout.f == 0
+        @test rout.outliers == [1:size(data)[1];]
+        @test rout.solution == x
 
         # lmlovo with function and gradient
 
@@ -92,7 +95,10 @@
         rout = lmlovo(model, gmodel!, x, data, 2, 0)
 
         @test rout.status == 1
-        @test rout.iter == 1
+        @test rout.iter == 0
+        @test rout.f == 0
+        @test rout.outliers == [1:size(data)[1];]
+        @test rout.solution == x
 
     end
 

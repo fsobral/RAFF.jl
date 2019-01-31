@@ -79,6 +79,8 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     npun, = size(data)
 
     @debug("Size of data matrix ", size(data))
+
+    (p == 0) && return RAFFOutput(1, x, 0, p, 0.0, [1:npun;])
     
     # Main function - the LOVO function
     LovoFun = let
