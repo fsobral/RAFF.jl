@@ -6,12 +6,12 @@ using Printf
 using Logging
 using Base.CoreLogging
 
-function run_raff(maxms=1, initguess=nothing)
+function run_lmlovo(p::Int, initguess=nothing)
     
     global_logger(ConsoleLogger(stdout, Logging.Error))
-    
-    n, model, modelstr = RAFF.model_list["logistic"]
 
+    n, model, modelstr = RAFF.model_list["logistic"]
+    
     open("/tmp/output.txt") do fp
         
         global N = parse(Int, readline(fp))
@@ -26,7 +26,7 @@ function run_raff(maxms=1, initguess=nothing)
 
     end
 
-    rsol = raff(model, data[:, 1:2], n; MAXMS=maxms, initguess=initguess, ε=1.0e-6)
+    rsol = lmlovo(model, initguess, data[:, 1:2], n, p)
     
     @printf("Solution found:
             fbest = %f
