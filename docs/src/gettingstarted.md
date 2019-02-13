@@ -59,12 +59,12 @@ A=[-2.0  5.0;
   -1.0  2.0 ;
   -0.5  1.25;
    0.0  1.0 ;
-   0.5  1.25;
+   0.5  2.55;
    1.0  2.0 ;
    1.5  3.25;
    2.0  5.0 ;]
 
-model(x,t)=x[1]*t^2+x[2]
+model(x,t)=x[1]*t[1]^2+x[2]
 ```
 
 After that, we can run raff:
@@ -73,5 +73,39 @@ After that, we can run raff:
 raff(model,A,2)
 ```
 
+The output is a `RAFFoutput type`, consequently is possible to handle with some atributes of this type. For example to acess only the parameters of solution, we can use
+
+```@repl 1
+output = raff(model,A,2)
+output.solution
+```
+
+Note that `RAFF algorithm` detects and ignores possible outliers. In order to see which points are outiliers, we can acess the `outliers` atribute.  
+
+```@repl 1
+output.outliers
+```
+
+More details about `RAFFoutput type` and others options can be obtained in [API section](api.md). 
 
 
+
+**Need to put something about Gradient Vector of the model**
+
+By default `RAFF` uses automatic differentiation, more specifically [ForwardDiff package](https://github.com/JuliaDiff/ForwardDiff.jl). But is possible to define and handle `RAFF` with gradient vector of model. For example, considering the above example, we have, 
+
+```math
+\nabla \varphi(x,t)=[t^2,1].
+```
+Programming this gradient and run raff we have
+
+```@repl 1
+gmodel(x,t,g)=begin
+g[1]=t[1]^2
+g[2]=1.0
+return g
+end
+
+raff(model,gmodel,A,2)
+```
+**Need to put something about multivariated models**
