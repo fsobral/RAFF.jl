@@ -143,3 +143,15 @@ function SortFun!(V::Vector{Float64}, ind::Vector{Int}, p::Int)
     return @view(ind[1:p]), @view(V[1:p])
     
 end
+
+function setRaffOutputLevel(level::LogLevel)
+
+    global raff_logger = ConsoleLogger(stdout, level)
+
+end
+
+function setLMOutputLevel(level::LogLevel)
+
+    global lm_logger = ConsoleLogger(stdout, level)
+
+end

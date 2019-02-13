@@ -1,6 +1,6 @@
-module RAFF
-
 __precompile__(false)
+
+module RAFF
 
 # Dependencies
 using Distributed
@@ -10,8 +10,16 @@ using Statistics
 using Printf
 using Random
 using SharedArrays
+using Logging
 
-export lmlovo, raff, praff
+export lmlovo, raff, praff, setRaffOutputLevel
+
+# Set RAFF logger
+raff_logger = ConsoleLogger(stdout, Logging.Error)
+
+lm_logger = ConsoleLogger(stdout, Logging.Error)
+
+# Load code
 
 include("raffoutput.jl")
 
@@ -78,7 +86,11 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     
     npun, = size(data)
 
-    @debug("Size of data matrix ", size(data))
+    with_logger(lm_logger) do
+        
+        @debug("Size of data matrix ", size(data))
+
+    end
 
     (p == 0) && return RAFFOutput(1, x, 0, p, 0.0, [1:npun;])
     
@@ -168,12 +180,16 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     
     while (ngrad_lovo >= ε) && (safecount < MAXITER)
 
-        @info("Iteration $(safecount)")
-        @info("  Current value:   $(best_val_lovo)")
-        @info("  ||grad_lovo||_2: $(ngrad_lovo)")
-        @info("  Current iterate: $(x)")
-        @info("  Best indices (first $(maxoutind)): $(ind_lovo[1:maxoutind])")
-        @info("  lambda: $(λ)")
+        with_logger(lm_logger) do
+
+            @info("Iteration $(safecount)")
+            @info("  Current value:   $(best_val_lovo)")
+            @info("  ||grad_lovo||_2: $(ngrad_lovo)")
+            @info("  Current iterate: $(x)")
+            @info("  Best indices (first $(maxoutind)): $(ind_lovo[1:maxoutind])")
+            @info("  lambda: $(λ)")
+
+        end
 
         G .= Id
 
@@ -192,9 +208,13 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             "error"
         end
         if ad == "error" #restarting if lapack fails
-            @warn "Failed to solve the linear system. Will try new point."
-            d .= - 1.0 .* grad_lovo 
-            x .= rand(n)
+            with_logger(lm_logger) do
+            
+                @warn "Failed to solve the linear system. Will try new point."
+                d .= - 1.0 .* grad_lovo 
+                x .= rand(n)
+                
+            end
         else 
             d .= ad
         end
@@ -216,14 +236,22 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
 
             ngrad_lovo = norm(grad_lovo, 2)
-            
-            @info("  Better function value found, lambda changed to $(λ).")
+
+            with_logger(lm_logger) do
+                
+                @info("  Better function value found, lambda changed to $(λ).")
+
+            end
             
         else
 
             λ = λ * λ_up
-            
-            @info("  No improvement, lambda changed to $(λ).")
+
+            with_logger(lm_logger) do
+
+                @info("  No improvement, lambda changed to $(λ).")
+
+            end
             
         end
 
@@ -232,29 +260,41 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     end
     
     if safecount == MAXITER
-        @info("No solution was found in $(safecount) iterations.")
+        with_logger(lm_logger) do
+            
+            @info("No solution was found in $(safecount) iterations.")
+
+        end
         status = 0
     end
 
     # TODO: Create a test for this case
     if isnan(ngrad_lovo)
-        @info("Incorrect value for gradient norm $(ngrad_lovo).")
+        with_logger(lm_logger) do
+
+            @info("Incorrect value for gradient norm $(ngrad_lovo).")
+
+        end
         status = 0
     end
 
     outliers = [1:npun;]
     setdiff!(outliers, ind_lovo)
-    
-    @info("""
 
-    Final iteration (STATUS=$(status))
-      Solution found:       $(x)
-      ||grad_lovo||_2:      $(ngrad_lovo)
-      Function value:       $(best_val_lovo)
-      Number of iterations: $(safecount)
-      Outliers:             $(outliers)
+    with_logger(lm_logger) do
+
+        @info("""
+
+        Final iteration (STATUS=$(status))
+          Solution found:       $(x)
+          ||grad_lovo||_2:      $(ngrad_lovo)
+          Function value:       $(best_val_lovo)
+          Number of iterations: $(safecount)
+          Outliers:             $(outliers)
     
-    """)
+        """)
+
+    end
     
     return RAFFOutput(status, x, safecount, p, best_val_lovo, outliers)
 
@@ -355,9 +395,13 @@ function raff(model::Function, gmodel!::Function,
         ind = i - pliminf + 1
         
         for j = 1:MAXMS
+
+            with_logger(raff_logger) do
+                
+                @debug("Running lmlovo for p = $(i). Repetition $(j).")
+                
+            end
             
-            @debug("Running lmlovo for p = $(i). Repetition $(j).")
-        
             # Starting point
             x = randn(seedMS, Float64, n)
             # x .= x .+ vbest.solution
@@ -377,7 +421,11 @@ function raff(model::Function, gmodel!::Function,
     # Remove possible stationary points, i.e., points with lower
     # values for 'p' and higher 'f'.
 
-    eliminate_local_min!(model, data, sols)
+    with_logger(raff_logger) do
+        
+        eliminate_local_min!(model, data, sols)
+
+    end
 
     # Voting strategy
     
@@ -418,13 +466,17 @@ function raff(model::Function, gmodel!::Function,
         threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
 
     elseif n_conv == 0
-        
-        @warn("No convergence for any 'p'. Returning largest.")
+
+        with_logger(raff_logger) do
+            
+            @warn("No convergence for any 'p'. Returning largest.")
+
+        end
 
     end
     
     votsis = zeros(lv)
-    @debug("Threshold: $(threshold)")
+    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
 
     # Actual votation
     
@@ -439,9 +491,13 @@ function raff(model::Function, gmodel!::Function,
             end
         end
     end
-    
-    @debug("Voting vector:", votsis)
-    @debug("Distance matrix:", dmatrix)
+
+    with_logger(raff_logger) do
+
+        @debug("Voting vector:", votsis)
+        @debug("Distance matrix:", dmatrix)
+
+    end
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
@@ -549,13 +605,21 @@ function praff(model::Function, gmodel!::Function,
 
         catch e
 
-            @warn("Tasks queue prematurely closed while inserting tasks. Will exit.")
+            with_logger(raff_logger) do
+
+                @warn("Tasks queue prematurely closed while inserting tasks. Will exit.")
+
+            end
 
             break
 
         end
 
-        @debug("Added problem $(p) to tasks queue.")
+        with_logger(raff_logger) do
+
+            @debug("Added problem $(p) to tasks queue.")
+
+        end
                 
     end
 
@@ -563,7 +627,11 @@ function praff(model::Function, gmodel!::Function,
     # read, due to the size 0 of this channel
     close(tqueue)
 
-    @debug("Waiting for workers to finish.")
+    with_logger(raff_logger) do
+        
+        @debug("Waiting for workers to finish.")
+
+    end
 
     for f in futures
 
@@ -573,8 +641,12 @@ function praff(model::Function, gmodel!::Function,
 
         catch e
 
-            @error("Error in consumer for worker $(f.where)", e)
+            with_logger(raff_logger) do
 
+                @error("Error in consumer for worker $(f.where)", e)
+
+            end
+            
         end
         
     end
@@ -593,11 +665,15 @@ function praff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
 
-    @info("""Solution from PRAFF:
-    x= $(v[:, mainind])
-    f= $(vf[mainind])
-    p= $(pliminf + mainind - 1)
-    """)
+    with_logger(raff_logger) do
+
+        @info("""Solution from PRAFF:
+        x= $(v[:, mainind])
+        f= $(vf[mainind])
+        p= $(pliminf + mainind - 1)
+        """)
+
+    end
     
     return v[:, mainind], vf[mainind], pliminf + mainind - 1
     
