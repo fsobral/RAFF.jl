@@ -1,5 +1,10 @@
-## Getting Started
+# Tutorial
 
+```@setup docrepl
+using Logging
+using Base.CoreLogging
+global_logger(ConsoleLogger(stdout, Logging.Error))
+```
 ## Installation
 
 This package is supported just for Julia version 1.0. Consequently, 
@@ -48,12 +53,12 @@ consider ``A_{6,2}=2.55``. Assuming the model for fitting given by
 we have by classical least square as result `x=[0.04333,2.8111]`. But when we consider RAFF algorithm we obtain the correct answer `x=[1.0,1.0]`. Moreover, we have the number of possible outliers and which they are.
 
 In order to get run RAFF algorithm we need to setup 
-```@repl 1
+```@repl docrepl
 using RAFF
 ``` 
 and define the dataset and model:
 
-```@repl 1
+```@repl docrepl
 A=[-2.0  5.0; 
   -1.5  3.25;
   -1.0  2.0 ;
@@ -69,28 +74,25 @@ model(x,t)=x[1]*t[1]^2+x[2]
 
 After that, we can run raff:
 
-```@repl 1
+```@repl docrepl
 raff(model,A,2)
 ```
 
 The output is a `RAFFoutput type`, consequently is possible to handle with some atributes of this type. For example to acess only the parameters of solution, we can use
 
-```@repl 1
+```@repl docrepl
 output = raff(model,A,2)
 output.solution
 ```
 
 Note that `RAFF algorithm` detects and ignores possible outliers. In order to see which points are outiliers, we can acess the `outliers` atribute.  
 
-```@repl 1
+```@repl docrepl
 output.outliers
 ```
 
 More details about `RAFFoutput type` and others options can be obtained in [API section](api.md). 
 
-
-
-**Need to put something about Gradient Vector of the model**
 
 By default `RAFF` uses automatic differentiation, more specifically [ForwardDiff package](https://github.com/JuliaDiff/ForwardDiff.jl). But is possible to define and handle `RAFF` with gradient vector of model. For example, considering the above example, we have, 
 
@@ -99,7 +101,7 @@ By default `RAFF` uses automatic differentiation, more specifically [ForwardDiff
 ```
 Programming this gradient and run raff we have
 
-```@repl 1
+```@repl docrepl
 gmodel(x,t,g)=begin
 g[1]=t[1]^2
 g[2]=1.0
@@ -108,4 +110,8 @@ end
 
 raff(model,gmodel,A,2)
 ```
-**Need to put something about multivariated models**
+
+## Multivariated models
+
+## Parallel running
+
