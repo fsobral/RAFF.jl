@@ -77,7 +77,7 @@ After that, we can run raff:
 ```@repl docrepl
 raff(model,A,2)
 ```
-
+The number `2` above is the number of variables in model.
 The output is a `RAFFoutput type`, consequently is possible to handle with some atributes of this type. For example to acess only the parameters of solution, we can use
 
 ```@repl docrepl
@@ -111,7 +111,62 @@ end
 raff(model,gmodel,A,2)
 ```
 
-## Multivariated models
+## Multivariate models
+
+`RAFF` supports fits to data sets of different sizes. To illustrate how this works, consider the following example:
+
+```@repl docrepl
+    data = [1.0 1.0   2.0
+            0.0 0.0   4.0
+            7.0 1.5  -4.5
+            2.0 2.0 -17.0 # outlier
+            0.0 8.6  -4.6]
+```
+and the following model
+
+```@repl docrepl
+    model(x, t) = x[1]*t[1] + x[2] * t[2] + x[3]            
+```
+
+Note that this model has two variables ``(t_1,t_2)``. Naturally, this problem has one outlier (`data[4,:]`), so there are 4 trust points. Let's run `RAFF` and check the answer. 
+
+```@repl docrepl
+    output = raff(model,data, 3)
+```
+
+The right answer is `[- 1.0, - 1.0, 4.0]`. As we can note `RAFF` get a good fit for the data set.
+
+Handling the output follows the same pattern as the one-dimensional case. 
+
+In order to get improvements in processing time, we can code the gradient vector of model to.
+
+```@repl docrepl
+    gmodel(x, t,g) = begin 
+        g[1] = t[1]
+        g[2] = t[2]
+        g[3] = 1.0
+        return g
+    end
+```
+```@repl docrepl
+    output = raff(model,data, 3)
+```
+
+
+## Changing some options
+
+Naturally, `RAFF` has options like precision of gradient stopping criteria and initial guess. 
+
+```@repl docrepl
+    output = raff(model,data, 3;initguess=[0.5,0.5,0.5],ε=1.0e-4)
+```
+
+RAFF is based on an optimization method. In this way, it is subject to stop at stationary points that are not global minimizers. For this reason, heuristics were implemented to find global minimizers. Such heuristics depend on random number generation. So if you want to run tests with more reliability this can be a useful strategy. To define in RAFF, say, 1000 different starting points, is enough to redefine the keyword argument `MAXMS`.
+
+```@repl docrepl
+    output = raff(model,data, 3;MAXMS=1,initguess=[0.5,0.5,0.5],ε=1.0e-10)
+```
+
 
 ## Parallel running
 
