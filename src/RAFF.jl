@@ -580,21 +580,23 @@ function praff(model::Function, gmodel!::Function,
     # This command selects only nodes which are local to myid()
     local_workers = intersect(workers(), procs(myid()))
     futures = Vector{Future}(undef, length(local_workers))
-    
-    # Start updater Task
-    @async update_best(bqueue, bestx)
 
+    # Start updater Task
+    @async with_logger(()-> update_best(bqueue, bestx), raff_logger)
+        
     # Start workers Tasks (CPU intensive)
     for (i, t) in enumerate(local_workers)
 
-        futures[i] = @spawnat(t, consume_tqueue( bqueue, tqueue,
-            bestx, v, vs, vf, model, gmodel!, data, n, pliminf,
-            plimsup, MAXMS, seedMS ))
+        futures[i] = @spawnat(t, with_logger( ()->
+            consume_tqueue(bqueue, tqueue,
+                           bestx, v, vs, vf, model, gmodel!, data, n, pliminf,
+                           plimsup, MAXMS, seedMS), raff_logger
+        ))
         
     end
 
     # Check asynchronously if there is at least one live worker
-    @async check_and_close(bqueue, tqueue, futures)
+    @async with_logger(()->check_and_close(bqueue, tqueue, futures), raff_logger)
 
     # Populate the task queue with jobs
     for p = pliminf:batches:plimsup
