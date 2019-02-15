@@ -73,67 +73,62 @@
 
         tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
-        bestx = SharedArray{Float64, 1}(n)
-
-        bestx .= 0.0
-
-        v = SharedArray{Float64, 2}(n, 6)
-        vf = SharedArray{Float64, 1}(6)
-        vs = SharedArray{Int, 1}(6)
+        squeue = RemoteChannel(() -> Channel{RAFFOutput}(0))
 
         seedMS = MersenneTwister(1234)
 
         MAXMS = 1
 
-        worker1 = @async RAFF.consume_tqueue(bqueue, tqueue,
-                        bestx, v, vs, vf, model, gmodel!, data,
-                        n, p - 2, np, MAXMS, seedMS)
+        worker1 = @async @test begin
+            RAFF.consume_tqueue(bqueue, tqueue, squeue,
+                                model, gmodel!, data, n, p - 2, np,
+                                MAXMS, seedMS)
+            true
+        end
 
         @test !istaskdone(worker1)
 
-        # Should not do anything
+        # Should not do anything for an invalid interval
         put!(tqueue, p - 3:p)
 
+        @test !isready(squeue)
+
         # Should work, since the problem is easy
-        vs[1] = 0
-        
         put!(tqueue, p - 2:p - 2)
 
-        x = take!(bqueue)
-
-        sleep(0.2)
+        # Should return a vector with 1 solution pair
+        rout = take!(squeue)
 
         @test !istaskdone(worker1)
-        @test x == v[:, 1]
-        @test vs[1] == 1
+        @test rout.p == p - 2
+        @test rout.status == 1
 
         # Another test, with different p
         
-        bestx .= xSol
-
         put!(tqueue, p:p)
 
-        x2 = take!(bqueue)
+        rout = take!(squeue)
 
-        sleep(0.1)
-
-        @test vs[3] == 1
-        @test vf[3] ≈ 0.0 atol=1.0e-1
-        @test v[:, 3] ≈ xSol atol=1.0e-1
-        @test v[:, 3] == x2
+        @test rout.p == p
+        @test rout.status == 1
+        @test rout.f ≈ 0.0 atol=1.0e-1
+        @test rout.solution ≈ xSol atol=1.0e-1
 
         # Test with interval
 
-        vs[2] = 0
-        vs[3] = 0
-        
         put!(tqueue, p - 1:p)
 
-        sleep(0.2)
-        
-        @test vs[2:3] == [1, 1]
-        @test v[:, 2] == take!(bqueue)
-        @test v[:, 3] == take!(bqueue)
+        rout = take!(squeue)
+
+        @test rout.status == 1
+        @test rout.p == p - 1
+
+        rout = take!(squeue)
+
+        @test rout.status == 1
+        @test rout.p == p
+
+        @test !isready(squeue)
 
         # Check if worker is alive when bqueue is closed
 
@@ -141,8 +136,8 @@
 
         put!(tqueue, p:p)
 
-        sleep(0.1)
-        
+        take!(squeue)
+
         @test !istaskdone(worker1)
 
         # Check if worker finishes when tqueue is closed
@@ -153,6 +148,33 @@
 
         @test istaskdone(worker1)
 
+        #  Worker should die if solution queue is closed
+
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
+
+        seedMS = MersenneTwister(1234)
+
+        MAXMS = 1
+
+        worker2 = @async @test begin
+            RAFF.consume_tqueue(bqueue, tqueue, squeue,
+                                model, gmodel!, data, n, p - 2, np,
+                                MAXMS, seedMS)
+            true
+        end
+
+        @test !istaskdone(worker2)
+
+        close(squeue)
+
+        put!(tqueue, p:p)
+
+        sleep(0.1)
+
+        @test !isready(tqueue)
+
+        @test istaskdone(worker2)
+
     end
 
     @testset "Consumer Multistart" begin
@@ -161,28 +183,26 @@
 
         tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
-        bestx = SharedArray{Float64, 1}(n)
-
-        bestx .= 0.0
-
-        v = SharedArray{Float64, 2}(n, 6)
-        vf = SharedArray{Float64, 1}(6)
-        vs = SharedArray{Int, 1}(6)
+        squeue = RemoteChannel(() -> Channel{RAFFOutput}(0))
 
         seedMS = MersenneTwister(1234)
 
         MAXMS = 1
 
-        worker1 = @async RAFF.consume_tqueue(bqueue, tqueue,
-                         bestx, v, vs, vf, model, gmodel!, data,
-                         n, p - 2, np, MAXMS, seedMS)
+        # Check if the worker dies after closing the task queue
 
+        worker1 = @async @test begin
+            RAFF.consume_tqueue(bqueue, tqueue, squeue,
+                                model, gmodel!, data, n, p - 2, np,
+                                MAXMS, seedMS)
+            true
+        end
 
         put!(tqueue, p:p)
 
-        take!(bqueue)
-        
         close(tqueue)
+
+        rout1 = take!(squeue)
 
         sleep(0.1)
 
@@ -191,19 +211,22 @@
         # Save the objective function found and run multistart
         # strategy with the same initial random generator
         
-        f1 = vf[3]
-
         tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
         MAXMS = 3
 
         seedMS = MersenneTwister(1234)
 
-        worker = @async RAFF.consume_tqueue(bqueue, tqueue,
-                        bestx, v, vs, vf, model, gmodel!, data,
-                        n, p - 2, np, MAXMS, seedMS)
+        worker = @async @test begin
+            RAFF.consume_tqueue(bqueue, tqueue, squeue,
+                                model, gmodel!, data, n, p - 2, np,
+                                MAXMS, seedMS)
+            true
+        end
 
         put!(tqueue, p:p)
+
+        rout2 = take!(squeue)
 
         close(tqueue)
 
@@ -213,7 +236,8 @@
         
         # Should find a better point
         
-        @test f1 >= vf[3]
+        @test rout1.f >= rout2.f
+        @test rout1.p == rout2.p
         @test istaskdone(worker)
         
     end
@@ -228,6 +252,8 @@
         
         tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
+        squeue = RemoteChannel(() -> Channel{RAFFOutput}(0))
+
         futures = Vector{Future}(undef, nworkers)
 
         for i = 1:nworkers
@@ -236,16 +262,19 @@
 
         end
 
-        RAFF.check_and_close(bqueue, tqueue, futures)
+        RAFF.check_and_close(bqueue, tqueue, squeue, futures)
 
         @test !isopen(bqueue)
         @test !isopen(tqueue)
+        @test !isopen(squeue)
 
         # Test if there is at least one live worker
 
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
         
         tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
+
+        squeue = RemoteChannel(() -> Channel{RAFFOutput}(0))
 
         futures = Vector{Future}(undef, nworkers)
 
@@ -257,22 +286,45 @@
 
         futures[nworkers] = @spawn take!(tqueue)
 
-        RAFF.check_and_close(bqueue, tqueue, futures)
+        RAFF.check_and_close(bqueue, tqueue, squeue, futures)
 
         @test isopen(bqueue)
         @test isopen(tqueue)
+        @test isopen(squeue)
 
         put!(tqueue, 1:1)
 
-        sleep(0.1)
+        RAFF.check_and_close(bqueue, tqueue, squeue, futures)
 
-        close(bqueue)
-
-        close(tqueue)
-
-        @test fetch(futures[nworkers]) == 1:1
         @test !isopen(bqueue)
         @test !isopen(tqueue)
+        @test !isopen(squeue)
+
+        # Ensure that this checker does not closes the queue if the
+        # workers have finished their job very fast
+
+        bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(4))
+
+        tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
+
+        squeue = RemoteChannel(() -> Channel{RAFFOutput}(0))
+
+        futures = Vector{Future}(undef, nworkers)
+
+        for i = 1:nworkers
+
+            futures[i] = @spawn(nothing)
+
+        end
+
+        # Simulates the case where all the tasks have already been
+        # taken
+        close(tqueue)
+
+        RAFF.check_and_close(bqueue, tqueue, squeue, futures)
+
+        @test isopen(bqueue)
+        @test isopen(squeue)
         
     end
 
@@ -314,25 +366,25 @@
 
         # Regular test
         
-        x, f, p = praff(model, data, 2)
+        rout = praff(model, data, 2)
         
-        @test x ≈ answer atol=1.0e-5
-        @test p == 18
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
         
-        x, f, p = praff(model, gmodel!, data, 2)
+        rout = praff(model, gmodel!, data, 2)
 
-        fgood = f
+        fgood = rout.f
         
-        @test x ≈ answer atol=1.0e-5
-        @test p == 18
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
 
         # Multistart test
 
-        x, f, p = praff(model, data, 2; MAXMS=2)
+        rout = praff(model, data, 2; MAXMS=2)
         
-        @test x ≈ answer atol=1.0e-5
-        @test p == 18
-        @test f >= fgood
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+        @test rout.f <= fgood
         
     end
     

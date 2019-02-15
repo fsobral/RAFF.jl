@@ -549,7 +549,7 @@ The optional arguments are
   - `initguess`: starting point to be used in the multistart procedure
   - `ε`: stopping tolerance
 
-Returns a [RaffOutput](@ref) object containing the solution.
+Returns a [RAFFOutput](@ref) object containing the solution.
 
 """
 function praff(model::Function, gmodel!::Function,
@@ -562,48 +562,50 @@ function praff(model::Function, gmodel!::Function,
     
     pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
-
-    nInfo = plimsup - pliminf + 1
-    
-    v = SharedArray{Float64, 2}(n, nInfo)
-    vf = SharedArray{Float64, 1}(nInfo)
-    vs = SharedArray{Int, 1}(nInfo)
-    bestx = SharedArray{Float64, 1}(n)
-
-    vs .= 0
+    lv = plimsup - pliminf + 1
     
     # Create a RemoteChannel to receive solutions
-    bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(div(nInfo, 2)))
+    bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(div(lv, 2)))
+    # TODO: Check a smart way for not creating a large channel
+    squeue = RemoteChannel(() -> Channel{RAFFOutput}(lv))
     # Create another channel to assign tasks
     tqueue = RemoteChannel(() -> Channel{UnitRange{Int}}(0))
 
     # This command selects only nodes which are local to myid()
-    local_workers = intersect(workers(), procs(myid()))
-    futures = Vector{Future}(undef, length(local_workers))
+    curr_workers = workers()
+
+    futures = Vector{Future}(undef, length(curr_workers))
 
     # Start updater Task
-    @async with_logger(()-> update_best(bqueue, bestx), raff_logger)
+    # This task is not needed up to now.
+    # @async with_logger(()-> update_best(bqueue, bestx), raff_logger)
         
     # Start workers Tasks (CPU intensive)
-    for (i, t) in enumerate(local_workers)
+    for (i, t) in enumerate(curr_workers)
 
-        futures[i] = @spawnat(t, with_logger( ()->
-            consume_tqueue(bqueue, tqueue,
-                           bestx, v, vs, vf, model, gmodel!, data, n, pliminf,
-                           plimsup, MAXMS, seedMS), raff_logger
+        futures[i] = @spawnat(t, with_logger( ()-> try
+                                              
+            consume_tqueue(bqueue, tqueue, squeue,
+                           model, gmodel!, data, n, pliminf,
+                           plimsup, MAXMS, seedMS)
+            catch e
+                                              
+               @error("Unable to start worker $(t).", e)
+
+            end, raff_logger
         ))
         
     end
 
     # Check asynchronously if there is at least one live worker
-    @async with_logger(()->check_and_close(bqueue, tqueue, futures), raff_logger)
+    @async with_logger(()->check_and_close(bqueue, tqueue, squeue, futures), raff_logger)
 
     # Populate the task queue with jobs
     for p = pliminf:batches:plimsup
 
         try
             
-            put!(tqueue, p:min(plimsup, p + batches))
+            put!(tqueue, p:min(plimsup, p + batches - 1))
 
         catch e
 
@@ -635,17 +637,28 @@ function praff(model::Function, gmodel!::Function,
 
     end
 
-    for f in futures
+    # Create a vector of solutions to store the results from workers
+    sols = Vector{RAFFOutput}(undef, lv)
+
+    for i in 1:lv
 
         try
 
-            wait(f)
+            rout = take!(squeue)
+
+            sols[rout.p - pliminf + 1] = rout
+
+            with_logger(raff_logger) do
+
+                @debug("Stored solution for p=$(rout.p).")
+
+            end
 
         catch e
 
             with_logger(raff_logger) do
 
-                @error("Error in consumer for worker $(f.where)", e)
+                @error("Error when retrieving solutions.", e)
 
             end
             
@@ -654,31 +667,86 @@ function praff(model::Function, gmodel!::Function,
     end
     
     close(bqueue)
+
+    close(squeue)
+
+    # Voting strategy
+
+    dvector = zeros(Int(lv * (lv - 1) / 2))
+    dmatrix = zeros(lv, lv)
+    pos = 0
+    n_conv = 0
+
+    for j = 1:lv
+
+        # Count how many have successfully converged
+        (sols[j].status == 1) && (n_conv += 1)
+
+        for i = j + 1:lv
+
+            dmatrix[i, j] = Inf
+
+            if sols[i].status == 1 && sols[j].status == 1
+
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
+
+                pos += 1
+
+                dvector[pos] = dmatrix[i, j]
+
+            end
+
+        end
+
+    end
+
+    threshold = Inf
+
+    if pos > 0
+
+        dvv = @view dvector[1:pos]
+
+        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
+
+    elseif n_conv == 0
+
+        with_logger(raff_logger) do
+            
+            @warn("No convergence for any 'p'. Returning largest.")
+
+        end
+
+    end
     
-    votsis = zeros(nInfo)
+    votsis = zeros(lv)
+
+    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
+
+    # Actual votation
     
-    for i = 1:nInfo
-        for j = 1:nInfo
-            if vs[i] == 1 && vs[j] == 1 && norm(v[:, i] - v[:, j]) < 10.0^(-3)
+    for j = 1:lv
+        # Count +1 if converged
+        (sols[j].status == 1) && (votsis[j] += 1)
+        # Check other distances
+        for i = j + 1:lv
+            if dmatrix[i, j] <=  threshold
+                votsis[j] += 1
                 votsis[i] += 1
             end
         end
     end
-    
-    mainind = findlast(x->x == maximum(votsis), votsis)
 
     with_logger(raff_logger) do
 
-        @info("""Solution from PRAFF:
-        x= $(v[:, mainind])
-        f= $(vf[mainind])
-        p= $(pliminf + mainind - 1)
-        """)
+        @debug("Voting vector:", votsis)
+        @debug("Distance matrix:", dmatrix)
 
     end
     
-    return v[:, mainind], vf[mainind], pliminf + mainind - 1
+    mainind = findlast(x->x == maximum(votsis), votsis)
     
+    return sols[mainind]
+
 end
 
 function praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)

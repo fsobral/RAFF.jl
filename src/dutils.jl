@@ -2,16 +2,17 @@
 # computing
 
 """
-
     update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
 
 Listen to a `channel` for results found by lmlovo. If there is an
 improvement for the objective function, the shared array `bestx` is
 updated.
 
-**Atention**: There might be an unstable state if there is a process
+**Attention**: There might be an unstable state if there is a process
   reading `bestx` while this function is updating it. This should not
   be a problem, since it is used as a starting point.
+
+**Attention 2**: this function is currently out of use.
 
 """
 function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
@@ -58,38 +59,31 @@ end
 
 """
 
-    consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
-                   bestx::SharedArray{Float64, 1},
-                   v::SharedArray{Float64, 2},
-                   vs::SharedArray{Int,1},
-                   vf::SharedArray{Float64, 1}, model::Function,
-                   gmodel!::Function, data::Array{Float64, 2}, n::Int,
-                   pliminf::Int, plimsup::Int, MAXMS::Int,
-                   seedMS::MersenneTwister)
+    function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
+                            squeue::RemoteChannel, model::Function, gmodel!::Function,
+                            data::Array{Float64, 2}, n::Int, pliminf::Int,
+                            plimsup::Int, MAXMS::Int, seedMS::MersenneTwister)
 
 This function represents one worker, which runs lmlovo in a multistart
 fashion.
 
 It takes a job from the RemoteChannel `tqueue` and runs `lmlovo`
-function to it. Saves the best results found to the shared arrays `v`
-(best solution), `vs` (convergence status) and `vf` (objective
-function value at the best solution). All the other arguments are the
-same for `praff` function.
+function to it. It might run using a multistart strategy, if
+`MAXMS>1`. It sends the best results found for each value obtained in
+`tqueue` to channel `squeue`, which will be consumed by the main
+process. All the other arguments are the same for [`praff`](@ref)
+function.
 
 """
 function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
-                        bestx::SharedArray{Float64, 1},
-                        v::SharedArray{Float64, 2},
-                        vs::SharedArray{Int, 1},
-                        vf::SharedArray{Float64, 1}, model::Function,
-                        gmodel!::Function, data::Array{Float64, 2},
-                        n::Int, pliminf::Int, plimsup::Int,
-                        MAXMS::Int, seedMS::MersenneTwister)
+                        squeue::RemoteChannel,
+                        model::Function, gmodel!::Function,
+                        data::Array{Float64, 2}, n::Int, pliminf::Int,
+                        plimsup::Int, MAXMS::Int,
+                        seedMS::MersenneTwister)
 
     @debug("Started worker $(myid())")
 
-    # my_bestx::Vector{Float64} = zeros(Float64, n)
-    
     while isopen(tqueue)
 
         p = try
@@ -120,66 +114,67 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
         end
 
         for k in p
+
+            wbest = RAFFOutput(0, [], -1, k, Inf, [])
         
-            # Starting point
-            wbestx = zeros(Float64, n)
-            wbestf = Inf
-            ws = 0
-            
             # Multi-start strategy
             for j = 1:MAXMS
 
                 # New random starting point
-                # x = randn(seedMS, n)
-                # x .= 10.0 .* x .+ my_bestx
-                # Best results with this one
-                x = zeros(Float64, n)
+                x = randn(seedMS, n)
                 
                 # Call function and store results
                 rout = lmlovo(model, gmodel!, x, data, n, k)
+
+                (rout.status == 1) && (rout.f < wbest.f) && (wbest = rout)
+
+                # This block is related to a strategy of smart
+                # starting points for the multistart
+                # process. Currently, it makes no sense to use it.
                 
-                if rout.f < wbestf
+                # if rout.f < wbest.f
                     
-                    # Send asynchronously the result to channel if success
-                    if rout.status == 1
+                #     # Send asynchronously the result to channel if success
+                #     if rout.status == 1
 
-                        @async try
+                #         @async try
                             
-                            put!(bqueue, rout.solution)
+                #             put!(bqueue, rout.solution)
                             
-                            @debug("Added new point to queue.", rout.solution, rout.f)
+                #             @debug("Added new point to queue.", rout.solution, rout.f)
 
-                        catch e
+                #         catch e
 
-                            @warn(string("Problems when saving best point found in queue. ",
-                                         "Will skip this step"), e)
+                #             @warn(string("Problems when saving best point found in queue. ",
+                #                          "Will skip this step"), e)
 
-                        end
+                #         end
 
-                    end
+                #     end
                     
-                    # Save best
-                    wbestx .= rout.solution
-                    wbestf  = rout.f
-                    ws      = rout.status
-                    
+                # end
+
+            end
+
+            @debug("Finished. p = $(k) and f = $(wbest.f).")
+
+            try
+
+                put!(squeue, wbest)
+
+            catch e
+
+                if isa(e, InvalidStateException)
+
+                    @warn("Solution queue prematurely closed. Unable to save solution for p=$(k).")
+
+                    return
+
                 end
 
-            end
-
-            # @async my_bestx .= bestx
-
-            @async begin
-                
-                ind = k - pliminf + 1
-                
-                v[:, ind] .= wbestx
-                vf[ind]    = wbestf
-                vs[ind]    = ws
+                @warn("Something wrong when sending the solution to queue for p=$(k).", e)
 
             end
-
-            @debug("Finished. p = $(k) and f = $(wbestf). -> $(wbestx)")
 
         end
 
@@ -190,16 +185,18 @@ end
 """
 
     check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
-                    futures::Vector{Future}; secs::Float64=0.1)
+                    squeue::RemoteChannel, futures::Vector{Future};
+                    secs::Float64=0.1)
 
 Check if there is at least one worker process in the vector of
 `futures` that has not prematurely finished. If there is no alive
-worker, close task and best queues `tqueue` and `bqueue`,
-respectively.
+worker, close task, solution and best queues, `tqueue`, `squeue` and
+`bqueue`, respectively.
 
 """
 function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
-                         futures::Vector{Future}; secs::Float64=0.1)
+                         squeue::RemoteChannel, futures::Vector{Future};
+                         secs::Float64=0.1)
 
     n_alive = length(futures)
 
@@ -209,7 +206,7 @@ function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
         if timedwait(()->isready(f), secs) == :ok
 
-            @warn("Worker $(i) has finished prematurely.")
+            @warn("Worker $(i) seems to have finished prematurely.")
 
             n_alive -= 1
 
@@ -218,14 +215,17 @@ function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
     end
 
     @debug("Workers online: $(n_alive)")
-    
-    if n_alive == 0
+
+    # Only closes all queues if there are tasks to be completed
+    if n_alive == 0 && isopen(tqueue)
 
         @warn("No live worker found. Will close queues and finish.")
 
         close(bqueue)
 
         close(tqueue)
+
+        close(squeue)
 
     end
 
