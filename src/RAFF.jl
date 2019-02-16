@@ -12,7 +12,7 @@ using Random
 using SharedArrays
 using Logging
 
-export lmlovo, raff, praff, setRaffOutputLevel
+export lmlovo, raff, praff
 
 # Set RAFF logger
 raff_logger = ConsoleLogger(stdout, Logging.Error)
@@ -74,7 +74,7 @@ The optional arguments are
   - `MAXITER`: maximum number of iterations
   - `ε`: tolerance for the gradient of the function
 
-Returns a RAFFOutput object.
+Returns a [`RAFFOutput`](@ref) object.
 
 """
 function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
@@ -372,7 +372,7 @@ The optional arguments are
     generating random points in the multistart strategy
   - `ε`: gradient stopping criteria to `lmlovo`
 
-Returns a RAFFOutput object with the best parameter found.
+Returns a [`RAFFOutput`](@ref) object with the best parameter found.
 
 """
 function raff(model::Function, gmodel!::Function,
@@ -549,7 +549,7 @@ The optional arguments are
   - `initguess`: starting point to be used in the multistart procedure
   - `ε`: stopping tolerance
 
-Returns a [RAFFOutput](@ref) object containing the solution.
+Returns a [`RAFFOutput`](@ref) object containing the solution.
 
 """
 function praff(model::Function, gmodel!::Function,
@@ -581,9 +581,17 @@ function praff(model::Function, gmodel!::Function,
     # @async with_logger(()-> update_best(bqueue, bestx), raff_logger)
         
     # Start workers Tasks (CPU intensive)
+    with_logger(raff_logger) do
+
+        @debug("Workers", curr_workers)
+
+    end
+    
     for (i, t) in enumerate(curr_workers)
 
         futures[i] = @spawnat(t, with_logger( ()-> try
+
+            @debug("Creating worker $(t).")
                                               
             consume_tqueue(bqueue, tqueue, squeue,
                            model, gmodel!, data, n, pliminf,
@@ -594,11 +602,18 @@ function praff(model::Function, gmodel!::Function,
 
             end, raff_logger
         ))
-        
+
+        with_logger(raff_logger) do
+
+            @debug("Created worker $(t).")
+
+        end
     end
 
     # Check asynchronously if there is at least one live worker
-    @async with_logger(()->check_and_close(bqueue, tqueue, squeue, futures), raff_logger)
+    @async with_logger(
+        () -> check_and_close(bqueue, tqueue, squeue, futures),
+        raff_logger)
 
     # Populate the task queue with jobs
     for p = pliminf:batches:plimsup

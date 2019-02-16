@@ -206,7 +206,8 @@ function check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
         if timedwait(()->isready(f), secs) == :ok
 
-            @warn("Worker $(i) seems to have finished prematurely.")
+            @warn("Worker $(i) seems to have finished prematurely.",
+                  fetch(f))
 
             n_alive -= 1
 

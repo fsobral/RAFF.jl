@@ -1,3 +1,5 @@
+export setRAFFOutputLevel, setLMOutputLevel
+
 """
 
     eliminate_local_min!(sols::Vector{RAFFOutput})
@@ -144,12 +146,40 @@ function SortFun!(V::Vector{Float64}, ind::Vector{Int}, p::Int)
     
 end
 
-function setRaffOutputLevel(level::LogLevel)
+"""
+
+    setRAFFOutputLevel(level::LogLevel)
+
+Set the output level of [`raff`](@ref) and [`praff`](@ref) algorithms
+to the desired logging level. Options are (from highly verbose to just
+errors): `Logging.Debug`, `Logging.Info`, `Logging.Warn` and
+`Logging.Error`. The package
+[`Logging`](https://docs.julialang.org/en/v1.0/stdlib/Logging/index.html)
+needs to be loaded.
+
+Defaults to `Logging.Error`.
+
+"""
+function setRAFFOutputLevel(level::LogLevel)
 
     global raff_logger = ConsoleLogger(stdout, level)
 
 end
 
+"""
+
+    setLMOutputLevel(level::LogLevel)
+
+Set the output level of [`lmlovo`](@ref) algorithm to the desired
+logging level. Options are (from highly verbose to just errors):
+`Logging.Debug`, `Logging.Info`, `Logging.Warn` and
+`Logging.Error`. The package
+[`Logging`](https://docs.julialang.org/en/v1.0/stdlib/Logging/index.html)
+needs to be loaded.
+
+Defaults to `Logging.Error`.
+
+"""
 function setLMOutputLevel(level::LogLevel)
 
     global lm_logger = ConsoleLogger(stdout, level)
