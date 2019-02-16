@@ -1,9 +1,6 @@
 # Tutorial
 
 ```@setup docrepl
-using Logging
-using Base.CoreLogging
-global_logger(ConsoleLogger(stdout, Logging.Error))
 ```
 ## Installation
 
@@ -170,3 +167,71 @@ RAFF is based on an optimization method. In this way, it is subject to stop at s
 
 ## Parallel running
 
+`RAFF` can be run in a parallel or distributed environment, using the
+[Distributed](https://docs.julialang.org/en/v1.0/stdlib/Distributed/)
+package and function [`praff`](@ref). Let's use `praff` to solve the
+same problem from the beginning before. First, the Distributed has to
+be loaded and the number of workers is added. It is also possible to
+add the address of other machines.
+
+```
+using Distributed
+
+addprocs(3) # Add 3 worker processes
+```
+
+This step can be replaced if Julia is initialized with the `-p`
+option
+
+```
+julia -p 3
+```
+
+Now we have to load [`RAFF`](@ref Overview) and the fit function in all
+workers:
+
+```
+@everywhere using RAFF
+
+@everywhere function gmodel!(x, t, g)
+    g[1] = t[1]^2
+    g[2] = 1.0
+end
+
+@everywhere function model(x, t)
+   x[1] * t[1]^2 + x[2]
+end
+```
+
+then, we call [`praff`](@ref) to solve the problem (note that we do
+not need to send the `A` matrix to all workers, since it will be
+sent by `praff`).
+
+```
+A=[-2.0  5.0;
+  -1.5  3.25;
+  -1.0  2.0 ;
+  -0.5  1.25;
+   0.0  1.0 ;
+   0.5  2.55;
+   1.0  2.0 ;
+   1.5  3.25;
+   2.0  5.0 ;];
+
+n = 2
+
+output = praff(model, gmodel!, A, n)
+RAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])
+```
+
+The true effectiveness of parallelism occurs when option `MAXMS` is
+set, which changes the number of random initial points that are tried
+for each subproblem solved. Better solutions can be achieved with
+higher values of `MAXMS`
+
+```
+n = 2
+
+output = praff(model, gmodel!, A, n; MAXMS=1000)
+RAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])
+```

@@ -10,6 +10,8 @@ There are three main RAFF structures:
 lmlovo
 raff
 praff
+setRAFFOutputLevel
+setLMOutputLevel
 ```
 ## Auxiliary functions
 ```@docs
