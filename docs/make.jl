@@ -7,7 +7,7 @@ makedocs(
 	     "Tutorial"=> "tutorial.md",
 	     "API" => "api.md"],
     #html_prettyurls = false
-    format = Documenter.HTML(prettyurls = false),
+    #format = Documenter.HTML(prettyurls = false),
     modules = [RAFF]
 	)
 	
