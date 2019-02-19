@@ -11,3 +11,6 @@ makedocs(
     modules = [RAFF]
 	)
 	
+deploydocs(
+	repo = "github.com/fsobral/RAFF.jl.git"
+	)
