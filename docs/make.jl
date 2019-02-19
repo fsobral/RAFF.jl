@@ -1,4 +1,4 @@
-using Documenter, DocumenterTools, RAFF
+using Documenter, RAFF
 
 makedocs(
     assets = ["assets/favicon.ico"],
