@@ -47,7 +47,7 @@ consider ``A_{6,2}=2.55``. Assuming the model for fitting given by
 ```math
 \varphi(x,t)=x_1 t^2 +x_2 
 ```
-we have by classical least square as result `x=[0.04333,2.8111]`. But when we consider RAFF algorithm we obtain the correct answer `x=[1.0,1.0]`. Moreover, we have the number of possible outliers and which they are.
+we have by classical least square as result `x=[0.904329,1.3039]`. But when we consider RAFF algorithm we obtain the correct answer `x=[1.0,1.0]`. Moreover, we have the number of possible outliers and which they are.
 
 In order to get run RAFF algorithm we need to setup 
 ```@repl docrepl
