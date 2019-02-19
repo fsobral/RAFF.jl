@@ -30,11 +30,11 @@ Let us assume that we wish to find a fitting function given by parameters `x[1],
 
 where `f(t[i])≈A[i,2]` in the least square sense. When we apply a least square strategy we obtain
 
-<img src="/docs/src/assets/figura_RAFF_example.png"/>
+<img src="/docs/src/assets/figure_RAFF_example.png"/>
 
 and when we apply RAFF strategy we get
 
-<img src="/docs/src/assets/figura_least_square_example.png"/>
+<img src="/docs/src/assets/figure_least_square_example.png"/>
 
 Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RAFF detects the point `(0.5,2.55)` like an outilier and excludes the influence of this point for determine `f(t)`. 
 Consequently, RAFF detects the number of possible outliers and in the same time, which their are. This fact distinguishes RAFF from other techniques like [1] or classical least square.
