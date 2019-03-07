@@ -7,12 +7,12 @@ tags:
   - Outlier detection
   - Nonlinear optimization
 authors:
-  - name: Francisco N. C Sobral
+  - name: Francisco N. C. Sobral
     orcid: 0000-0003-4963-0946
     affiliation: 1
-  - name: Author 2
+  - name: Emerson V. Castelani
     orcid: 0000-0000-0000-0000
-    affiliation: 2
+    affiliation: 1
 affiliations:
  - name: Department of Mathematics, State University of Maringá, Paraná, Brazil
    index: 1
@@ -26,35 +26,30 @@ The adjustment of mathematical functions to data is a problem that
 appears in many areas of science. When data comes from real
 experiments, non-expected error may cause the appearance of
 outliers. Detection of outliers is always regarded as the statistical
-part of data adjustment. ``RAFF`` (Robust Algebraic Fitting Function) is
-a Julia package to the adjustment of mathematical models with
-automatic detection of outliers.
-
-``RAFF`` is based on algorithms for Lower Order-Value Optimization
-(LOVO) [@Andreani2009] to fit the given models. In order to find a
+part of data adjustment. ``RAFF`` (Robust Algebraic Fitting Function)
+is a Julia package to the adjustment of mathematical models with
+automatic detection of outliers. It is an optimization-based package,
+based on algorithms for Lower Order-Value Optimization (LOVO)
+[@Andreani2009] to fit the user-provided models. In order to find a
 robust adjustment, a voting system is used. The voting system is also
 responsible for the detection of possible outliers.
 
-``Gala`` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for ``Gala`` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. ``Gala`` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the ``Astropy`` package [@astropy] (``astropy.units`` and
-``astropy.coordinates``).
+``RAFF`` main methods expect as input a dataset of the observed data
+and a model function, whose parameters one intends to adjust. The user
+may also provide more information, such as the expected number of
+*trusted* observations. Additional methods and options are also
+available to more advanced users, such as generation of random test
+data and multistart strategies. It uses Julia's
+``ForwardDiff``[@ForwardDiff] package, so the user does not need to
+compute the derivatives of the model function. ``RAFF`` also has a
+parallel and distributed version, which uses the native
+``Distributed``[@Distributed] package. The distributed version is a
+centralized implementation that does not uses shared arrays,
+therefore, can be run both locally or in a cluster of heterogeneous
+computers.
 
-``Gala`` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in ``Gala`` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike. The source code for ``Gala`` has been
-archived to Zenodo with the linked DOI: [@zenodo]
+``RAFF`` is intended to be used by all experimental researchers who
+know a little about mathematical modeling and fitting functions.
 
 # Mathematics
 
