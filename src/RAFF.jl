@@ -371,19 +371,22 @@ The optional arguments are
   - `initialguess`: a good guess for the starting point and for
     generating random points in the multistart strategy
   - `ε`: gradient stopping criteria to `lmlovo`
+  - `noutliers`: integer describing the maximum expected number of
+    outliers. The default is *half*.
 
 Returns a [`RAFFOutput`](@ref) object with the best parameter found.
 
 """
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789, initguess=zeros(Float64, n), ε=1.0e-4)
+              SEEDMS::Int=123456789, initguess=zeros(Float64, n), ε=1.0e-4,
+              noutliers::Int=-1)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
 
-    pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
+    pliminf = (noutliers >= 0) ? plimsup - noutliers : Int(round(length(data[:, 1]) / 2.0))
     lv = plimsup - pliminf + 1
     
     sols = Vector{RAFFOutput}(undef, lv)
@@ -548,6 +551,8 @@ The optional arguments are
   - `batches`: size of batches to be send to each worker
   - `initguess`: starting point to be used in the multistart procedure
   - `ε`: stopping tolerance
+  - `noutliers`: integer describing the maximum expected number of
+    outliers. The default is *half*.
 
 Returns a [`RAFFOutput`](@ref) object containing the solution.
 
@@ -555,13 +560,13 @@ Returns a [`RAFFOutput`](@ref) object containing the solution.
 function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
                SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),
-               ε::Float64=1.0e-4)
+               ε::Float64=1.0e-4, noutliers::Int=-1)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
     
-    pliminf = Int(round(length(data[:, 1]) / 2.0))
     plimsup = length(data[:, 1])
+    pliminf = (noutliers >= 0) ? plimsup - noutliers : Int(round(length(data[:, 1]) / 2.0))
     lv = plimsup - pliminf + 1
     
     # Create a RemoteChannel to receive solutions
