@@ -100,20 +100,37 @@ $t_1$       $t_2$     $f(t_1, t_2)$
 -3.59619   -3.5961    0.0
 -------------------------------------
 
+In this example, we are trying to find a circle to fit the observed
+data. Therefore, all the values of $f$ should be zero. The observed
+data is shown in [Figure][#circle]. The dots represent the observed
+data, the red ones being the outliers. They were generated as a
+perturbation of the points lying in the blue dashed circle. Using the
+Least Squares technique with the model above, the red circle is
+found. When RAFF is applied to the same problem, it correctly
+identifies the two outliers. The resulting circle is depicted as the
+green circle, very close the true circle.
+
+![Points representing a circle. The red dots are two outliers that
+ should be ignored. The blue dashed circle is the true one, while the
+ red was obtained by traditional Least Squares techniques and the
+ green one was obtained by RAFF.](circle.png){#circle}
+
 # Additional features
 
- The user may also provide more information, such as the
+The user may also provide more information to ``RAFF``, such as the
 expected number of *trusted* observations. Additional methods and
 options are also available to more advanced users, such as generation
-of random test data and multistart strategies. It uses Julia's
-``ForwardDiff``[@ForwardDiff] package, so the user does not need to
-compute the derivatives of the model function.
+of random test data and multistart strategies. Derivatives of the
+model $\phi$ can also be provided, what results in a faster executing
+time. When they are not provided by the user, ``RAFF`` uses Julia's
+``ForwardDiff``[@Revels2016] package.
 
 ``RAFF`` can be run in serial, parallel and distributed
 environments. Parallel and distributed methods use the native
-``Distributed``[@Distributed] package. The distributed version is a
-centralized implementation that does not use shared arrays, therefore,
-can be run both locally or in a cluster of computers.
+[``Distributed``][https://docs.julialang.org/en/v1.0/stdlib/Distributed/]
+package. The distributed version is a centralized implementation that
+does not use shared arrays, therefore, can be run both locally or in a
+cluster of computers.
 
 This package is intended to be used by all experimental researchers
 who know a little about mathematical modeling and fitting functions.
