@@ -115,7 +115,8 @@ green circle, very close the true circle.
 ![Points representing a circle. The red dots are two outliers that
  should be ignored. The blue dashed circle is the true one, while the
  red was obtained by traditional Least Squares techniques and the
- green one was obtained by RAFF.](circle.png){#circle}
+ green one was obtained by RAFF.](circle.png){#circle width=50%,
+  height=50%}
 
 # Additional features
 
