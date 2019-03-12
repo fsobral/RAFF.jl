@@ -8,13 +8,13 @@ tags:
   - Nonlinear optimization
 authors:
   - name: Emerson V. Castelani
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0001-9718-6486
     affiliation: 1
   - name: Ronaldo Lopes
     orcid: 0000-0000-0000-0000
     affiliation: 1
   - name: Wesley V. I. Shirabayashi
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0002-7790-6703	
     affiliation: 1
   - name: Francisco N. C. Sobral
     orcid: 0000-0003-4963-0946
