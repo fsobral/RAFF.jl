@@ -65,42 +65,42 @@ $$
 \phi(x, t) = (t_1 - x_1)^2 + (t_2 - x_2)^2 - x_3^2.
 $$
 
-Note that $x_1$ and $x_2$ are parameters related with the center of
-the circle, while $x_3$ is related to its radius. Therefore, this
-model contains 3 parameters. Since we think that the unknown function
-$f$ is a circle, it is obvious that its arguments are a
+Note that $x_1$ and $x_2$ are parameters related to the center of the
+circle, while $x_3$ is related to its radius. Therefore, this model
+contains 3 parameters. Since we think that the unknown function $f$ is
+a circle, it is obvious that its arguments are given by a
 two-dimensional vector $t$. The observed data can be represented by
 the following table:
 
 -----------------------------------
-$t_1$       $t_2$     $f(t_1, t_2)$
--------     -------   -------------
- 6.11129    1.0000    	0.0000
- 6.12134    1.0038    	0.0000
- 5.73863    2.1833    	0.0000
- 5.35241    3.5871    	0.0000
- 4.76209    4.2487    	0.0000
- 3.57131    5.3119    	0.0000
- 2.75896    5.7070    	0.0000
- 2.07888    5.7852    	0.0000
- 1.65623    6.0197    	0.0000
--0.31324    5.7656    	0.0000
--2.18214    4.9540    	0.0000
--2.45642    4.4935    	0.0000
--3.15965    3.8885    	0.0000
--3.77514    2.5237    	0.0000
--4.03242    1.4327    	0.0000
--3.93137   -0.0512    	0.0000
--2.55007   -2.6777    	0.0000
- 0.16087   -4.0584    	0.0000
- 1.83171   -3.9190    	0.0000
- 4.19091   -2.7741    	0.0000
- 5.67758   -0.6784    	0.0000
- 5.81633    0.2874    	0.0000
- 5.94573    0.3777    	0.0000
--1.12132    3.1213    	0.0000
--3.59619   -3.5961    	0.0000
--------------------------------------
+  $t_1$     $t_2$     $f(t_1, t_2)$
+-------   -------   ---------------
+ 6.1112    1.0000            0.0000
+ 6.1213    1.0038            0.0000
+ 5.7386    2.1833            0.0000
+ 5.3524    3.5871            0.0000
+ 4.7620    4.2487            0.0000
+ 3.5713    5.3119            0.0000
+ 2.7589    5.7070            0.0000
+ 2.0788    5.7852            0.0000
+ 1.6562    6.0197            0.0000
+-0.3132    5.7656            0.0000
+-2.1821    4.9540            0.0000
+-2.4564    4.4935            0.0000
+-3.1596    3.8885            0.0000
+-3.7751    2.5237            0.0000
+-4.0324    1.4327            0.0000
+-3.9313   -0.0512            0.0000
+-2.5500   -2.6777            0.0000
+ 0.1608   -4.0584            0.0000
+ 1.8317   -3.9190            0.0000
+ 4.1909   -2.7741            0.0000
+ 5.6775   -0.6784            0.0000
+ 5.8163    0.2874            0.0000
+ 5.9457    0.3777            0.0000
+-1.1213    3.1213            0.0000
+-3.5961   -3.5961            0.0000
+-----------------------------------
 
 In this example, we are trying to find a circle to fit the observed
 data. Therefore, all the values of $f$ should be zero. The observed
@@ -137,5 +137,12 @@ cluster of computers.
 
 This package is intended to be used by all experimental researchers
 who know a little about mathematical modeling and fitting functions.
+
+# Instalation and usage
+
+``RAFF`` is an open-source software that can be [downloaded from
+Github](https://github.com/fsobral/RAFF.jl). All the description for
+first time usage or its API is available at its
+[documentation](https://fsobral.github.io/RAFF.jl/stable/).
 
 # References
