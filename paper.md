@@ -72,7 +72,6 @@ a circle, it is obvious that its arguments are given by a
 two-dimensional vector $t$. The observed data can be represented by
 the following table:
 
------------------------------------
   $t_1$     $t_2$     $f(t_1, t_2)$
 -------   -------   ---------------
  6.1112    1.0000            0.0000
@@ -100,7 +99,6 @@ the following table:
  5.9457    0.3777            0.0000
 -1.1213    3.1213            0.0000
 -3.5961   -3.5961            0.0000
------------------------------------
 
 In this example, we are trying to find a circle to fit the observed
 data. Therefore, all the values of $f$ should be zero. The observed
