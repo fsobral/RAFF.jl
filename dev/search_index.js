@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Overview",
     "title": "Overview",
     "category": "section",
-    "text": "This page is devoted to document and make easier the use of RAFF- Robust  Algebraic Fitting Function. Our intent is provide a package  to determine fitting functions for a dataset with ability to detect possible  outliers of the dataset. All scripts were made in  Julia language, version 1.0. This package is not an implentation of classical least square solvers. In fact,  RAFF is a solver for Low Order Value Problem [1] which is a generalization of least square problems. "
+    "text": "This page is devoted to document and make easier the use of RAFF- Robust Algebraic Fitting Function. Our intent is to provide a package to determine fitting functions for a dataset with ability to detect possible outliers of the dataset. All the code was made in Julia language, version 1.0.This package is not an implentation of classical least square solvers. In fact, RAFF is a solver for Low Order Value Problem [1] which is a generalization of least square problems."
 },
 
 {
@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Overview",
     "title": "Current Status",
     "category": "section",
-    "text": "The current status of this project is beta quality, don\'t use for anything important.  We provide support to serial and parallel running. "
+    "text": "The current status of this project is beta quality, don\'t use for anything important.  We provide support to serial and parallel running."
 },
 
 {
@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Overview",
     "title": "Developed by",
     "category": "section",
-    "text": "This project was developed byFrancisco Sobral (Leader)\nEmerson Vitor Castelani\nRonaldo Lopes\nWesley Shirabayashi"
+    "text": "This project was developed by the optimization group at Department of Mathematics, State University of Maringá, BrazilFrancisco Sobral (Leader)\nEmerson Vitor Castelani\nRonaldo Lopes\nWesley Shirabayashi"
 },
 
 {
@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Installation",
     "category": "section",
-    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF ins\'t in  Metadata.jl, so the  package can be installed with the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add https://github.com/fsobral/RAFF.jl#dev"
+    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF is not in  Metadata.jl, so the  package can be installed with the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add https://github.com/fsobral/RAFF.jl"
 },
 
 {
@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Basic usage",
     "category": "section",
-    "text": "Just to ilustrate the potential and basic usage of RAFF, let us consider the following dataset given by an array A:A=left beginarraycc\n -20   50 \n -15   325\n -10   20 \n -05   125\n  00   10 \n  05   125\n  10   20 \n  15   325\n  20   50 \nendarrayrightLets suppose the first column of A as an experimental measure with  result given by second column. It is easy to see that the fitting  function in this case is accurate and given by phi(t)=t^2 +1Now lets perturb one result of second column of A. For example,  consider A_62=255. Assuming the model for fitting given byvarphi(xt)=x_1 t^2 +x_2 we have by classical least square as result x=[0.904329,1.3039]. But when we consider RAFF algorithm we obtain the correct answer x=[1.0,1.0]. Moreover, we have the number of possible outliers and which they are.In order to get run RAFF algorithm we need to setup using RAFFand define the dataset and model:A=[-2.0  5.0; \n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;]\n\nmodel(x,t)=x[1]*t[1]^2+x[2]After that, we can run raff:raff(model,A,2)The number 2 above is the number of variables in model. The output is a RAFFoutput type, consequently is possible to handle with some atributes of this type. For example to acess only the parameters of solution, we can useoutput = raff(model,A,2)\noutput.solutionNote that RAFF algorithm detects and ignores possible outliers. In order to see which points are outiliers, we can acess the outliers atribute.  output.outliersMore details about RAFFoutput type and others options can be obtained in API section. By default RAFF uses automatic differentiation, more specifically ForwardDiff package. But is possible to define and handle RAFF with gradient vector of model. For example, considering the above example, we have, nabla varphi(xt)=t^21Programming this gradient and run raff we havegmodel(x,t,g)=begin\ng[1]=t[1]^2\ng[2]=1.0\nreturn g\nend\n\nraff(model,gmodel,A,2)"
+    "text": "Just to illustrate the potential and basic usage of RAFF, let us consider the following data set given by an array A:A=left beginarraycc\n -20   50 \n -15   325\n -10   20 \n -05   125\n  00   10 \n  05   125\n  10   20 \n  15   325\n  20   50 \nendarrayrightLet\'s suppose the first column of A as an experimental measure with  result given by second column. It is easy to see that the fitting  function in this case is accurate and given by phi(t)=t^2 +1Now let\'s perturb one result of second column of A. For example,  consider A_62 = 255. Assuming the model for fitting given byvarphi(xt)=x_1 t^2 +x_2 we have by classical least squares as result x = [0.904329, 1.3039]. On the other hand, when we consider the RAFF algorithm we obtain the correct answer x=[1.0, 1.0]. Moreover, we also have a list of the possible outliers.In order to run RAFF algorithm we need to setup using RAFFand define the data set and model:A=[-2.0  5.0; \n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;]\n\nmodel(x, t) = x[1] * t[1]^2 + x[2]After that, we can run method raff:raff(model, A, 2)The number 2 above is the number of variables in model, i. e., the number of parameters to adjust in the model. The output is a RAFFOutput type. For example to access only the parameters of solution, we can useoutput = raff(model, A, 2)\noutput.solutionNote that RAFF algorithm detects and ignores possible outliers. In order to see which points are outliers, we can access the outliers attribute.output.outliersMore details about RAFFOutput type and other options can be obtained in API section.By default RAFF uses automatic differentiation, more specifically ForwardDiff package. But is possible to call RAFF methods with gradient vector of model. For example, considering the above example, we have,nabla varphi(x t) = t^2 1Programming this gradient and run raff we havegmodel(x, t, g)=begin\n   g[1] = t[1]^2\n   g[2] = 1.0\n   return g\nend\n\nraff(model, gmodel, A, 2)Preliminary tests have shown that the use of explicit derivatives is 10 times faster than automatic differentiation."
 },
 
 {
@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Multivariate models",
     "category": "section",
-    "text": "RAFF supports fits to data sets of different sizes. To illustrate how this works, consider the following example:    data = [1.0 1.0   2.0\n            0.0 0.0   4.0\n            7.0 1.5  -4.5\n            2.0 2.0 -17.0 # outlier\n            0.0 8.6  -4.6]and the following model    model(x, t) = x[1]*t[1] + x[2] * t[2] + x[3]            Note that this model has two variables (t_1t_2). Naturally, this problem has one outlier (data[4,:]), so there are 4 trust points. Let\'s run RAFF and check the answer.     output = raff(model,data, 3)The right answer is [- 1.0, - 1.0, 4.0]. As we can note RAFF get a good fit for the data set.Handling the output follows the same pattern as the one-dimensional case. In order to get improvements in processing time, we can code the gradient vector of model to.    gmodel(x, t,g) = begin \n        g[1] = t[1]\n        g[2] = t[2]\n        g[3] = 1.0\n        return g\n    end    output = raff(model,data, 3)"
+    "text": "RAFF supports the use of multivariate fitting functions to data sets of different dimensions. To illustrate how this works, consider the following example:data = [1.0 1.0   2.0\n        0.0 0.0   4.0\n        7.0 1.5  -4.5\n        2.0 2.0 -17.0 # outlier\n        0.0 8.6  -4.6]and the following modelmodel(x, t) = x[1] * t[1] + x[2] * t[2] + x[3]            Note that this model has two variables (t_1 t_2). Naturally, this problem has one outlier (data[4,:]), so there are 4 trust points. Let\'s run RAFF and check the answer.output = raff(model, data, 3)The right answer is [- 1.0, - 1.0, 4.0]. As we can note, RAFF get a good fit for the data set. Handling the output follows the same pattern as the one-dimensional case.In order to get improvements in processing time, we can code the gradient vector of model too:gmodel(x, t, g) = begin \n    g[1] = t[1]\n    g[2] = t[2]\n    g[3] = 1.0\n    return g\nendoutput = raff(model,data, 3)"
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Changing some options",
     "category": "section",
-    "text": "Naturally, RAFF has options like precision of gradient stopping criteria and initial guess.     output = raff(model,data, 3;initguess=[0.5,0.5,0.5],ε=1.0e-4)RAFF is based on an optimization method. In this way, it is subject to stop at stationary points that are not global minimizers. For this reason, heuristics were implemented to find global minimizers. Such heuristics depend on random number generation. So if you want to run tests with more reliability this can be a useful strategy. To define in RAFF, say, 1000 different starting points, is enough to redefine the keyword argument MAXMS.    output = raff(model,data, 3;MAXMS=1,initguess=[0.5,0.5,0.5],ε=1.0e-10)"
+    "text": "Naturally, RAFF has options like precision of gradient stopping criteria and initial guess. output = raff(model,data, 3;initguess=[0.5,0.5,0.5],ε=1.0e-4)RAFF is based on an optimization method. In this way, it is subject to stopping at stationary points that are not global minimizers. For this reason, heuristics were implemented to find global minimizers. Such heuristics depend on random number generation. So, if you want to run tests with more reliability this can be a useful strategy. To define in RAFF, say, 1000 different starting points, is enough to redefine the keyword argument MAXMS.output = raff(model, data, 3; MAXMS=1, initguess=[0.5,0.5,0.5], ε=1.0e-10)In the above example, we have also changed the starting point for the method. Also, the stopping criterion was changed to 10^-10, which means high accuracy when solving the subproblems. See RAFF API for all the possible options that can be used."
 },
 
 {
@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Parallel running",
     "category": "section",
-    "text": "RAFF can be run in a parallel or distributed environment, using the Distributed package and function praff. Let\'s use praff to solve the same problem from the beginning before. First, the Distributed has to be loaded and the number of workers is added. It is also possible to add the address of other machines.using Distributed\n\naddprocs(3) # Add 3 worker processesThis step can be replaced if Julia is initialized with the -p optionjulia -p 3Now we have to load RAFF and the fit function in all workers:@everywhere using RAFF\n\n@everywhere function gmodel!(x, t, g)\n    g[1] = t[1]^2\n    g[2] = 1.0\nend\n\n@everywhere function model(x, t)\n   x[1] * t[1]^2 + x[2]\nendthen, we call praff to solve the problem (note that we do not need to send the A matrix to all workers, since it will be sent by praff).A=[-2.0  5.0;\n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;];\n\nn = 2\n\noutput = praff(model, gmodel!, A, n)\nRAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])The true effectiveness of parallelism occurs when option MAXMS is set, which changes the number of random initial points that are tried for each subproblem solved. Better solutions can be achieved with higher values of MAXMSn = 2\n\noutput = praff(model, gmodel!, A, n; MAXMS=1000)\nRAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])"
+    "text": "RAFF can be run in a parallel or distributed environment, using the Distributed package and function praff. Let\'s use praff to solve the same problem from the beginning. First, the Distributed package has to be loaded and the number of workers has to be added. It is also possible to add the address of other machines.using Distributed\n\naddprocs(3) # Add 3 worker processesThis step can be replaced if Julia is initialized with the -p optionjulia -p 3Now we have to load RAFF and the fit function in all workers:@everywhere using RAFF\n\n@everywhere function gmodel!(x, t, g)\n    g[1] = t[1]^2\n    g[2] = 1.0\nend\n\n@everywhere function model(x, t)\n   x[1] * t[1]^2 + x[2]\nendthen, we call praff to solve the problem (note that we do not need to send the A matrix to all workers, since it will be automatically sent by praff).A=[-2.0  5.0;\n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;];\n\nn = 2\n\noutput = praff(model, gmodel!, A, n)\nRAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])The true effectiveness of parallelism occurs when option MAXMS is set, which changes the number of random initial points that are tried for each subproblem solved. Better solutions can be achieved with higher values of MAXMSn = 2\n\noutput = praff(model, gmodel!, A, n; MAXMS=1000)\nRAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])"
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Summary",
     "category": "section",
-    "text": "There are three main RAFF structures: main functions: called by user; \nauxiliary functions: used like internal auxiliary function but can be modify user;\noutput type: type defined to manipulate output information."
+    "text": "There are four main RAFF structures: Main functions: directly called by user; \nAuxiliary functions: used like internal auxiliary functions;\nRandom generation: used to generate random sets of data, in order to test RAFF\nOutput type: type defined to manipulate output information."
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.raff",
     "category": "function",
-    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n     SEEDMS::Int=123456789, initguess=zeros(Float64, n))\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n     [MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n),\n      kwargs...])\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, t)\nwhere x is a n-dimensional vector of parameters and t is the multidimensional argument\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(x, t, g)\nwhere x is a n-dimensional vector of parameters, t is the multidimensional argument and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nt11 t12 ... t1N y1\nt21 t22 ... t2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of t).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nε: gradient stopping criteria to lmlovo\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
+    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n     SEEDMS::Int=123456789, initguess=zeros(Float64, n))\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n     [MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n),\n      kwargs...])\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, t)\nwhere x is a n-dimensional vector of parameters and t is the multidimensional argument\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(x, t, g)\nwhere x is a n-dimensional vector of parameters, t is the multidimensional argument and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nt11 t12 ... t1N y1\nt21 t22 ... t2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of t).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nε: gradient stopping criteria to lmlovo\nnoutliers: integer describing the maximum expected number of outliers. The default is half.\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
 },
 
 {
@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.praff",
     "category": "function",
-    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n      SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),\n      ε=1.0e-4)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n      MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n      initguess=zeros(Float64, n), ε::Float64=1.0e-4)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nε: stopping tolerance\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
+    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n      SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),\n      ε=1.0e-4)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n      MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n      initguess=zeros(Float64, n), ε::Float64=1.0e-4)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nε: stopping tolerance\nnoutliers: integer describing the maximum expected number of outliers. The default is half.\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
 },
 
 {
@@ -161,43 +161,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api/#RAFF.eliminate_local_min!",
+    "location": "api/#Auxiliary-functions-1",
     "page": "API",
-    "title": "RAFF.eliminate_local_min!",
-    "category": "function",
-    "text": "eliminate_local_min!(sols::Vector{RAFFOutput})\n\nCheck if the function value of the solution found by smaller values of p is not greater when compared with larger ones. This certainly indicates that a local minimizer was found by the smaller p.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.SortFun!",
-    "page": "API",
-    "title": "RAFF.SortFun!",
-    "category": "function",
-    "text": "This function is an auxiliary function. It finds the p smallest values of vector V and brings them to the first p positions. The indexes associated with the p smallest values are stored in ind.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.update_best",
-    "page": "API",
-    "title": "RAFF.update_best",
-    "category": "function",
-    "text": "update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})\n\nListen to a channel for results found by lmlovo. If there is an improvement for the objective function, the shared array bestx is updated.\n\nAttention: There might be an unstable state if there is a process   reading bestx while this function is updating it. This should not   be a problem, since it is used as a starting point.\n\nAttention 2: this function is currently out of use.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.consume_tqueue",
-    "page": "API",
-    "title": "RAFF.consume_tqueue",
-    "category": "function",
-    "text": "function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                        squeue::RemoteChannel, model::Function, gmodel!::Function,\n                        data::Array{Float64, 2}, n::Int, pliminf::Int,\n                        plimsup::Int, MAXMS::Int, seedMS::MersenneTwister)\n\nThis function represents one worker, which runs lmlovo in a multistart fashion.\n\nIt takes a job from the RemoteChannel tqueue and runs lmlovo function to it. It might run using a multistart strategy, if MAXMS>1. It sends the best results found for each value obtained in tqueue to channel squeue, which will be consumed by the main process. All the other arguments are the same for praff function.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.check_and_close",
-    "page": "API",
-    "title": "RAFF.check_and_close",
-    "category": "function",
-    "text": "check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                squeue::RemoteChannel, futures::Vector{Future};\n                secs::Float64=0.1)\n\nCheck if there is at least one worker process in the vector of futures that has not prematurely finished. If there is no alive worker, close task, solution and best queues, tqueue, squeue and bqueue, respectively.\n\n\n\n\n\n"
+    "title": "Auxiliary functions",
+    "category": "section",
+    "text": "RAFF.eliminate_local_min!\nRAFF.SortFun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.setLMOutputLevel\nRAFF.setRAFFOutputLevel"
 },
 
 {
@@ -225,11 +193,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api/#Auxiliary-functions-1",
+    "location": "api/#Random-generation-1",
     "page": "API",
-    "title": "Auxiliary functions",
+    "title": "Random generation",
     "category": "section",
-    "text": "RAFF.eliminate_local_min!\nRAFF.SortFun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.generateTestProblems\nRAFF.get_unique_random_points\nRAFF.generateNoisyData"
+    "text": "RAFF.generateTestProblems\nRAFF.get_unique_random_points\nRAFF.generateNoisyData"
 },
 
 {
