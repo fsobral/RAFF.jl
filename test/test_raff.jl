@@ -106,7 +106,7 @@
     
     @testset "Error in printing" begin
 
-        model(x, t) = x[1] * t[1]^2 + x[2]
+        m(x, t) = x[1] * t[1]^2 + x[2]
 
         A = [ -2.0  5.00;
               -1.5  3.25;
@@ -123,12 +123,51 @@
         # Changes log just for this test
         rout = with_logger(NullLogger()) do
             
-            lmlovo(model, x, A, 2, 4)
+            lmlovo(m, x, A, 2, 4)
 
         end
 
         @test rout.status == 1
         @test rout.p == 4
+        
+    end
+
+    @testset "Test parameters" begin
+
+        data = [-1.0   3.2974425414002564;
+                -0.75  2.9099828292364025;
+                -0.5    2.568050833375483;
+                -0.25  2.2662969061336526;
+                 0.0                  2.0;
+                 0.25   1.764993805169191;
+                 0.5   1.5576015661428098;
+                 0.75  1.5745785575819442; #noise
+                 1.0   1.2130613194252668;
+                 1.25  1.0705228570379806;
+                 1.5   0.9447331054820294;
+                 1.75  0.8337240393570168;
+                 2.0   0.7357588823428847;
+                 2.25  0.6493049347166995;
+                 2.5   0.5730095937203802;
+                 2.75  0.5056791916094929;
+                 3.0  0.44626032029685964;
+                 3.25  0.5938233504083881; #noise 
+                 3.5   0.3475478869008902;
+                 3.75 0.30670993368985694;
+                 4.0   0.5706705664732254; #noise
+                ]
+
+        answer = [2.0, -0.5]
+        
+        rout = raff(model, gmodel!, data, 2; noutliers=0)
+        
+        @test rout.p == 21
+        
+        rout = raff(model, data, 2; noutliers=5)
+        
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
         
     end
 
