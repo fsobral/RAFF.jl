@@ -8,8 +8,6 @@ using Base.CoreLogging
 
 function run_raff(maxms=1, initguess=nothing)
     
-    global_logger(ConsoleLogger(stdout, Logging.Error))
-    
     n, model, modelstr = RAFF.model_list["logistic"]
 
     open("/tmp/output.txt") do fp
@@ -26,7 +24,7 @@ function run_raff(maxms=1, initguess=nothing)
 
     end
 
-    rsol = raff(model, data[:, 1:2], n; MAXMS=maxms, initguess=initguess, ε=1.0e-6)
+    rsol = raff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess, ε=1.0e-6)
     
     @printf("Solution found:
             fbest = %f
