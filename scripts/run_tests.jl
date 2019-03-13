@@ -21,6 +21,8 @@ getType = begin
 end
 
 function run_tests(;kwargs...)
+
+    tfp = open("/tmp/table.csv", "w")
     
     for fname in readdir(fpath)
 
@@ -50,33 +52,31 @@ function run_tests(;kwargs...)
         # Run RAFF
         rsol, t, = @timed raff(model, data[:, 1:end - 1], n; kwargs...)
 
-        open("/tmp/table.csv", "a") do fp
+        name = match(r"[^.]*", fname).match
+        
+        @printf(tfp, "%5s\t%6d\t%3d\t[", name, np, length(outliers))
 
-            name = match(r"[^.]*", fname).match
-            
-            @printf(fp, "%5s\t%6d\t%3d\t[", name, np, length(outliers))
+        for i = 1:n - 1
 
-            for i = 1:n - 1
-
-                @printf(fp, "%10.3e, ", rsol.solution[i])
-
-            end
-
-            @printf(fp, "%10.3e]\t", rsol.solution[n])
-
-            nexact = 0
-
-            for i in rsol.outliers
-
-                (i in outliers) && (nexact += 1)
-
-            end
-
-            @printf(fp, "%3d\t%3d\t%10.4f\t%d\n",
-                    length(rsol.outliers), nexact, t, rsol.status)
+            @printf(tfp, "%10.3e, ", rsol.solution[i])
 
         end
 
+        @printf(tfp, "%10.3e]\t", rsol.solution[n])
+
+        nexact = 0
+
+        for i in rsol.outliers
+
+            (i in outliers) && (nexact += 1)
+
+        end
+
+        @printf(tfp, "%3d\t%3d\t%10.4f\t%d\n",
+                length(rsol.outliers), nexact, t, rsol.status)
+
     end
+
+    close(tfp)
 
 end
