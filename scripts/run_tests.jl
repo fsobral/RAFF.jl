@@ -24,6 +24,11 @@ function run_tests(;kwargs...)
 
     tfp = open("/tmp/table.csv", "w")
     
+    @printf(tfp, """
+| Name | Dim. | N Points | N Outl. | Found | Correct | Time (s) | Status | Solution |
+| ---- | ---- | -------- | ------- | ----- | ------- | -------- | ------ | -------- |
+""")
+        
     for fname in readdir(fpath)
 
         occursin("sol", fname) && continue
@@ -52,17 +57,11 @@ function run_tests(;kwargs...)
         # Run RAFF
         rsol, t, = @timed raff(model, data[:, 1:end - 1], n; kwargs...)
 
+        # Save problem data
+
         name = match(r"[^.]*", fname).match
-        
-        @printf(tfp, "%5s\t%6d\t%3d\t[", name, np, length(outliers))
 
-        for i = 1:n - 1
-
-            @printf(tfp, "%10.3e, ", rsol.solution[i])
-
-        end
-
-        @printf(tfp, "%10.3e]\t", rsol.solution[n])
+        @printf(tfp, "| %5s | %3d | %6d | %3d | ", name, n, np, length(outliers))
 
         nexact = 0
 
@@ -72,8 +71,20 @@ function run_tests(;kwargs...)
 
         end
 
-        @printf(tfp, "%3d\t%3d\t%10.4f\t%d\n",
+        @printf(tfp, "%3d | %3d | %10.4f | %d | ",
                 length(rsol.outliers), nexact, t, rsol.status)
+
+        # Save best solution
+        
+        @printf(tfp, "[")
+
+        for i = 1:n - 1
+
+            @printf(tfp, "%10.3e, ", rsol.solution[i])
+
+        end
+
+        @printf(tfp, "%10.3e] |\n", rsol.solution[n])
 
     end
 
