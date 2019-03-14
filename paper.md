@@ -11,7 +11,6 @@ authors:
     orcid: 0000-0001-9718-6486
     affiliation: 1
   - name: Ronaldo Lopes
-    orcid: 0000-0000-0000-0000
     affiliation: 1
   - name: Wesley V. I. Shirabayashi
     orcid: 0000-0002-7790-6703	
