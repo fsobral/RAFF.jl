@@ -22,8 +22,6 @@ RAFF.sort_fun!
 RAFF.update_best
 RAFF.consume_tqueue
 RAFF.check_and_close
-RAFF.set_raff_output_level
-RAFF.set_lm_output_level
 ```
 
 ## Random generation
