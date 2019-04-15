@@ -10,7 +10,7 @@ This package implements a robust method to fit a given function
 the LOVO algorithm [1] and also in a suitable voting strategy in order
 automatically eliminate outliers.
 
-The potential use of this package is in statistical  problems which depend on fitting functions or in more specific fields like computer vision for problems related shape detection. 
+Potential use of this package is in statistical  problems which depend on fitting functions or in more specific fields like computer vision for problems related shape detection. 
 
 For a brief description of the potential of this program and the difference between related strategies in the literature, like least square, consider the following dataset
 
