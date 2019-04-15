@@ -1,4 +1,4 @@
-export setRAFFOutputLevel, setLMOutputLevel
+export set_raff_output_level, set_lm_output_level
 
 """
 
@@ -114,7 +114,7 @@ values of vector `V` and brings them to the first `p` positions. The
 indexes associated with the `p` smallest values are stored in `ind`.
 
 """
-function SortFun!(V::Vector{Float64}, ind::Vector{Int}, p::Int)
+function sort_fun!(V::Vector{Float64}, ind::Vector{Int}, p::Int)
 
     # If p is invalid, returns an empty view
     (p <= 0) && (return @view(ind[1:p]), @view(V[1:p]))
@@ -148,7 +148,7 @@ end
 
 """
 
-    setRAFFOutputLevel(level::LogLevel)
+    set_raff_output_level(level::LogLevel)
 
 Set the output level of [`raff`](@ref) and [`praff`](@ref) algorithms
 to the desired logging level. Options are (from highly verbose to just
@@ -160,7 +160,7 @@ needs to be loaded.
 Defaults to `Logging.Error`.
 
 """
-function setRAFFOutputLevel(level::LogLevel)
+function set_raff_output_level(level::LogLevel)
 
     global raff_logger = ConsoleLogger(stdout, level)
 
@@ -168,7 +168,7 @@ end
 
 """
 
-    setLMOutputLevel(level::LogLevel)
+    set_lm_output_level(level::LogLevel)
 
 Set the output level of [`lmlovo`](@ref) algorithm to the desired
 logging level. Options are (from highly verbose to just errors):
@@ -180,7 +180,7 @@ needs to be loaded.
 Defaults to `Logging.Error`.
 
 """
-function setLMOutputLevel(level::LogLevel)
+function set_lm_output_level(level::LogLevel)
 
     global lm_logger = ConsoleLogger(stdout, level)
 

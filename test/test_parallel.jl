@@ -15,7 +15,7 @@
 
     Random.seed!(123456789)
     
-    data, xSol, = RAFF.generateNoisyData(model, n, np, p; std=0.0)
+    data, xSol, = RAFF.generate_noisy_data(model, n, np, p; std=0.0)
 
     # Remove outlier information
     data = data[:, 1:2]

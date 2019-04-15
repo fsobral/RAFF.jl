@@ -112,7 +112,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 F[i] = (model(x, data[i,1:(end - 1)]) - data[i, end])^2
             end
             
-            indF, orderedF = SortFun!(F, ind, p_)
+            indF, orderedF = sort_fun!(F, ind, p_)
             
             return indF, sum(orderedF)
         end

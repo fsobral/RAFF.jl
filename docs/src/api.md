@@ -11,26 +11,26 @@ There are four main RAFF structures:
 lmlovo
 raff
 praff
-setRAFFOutputLevel
-setLMOutputLevel
+set_raff_output_level
+set_lm_output_level
 ```
 
 ## Auxiliary functions
 ```@docs
 RAFF.eliminate_local_min!
-RAFF.SortFun!
+RAFF.sort_fun!
 RAFF.update_best
 RAFF.consume_tqueue
 RAFF.check_and_close
-RAFF.setLMOutputLevel
-RAFF.setRAFFOutputLevel
+RAFF.set_raff_output_level
+RAFF.set_lm_output_level
 ```
 
 ## Random generation
 ```@docs
-RAFF.generateTestProblems
+RAFF.generate_test_problems
 RAFF.get_unique_random_points
-RAFF.generateNoisyData
+RAFF.generate_noisy_data
 ```
 
 ## Output type
