@@ -137,19 +137,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api/#RAFF.setRAFFOutputLevel",
+    "location": "api/#RAFF.set_raff_output_level",
     "page": "API",
-    "title": "RAFF.setRAFFOutputLevel",
+    "title": "RAFF.set_raff_output_level",
     "category": "function",
-    "text": "setRAFFOutputLevel(level::LogLevel)\n\nSet the output level of raff and praff algorithms to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
+    "text": "set_raff_output_level(level::LogLevel)\n\nSet the output level of raff and praff algorithms to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
 },
 
 {
-    "location": "api/#RAFF.setLMOutputLevel",
+    "location": "api/#RAFF.set_lm_output_level",
     "page": "API",
-    "title": "RAFF.setLMOutputLevel",
+    "title": "RAFF.set_lm_output_level",
     "category": "function",
-    "text": "setLMOutputLevel(level::LogLevel)\n\nSet the output level of lmlovo algorithm to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
+    "text": "set_lm_output_level(level::LogLevel)\n\nSet the output level of lmlovo algorithm to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
 },
 
 {
@@ -157,7 +157,47 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Main functions",
     "category": "section",
-    "text": "lmlovo\nraff\npraff\nsetRAFFOutputLevel\nsetLMOutputLevel"
+    "text": "lmlovo\nraff\npraff\nset_raff_output_level\nset_lm_output_level"
+},
+
+{
+    "location": "api/#RAFF.eliminate_local_min!",
+    "page": "API",
+    "title": "RAFF.eliminate_local_min!",
+    "category": "function",
+    "text": "eliminate_local_min!(sols::Vector{RAFFOutput})\n\nCheck if the function value of the solution found by smaller values of p is not greater when compared with larger ones. This certainly indicates that a local minimizer was found by the smaller p.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.sort_fun!",
+    "page": "API",
+    "title": "RAFF.sort_fun!",
+    "category": "function",
+    "text": "This function is an auxiliary function. It finds the p smallest values of vector V and brings them to the first p positions. The indexes associated with the p smallest values are stored in ind.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.update_best",
+    "page": "API",
+    "title": "RAFF.update_best",
+    "category": "function",
+    "text": "update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})\n\nListen to a channel for results found by lmlovo. If there is an improvement for the objective function, the shared array bestx is updated.\n\nAttention: There might be an unstable state if there is a process   reading bestx while this function is updating it. This should not   be a problem, since it is used as a starting point.\n\nAttention 2: this function is currently out of use.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.consume_tqueue",
+    "page": "API",
+    "title": "RAFF.consume_tqueue",
+    "category": "function",
+    "text": "function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                        squeue::RemoteChannel, model::Function, gmodel!::Function,\n                        data::Array{Float64, 2}, n::Int, pliminf::Int,\n                        plimsup::Int, MAXMS::Int, seedMS::MersenneTwister)\n\nThis function represents one worker, which runs lmlovo in a multistart fashion.\n\nIt takes a job from the RemoteChannel tqueue and runs lmlovo function to it. It might run using a multistart strategy, if MAXMS>1. It sends the best results found for each value obtained in tqueue to channel squeue, which will be consumed by the main process. All the other arguments are the same for praff function.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.check_and_close",
+    "page": "API",
+    "title": "RAFF.check_and_close",
+    "category": "function",
+    "text": "check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                squeue::RemoteChannel, futures::Vector{Future};\n                secs::Float64=0.1)\n\nCheck if there is at least one worker process in the vector of futures that has not prematurely finished. If there is no alive worker, close task, solution and best queues, tqueue, squeue and bqueue, respectively.\n\n\n\n\n\n"
 },
 
 {
@@ -165,15 +205,15 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Auxiliary functions",
     "category": "section",
-    "text": "RAFF.eliminate_local_min!\nRAFF.SortFun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.setLMOutputLevel\nRAFF.setRAFFOutputLevel"
+    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close"
 },
 
 {
-    "location": "api/#RAFF.generateTestProblems",
+    "location": "api/#RAFF.generate_test_problems",
     "page": "API",
-    "title": "RAFF.generateTestProblems",
+    "title": "RAFF.generate_test_problems",
     "category": "function",
-    "text": "generateTestProblems(datFilename::String, solFilename::String,\n                     model::Function, modelStr::String, n::Int,\n                     np::Int, p::Int)\n\nGenerate random data files for testing fitting problems.\n\ndatFilename and solFilename are strings with the name of the files for storing the random data and solution, respectively.\nmodel is the model function and modelStr is a string representing this model function, e.g.\n model = (x, t) -> x[1] * t[1] + x[2]\n modelStr = \"(x, t) -> x[1] * t[1] + x[2]\"\nwhere vector x represents the parameters (to be found) of the model and vector t are the variables of the model.\nn is the number of parameters\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\n\n\n\n\n"
+    "text": "generate_test_problems(datFilename::String, solFilename::String,\n                     model::Function, modelStr::String, n::Int,\n                     np::Int, p::Int)\n\nGenerate random data files for testing fitting problems.\n\ndatFilename and solFilename are strings with the name of the files for storing the random data and solution, respectively.\nmodel is the model function and modelStr is a string representing this model function, e.g.\n model = (x, t) -> x[1] * t[1] + x[2]\n modelStr = \"(x, t) -> x[1] * t[1] + x[2]\"\nwhere vector x represents the parameters (to be found) of the model and vector t are the variables of the model.\nn is the number of parameters\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\n\n\n\n\n"
 },
 
 {
@@ -185,11 +225,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api/#RAFF.generateNoisyData",
+    "location": "api/#RAFF.generate_noisy_data",
     "page": "API",
-    "title": "RAFF.generateNoisyData",
+    "title": "RAFF.generate_noisy_data",
     "category": "function",
-    "text": "generateNoisyData(model::Function, n::Int, np::Int, p::Int;\n                  tMin::Float64=-10.0, tMax::Float64=10.0,\n                  xSol::Vector{Float64}=10.0 * randn(Float64, n),\n                  std::Float64=200.0, outTimes::Float64=7.0)\n\ngenerateNoisyData(model::Function, n, np, p, tMin::Float64, tMax::Float64)\n\ngenerateNoisyData(model::Function, n::Int, np::Int, p::Int,\n                  xSol::Vector{Float64}, tMin::Float64, tMax::Float64)\n\nRandom generate a fitting one-dimensional data problem.\n\nThis function receives a model(x, t) function, the number of parameters n, the number of points np to be generated and the number of trusted points p. \n\nIf the n-dimensional vector xSol is provided, the the exact solution will not be random generated. The interval [tMin, tMax] for generating the values to evaluate model can also be provided.\n\nIt returns a tuple (data, xSol, outliers) where\n\ndata: (np x 2) array, where each row contains t and model(xSol, t).\nxSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set\n\n\n\n\n\n"
+    "text": "generate_noisy_data(model::Function, n::Int, np::Int, p::Int;\n                  tMin::Float64=-10.0, tMax::Float64=10.0,\n                  xSol::Vector{Float64}=10.0 * randn(Float64, n),\n                  std::Float64=200.0, outTimes::Float64=7.0)\n\ngenerate_noisy_data(model::Function, n, np, p, tMin::Float64, tMax::Float64)\n\ngenerate_noisy_data(model::Function, n::Int, np::Int, p::Int,\n                  xSol::Vector{Float64}, tMin::Float64, tMax::Float64)\n\nRandom generate a fitting one-dimensional data problem.\n\nThis function receives a model(x, t) function, the number of parameters n, the number of points np to be generated and the number of trusted points p. \n\nIf the n-dimensional vector xSol is provided, the the exact solution will not be random generated. The interval [tMin, tMax] for generating the values to evaluate model can also be provided.\n\nIt returns a tuple (data, xSol, outliers) where\n\ndata: (np x 2) array, where each row contains t and model(xSol, t).\nxSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set\n\n\n\n\n\n"
 },
 
 {
@@ -197,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Random generation",
     "category": "section",
-    "text": "RAFF.generateTestProblems\nRAFF.get_unique_random_points\nRAFF.generateNoisyData"
+    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.generate_noisy_data"
 },
 
 {
