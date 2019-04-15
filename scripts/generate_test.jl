@@ -68,7 +68,7 @@ try
     ffname = "/tmp/" * fname * ".txt"
     fsname = "/tmp/" * fname * "_sol.txt"
     
-    generateTestProblems(ffname, fsname, model, modelStr, n, np, p;
+    generate_test_problems(ffname, fsname, model, modelStr, n, np, p;
                          tMin=tMin, tMax=tMax, xSol=xSol)
 
     @printf("Created problem and solution files.\n")

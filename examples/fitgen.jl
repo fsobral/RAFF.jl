@@ -36,7 +36,7 @@ for i = 1:number_of_functions
                 
         println(list, datFilename, "  ", solFilename)
 
-        generateTestProblems(datFilename, solFilename, model,
+        generate_test_problems(datFilename, solFilename, model,
                              modelStr, n, np, p, tmin = tmin,
                              tmax = tmax)
 

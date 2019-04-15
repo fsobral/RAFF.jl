@@ -64,7 +64,7 @@ function main()
         ffname = "/tmp/" * fname * ".txt"
         fsname = "/tmp/" * fname * "_sol.txt"
         
-        generateTestProblems(ffname, fsname, model, modelStr, n,
+        generate_test_problems(ffname, fsname, model, modelStr, n,
                              parsed_args["np"], parsed_args["p"];
                              tMin=tMin, tMax=tMax, xSol=xSol, std=200.0)
 
