@@ -5,9 +5,8 @@
 ## Installation
 
 This package is supported just for Julia version 1.0. Consequently, 
-it uses package 3.0. Currently `RAFF` is not in 
-[Metadata.jl](https://github.com/JuliaLang/METADATA.jl), so the 
-package can be installed with the Julia package manager.
+it uses package 3.0. Currently `RAFF` is registered in [General Julia Registers](https://github.com/JuliaRegistries), so the 
+package can be installed using the Julia package manager.
 From the Julia REPL, type `]` to enter into Pkg REPL mode and run:
 
 ```
