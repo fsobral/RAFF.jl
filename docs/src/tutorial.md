@@ -11,7 +11,7 @@ package can be installed with the Julia package manager.
 From the Julia REPL, type `]` to enter into Pkg REPL mode and run:
 
 ```
-pkg> add https://github.com/fsobral/RAFF.jl
+pkg> add RAFF
 ```
 
 ## Basic usage
