@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Installation",
     "category": "section",
-    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF is not in  Metadata.jl, so the  package can be installed with the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add https://github.com/fsobral/RAFF.jl"
+    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF is not in  Metadata.jl, so the  package can be installed with the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add RAFF"
 },
 
 {
