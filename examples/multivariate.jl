@@ -27,5 +27,3 @@ output = raff(model, data, n)
 
 # Print output
 println(output)
-
-
