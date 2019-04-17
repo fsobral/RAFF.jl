@@ -43,9 +43,11 @@ Consequently, RAFF detects the number of possible outliers and in the same time,
 Other useful examples are found in the documentation and also in directory [`examples/`](examples/).
 
 ## Installation
-`RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `PkgREPL`:
+`RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `REPL`:
 
-```add RAFF```
+```julia
+julia> ] add RAFF
+```
 
 ## Credits
 
