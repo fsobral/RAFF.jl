@@ -41,9 +41,11 @@ Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RA
 Consequently, RAFF detects the number of possible outliers and in the same time, which their are. This fact distinguishes RAFF from other techniques like [1] or classical least square.
 
 ## Installation
-`RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `PkgREPL`:
+`RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `REPL`:
 
-```add RAFF```
+```julia
+julia> ] add RAFF
+```
 
 ## Credits
 
