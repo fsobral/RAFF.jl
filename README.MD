@@ -37,8 +37,10 @@ and when we apply RAFF strategy we get
 
 <img src="/docs/src/assets/figure_RAFF_example.png" height="80%" width="80%"/>
 
-Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RAFF detects the point `(0.5,2.55)` like an outilier and excludes the influence of this point for determine `f(t)`. 
+Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RAFF detects the point `(0.5,2.55)` like an outlier and excludes the influence of this point for determine `f(t)`. 
 Consequently, RAFF detects the number of possible outliers and in the same time, which their are. This fact distinguishes RAFF from other techniques like [1] or classical least square.
+
+Other useful examples are found in the documentation and also in directory [`examples/`](examples/).
 
 ## Installation
 `RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `PkgREPL`:
