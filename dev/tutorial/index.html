@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · RAFF- Robust Algebraic Fitting Function</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><nav class="toc"><a href="../index.html"><img class="logo" src="../assets/logo.png" alt="RAFF- Robust Algebraic Fitting Function logo"/></a><h1>RAFF- Robust Algebraic Fitting Function</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Overview</a></li><li class="current"><a class="toctext" href>Tutorial</a><ul class="internal"><li><a class="toctext" href="#Installation-1">Installation</a></li><li><a class="toctext" href="#Basic-usage-1">Basic usage</a></li><li><a class="toctext" href="#Multivariate-models-1">Multivariate models</a></li><li><a class="toctext" href="#Changing-some-options-1">Changing some options</a></li><li><a class="toctext" href="#Parallel-running-1">Parallel running</a></li></ul></li><li><a class="toctext" href="../api/">API</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Tutorial</a></li></ul><a class="edit-page" href="https://github.com/fsobral/RAFF.jl/blob/master/docs/src/tutorial.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Tutorial</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Tutorial-1" href="#Tutorial-1">Tutorial</a></h1><div></div><h2><a class="nav-anchor" id="Installation-1" href="#Installation-1">Installation</a></h2><p>This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently <code>RAFF</code> is registered in <a href="https://github.com/JuliaRegistries">General Julia Registers</a>, so the  package can be installed using the Julia package manager. From the Julia REPL, type <code>]</code> to enter into Pkg REPL mode and run:</p><pre><code class="language-none">pkg&gt; add RAFF</code></pre><h2><a class="nav-anchor" id="Basic-usage-1" href="#Basic-usage-1">Basic usage</a></h2><p>Just to illustrate the potential and basic usage of <code>RAFF</code>, let us consider the following data set given by an array <span>$A$</span>:</p><div>\[A=\left[ \begin{array}{cc}
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · RAFF- Robust Algebraic Fitting Function</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><nav class="toc"><a href="../index.html"><img class="logo" src="../assets/logo.png" alt="RAFF- Robust Algebraic Fitting Function logo"/></a><h1>RAFF- Robust Algebraic Fitting Function</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Overview</a></li><li class="current"><a class="toctext" href>Tutorial</a><ul class="internal"><li><a class="toctext" href="#Installation-1">Installation</a></li><li><a class="toctext" href="#Basic-usage-1">Basic usage</a></li><li><a class="toctext" href="#Multivariate-models-1">Multivariate models</a></li><li><a class="toctext" href="#Changing-some-options-1">Changing some options</a></li><li><a class="toctext" href="#Parallel-running-1">Parallel running</a></li></ul></li><li><a class="toctext" href="../examples/">Examples</a></li><li><a class="toctext" href="../api/">API</a></li><li><a class="toctext" href="../advanced/">Advanced</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Tutorial</a></li></ul><a class="edit-page" href="https://github.com/fsobral/RAFF.jl/blob/master/docs/src/tutorial.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Tutorial</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Tutorial-1" href="#Tutorial-1">Tutorial</a></h1><div></div><h2><a class="nav-anchor" id="Installation-1" href="#Installation-1">Installation</a></h2><p>This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently <code>RAFF</code> is registered in <a href="https://github.com/JuliaRegistries">General Julia Registers</a>, so the  package can be installed using the Julia package manager. From the Julia REPL, type <code>]</code> to enter into Pkg REPL mode and run:</p><pre><code class="language-none">pkg&gt; add RAFF</code></pre><p>In what follows, we provide some simple examples on how to solve problems with <code>RAFF</code>. All the examples, and some other ones, are given in the <code>examples/</code> directory as Julia scripts.</p><h2><a class="nav-anchor" id="Basic-usage-1" href="#Basic-usage-1">Basic usage</a></h2><p>Just to illustrate the potential and basic usage of <code>RAFF</code>, let us consider the following data set given by an array <span>$A$</span>:</p><div>\[A=\left[ \begin{array}{cc}
  -2.0 &amp;  5.0 \\
  -1.5 &amp;  3.25\\
  -1.0 &amp;  2.0 \\
@@ -10,24 +10,14 @@
   1.5 &amp;  3.25\\
   2.0 &amp;  5.0 \\
 \end{array}\right]\]</div><p>Let&#39;s suppose the first column of <span>$A$</span> as an experimental measure with  result given by second column. It is easy to see that the fitting  function in this case is accurate and given by </p><div>\[\phi(t)=t^2 +1\]</div><p>Now let&#39;s perturb one result of second column of <span>$A$</span>. For example,  consider <span>$A_{6,2} = 2.55$</span>. Assuming the model for fitting given by</p><div>\[\varphi(x,t)=x_1 t^2 +x_2 \]</div><p>we have by classical least squares as result <code>x = [0.904329, 1.3039]</code>. On the other hand, when we consider the <code>RAFF</code> algorithm we obtain the correct answer <code>x=[1.0, 1.0]</code>. Moreover, we also have a list of the possible outliers.</p><p>In order to run <code>RAFF</code> algorithm we need to setup </p><pre><code class="language-julia-repl">julia&gt; using RAFF</code></pre><p>and define the data set and model:</p><pre><code class="language-julia-repl">julia&gt; A=[-2.0  5.0;
-         -1.5  3.25;
-         -1.0  2.0 ;
-         -0.5  1.25;
-          0.0  1.0 ;
-          0.5  2.55;
-          1.0  2.0 ;
-          1.5  3.25;
-          2.0  5.0 ;]
-9×2 Array{Float64,2}:
- -2.0  5.0
- -1.5  3.25
- -1.0  2.0
- -0.5  1.25
-  0.0  1.0
-  0.5  2.55
-  1.0  2.0
-  1.5  3.25
-  2.0  5.0
+          -1.5  3.25;
+          -1.0  2.0 ;
+          -0.5  1.25;
+           0.0  1.0 ;
+           0.5  2.55;
+           1.0  2.0 ;
+           1.5  3.25;
+           2.0  5.0 ;];
 
 julia&gt; model(x, t) = x[1] * t[1]^2 + x[2]
 model (generic function with 1 method)</code></pre><p>After that, we can run method <a href="../api/#RAFF.raff"><code>raff</code></a>:</p><pre><code class="language-julia-repl">julia&gt; raff(model, A, 2)
@@ -47,11 +37,11 @@ julia&gt; output.solution
 gmodel (generic function with 1 method)
 
 julia&gt; raff(model, gmodel, A, 2)
-RAFFOutput(1, [0.999999, 1.0], 6, 8, 3.672268261041584e-11, [6])</code></pre><p>Preliminary tests have shown that the use of explicit derivatives is 10 times faster than automatic differentiation.</p><h2><a class="nav-anchor" id="Multivariate-models-1" href="#Multivariate-models-1">Multivariate models</a></h2><p><code>RAFF</code> supports the use of multivariate fitting functions to data sets of different dimensions. To illustrate how this works, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; data = [1.0 1.0   2.0
-               0.0 0.0   4.0
-               7.0 1.5  -4.5
-               2.0 2.0 -17.0 # outlier
-               0.0 8.6  -4.6]
+RAFFOutput(1, [0.999999, 1.0], 6, 8, 3.672268261041584e-11, [6])</code></pre><p>Preliminary tests have shown that the use of explicit derivatives is 10 times faster than automatic differentiation.</p><h2><a class="nav-anchor" id="Multivariate-models-1" href="#Multivariate-models-1">Multivariate models</a></h2><p><code>RAFF</code> supports the use of multivariate fitting functions to data sets of different dimensions. To illustrate how this works, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; data = [1.0 1.0    2.0
+               0.0 0.0    4.0
+               7.0 1.5   -4.5
+               2.0 2.0  -17.0 # outlier
+               0.0 8.6   -4.6]
 5×3 Array{Float64,2}:
  1.0  1.0    2.0
  0.0  0.0    4.0
@@ -72,13 +62,13 @@ RAFFOutput(1, [-1.0, -1.0, 4.0], 10, 4, 5.2480273340321425e-25, [4])</code></pre
 
 addprocs(3) # Add 3 worker processes</code></pre><p>This step can be replaced if Julia is initialized with the <code>-p</code> option</p><pre><code class="language-none">julia -p 3</code></pre><p>Now we have to load <a href="../#Overview-1"><code>RAFF</code></a> and the fit function in all workers:</p><pre><code class="language-none">@everywhere using RAFF
 
+@everywhere function model(x, t)
+   x[1] * t[1]^2 + x[2]
+end
+
 @everywhere function gmodel!(x, t, g)
     g[1] = t[1]^2
     g[2] = 1.0
-end
-
-@everywhere function model(x, t)
-   x[1] * t[1]^2 + x[2]
 end</code></pre><p>then, we call <a href="../api/#RAFF.praff"><code>praff</code></a> to solve the problem (note that we do not need to send the <code>A</code> matrix to all workers, since it will be automatically sent by <code>praff</code>).</p><pre><code class="language-none">A=[-2.0  5.0;
   -1.5  3.25;
   -1.0  2.0 ;
@@ -95,4 +85,4 @@ output = praff(model, gmodel!, A, n)
 RAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])</code></pre><p>The true effectiveness of parallelism occurs when option <code>MAXMS</code> is set, which changes the number of random initial points that are tried for each subproblem solved. Better solutions can be achieved with higher values of <code>MAXMS</code></p><pre><code class="language-none">n = 2
 
 output = praff(model, gmodel!, A, n; MAXMS=1000)
-RAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])</code></pre><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Overview</span></a><a class="next" href="../api/"><span class="direction">Next</span><span class="title">API</span></a></footer></article></body></html>
+RAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])</code></pre><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Overview</span></a><a class="next" href="../examples/"><span class="direction">Next</span><span class="title">Examples</span></a></footer></article></body></html>

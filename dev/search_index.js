@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Installation",
     "category": "section",
-    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF is registered in General Julia Registers, so the  package can be installed using the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add RAFF"
+    "text": "This package is supported just for Julia version 1.0. Consequently,  it uses package 3.0. Currently RAFF is registered in General Julia Registers, so the  package can be installed using the Julia package manager. From the Julia REPL, type ] to enter into Pkg REPL mode and run:pkg> add RAFFIn what follows, we provide some simple examples on how to solve problems with RAFF. All the examples, and some other ones, are given in the examples/ directory as Julia scripts."
 },
 
 {
@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Basic usage",
     "category": "section",
-    "text": "Just to illustrate the potential and basic usage of RAFF, let us consider the following data set given by an array A:A=left beginarraycc\n -20   50 \n -15   325\n -10   20 \n -05   125\n  00   10 \n  05   125\n  10   20 \n  15   325\n  20   50 \nendarrayrightLet\'s suppose the first column of A as an experimental measure with  result given by second column. It is easy to see that the fitting  function in this case is accurate and given by phi(t)=t^2 +1Now let\'s perturb one result of second column of A. For example,  consider A_62 = 255. Assuming the model for fitting given byvarphi(xt)=x_1 t^2 +x_2 we have by classical least squares as result x = [0.904329, 1.3039]. On the other hand, when we consider the RAFF algorithm we obtain the correct answer x=[1.0, 1.0]. Moreover, we also have a list of the possible outliers.In order to run RAFF algorithm we need to setup using RAFFand define the data set and model:A=[-2.0  5.0; \n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;]\n\nmodel(x, t) = x[1] * t[1]^2 + x[2]After that, we can run method raff:raff(model, A, 2)The number 2 above is the number of variables in model, i. e., the number of parameters to adjust in the model. The output is a RAFFOutput type. For example to access only the parameters of solution, we can useoutput = raff(model, A, 2)\noutput.solutionNote that RAFF algorithm detects and ignores possible outliers. In order to see which points are outliers, we can access the outliers attribute.output.outliersMore details about RAFFOutput type and other options can be obtained in API section.By default RAFF uses automatic differentiation, more specifically ForwardDiff package. But is possible to call RAFF methods with gradient vector of model. For example, considering the above example, we have,nabla varphi(x t) = t^2 1Programming this gradient and run raff we havegmodel(x, t, g)=begin\n   g[1] = t[1]^2\n   g[2] = 1.0\n   return g\nend\n\nraff(model, gmodel, A, 2)Preliminary tests have shown that the use of explicit derivatives is 10 times faster than automatic differentiation."
+    "text": "Just to illustrate the potential and basic usage of RAFF, let us consider the following data set given by an array A:A=left beginarraycc\n -20   50 \n -15   325\n -10   20 \n -05   125\n  00   10 \n  05   125\n  10   20 \n  15   325\n  20   50 \nendarrayrightLet\'s suppose the first column of A as an experimental measure with  result given by second column. It is easy to see that the fitting  function in this case is accurate and given by phi(t)=t^2 +1Now let\'s perturb one result of second column of A. For example,  consider A_62 = 255. Assuming the model for fitting given byvarphi(xt)=x_1 t^2 +x_2 we have by classical least squares as result x = [0.904329, 1.3039]. On the other hand, when we consider the RAFF algorithm we obtain the correct answer x=[1.0, 1.0]. Moreover, we also have a list of the possible outliers.In order to run RAFF algorithm we need to setup using RAFFand define the data set and model:A=[-2.0  5.0; \n   -1.5  3.25;\n   -1.0  2.0 ;\n   -0.5  1.25;\n    0.0  1.0 ;\n    0.5  2.55;\n    1.0  2.0 ;\n    1.5  3.25;\n    2.0  5.0 ;];\n\nmodel(x, t) = x[1] * t[1]^2 + x[2]After that, we can run method raff:raff(model, A, 2)The number 2 above is the number of variables in model, i. e., the number of parameters to adjust in the model. The output is a RAFFOutput type. For example to access only the parameters of solution, we can useoutput = raff(model, A, 2)\noutput.solutionNote that RAFF algorithm detects and ignores possible outliers. In order to see which points are outliers, we can access the outliers attribute.output.outliersMore details about RAFFOutput type and other options can be obtained in API section.By default RAFF uses automatic differentiation, more specifically ForwardDiff package. But is possible to call RAFF methods with gradient vector of model. For example, considering the above example, we have,nabla varphi(x t) = t^2 1Programming this gradient and run raff we havegmodel(x, t, g)=begin\n   g[1] = t[1]^2\n   g[2] = 1.0\n   return g\nend\n\nraff(model, gmodel, A, 2)Preliminary tests have shown that the use of explicit derivatives is 10 times faster than automatic differentiation."
 },
 
 {
@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Multivariate models",
     "category": "section",
-    "text": "RAFF supports the use of multivariate fitting functions to data sets of different dimensions. To illustrate how this works, consider the following example:data = [1.0 1.0   2.0\n        0.0 0.0   4.0\n        7.0 1.5  -4.5\n        2.0 2.0 -17.0 # outlier\n        0.0 8.6  -4.6]and the following modelmodel(x, t) = x[1] * t[1] + x[2] * t[2] + x[3]            Note that this model has two variables (t_1 t_2). Naturally, this problem has one outlier (data[4,:]), so there are 4 trust points. Let\'s run RAFF and check the answer.output = raff(model, data, 3)The right answer is [- 1.0, - 1.0, 4.0]. As we can note, RAFF get a good fit for the data set. Handling the output follows the same pattern as the one-dimensional case.In order to get improvements in processing time, we can code the gradient vector of model too:gmodel(x, t, g) = begin \n    g[1] = t[1]\n    g[2] = t[2]\n    g[3] = 1.0\n    return g\nendoutput = raff(model,data, 3)"
+    "text": "RAFF supports the use of multivariate fitting functions to data sets of different dimensions. To illustrate how this works, consider the following example:data = [1.0 1.0    2.0\n        0.0 0.0    4.0\n        7.0 1.5   -4.5\n        2.0 2.0  -17.0 # outlier\n        0.0 8.6   -4.6]and the following modelmodel(x, t) = x[1] * t[1] + x[2] * t[2] + x[3]            Note that this model has two variables (t_1 t_2). Naturally, this problem has one outlier (data[4,:]), so there are 4 trust points. Let\'s run RAFF and check the answer.output = raff(model, data, 3)The right answer is [- 1.0, - 1.0, 4.0]. As we can note, RAFF get a good fit for the data set. Handling the output follows the same pattern as the one-dimensional case.In order to get improvements in processing time, we can code the gradient vector of model too:gmodel(x, t, g) = begin \n    g[1] = t[1]\n    g[2] = t[2]\n    g[3] = 1.0\n    return g\nendoutput = raff(model,data, 3)"
 },
 
 {
@@ -93,7 +93,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Tutorial",
     "title": "Parallel running",
     "category": "section",
-    "text": "RAFF can be run in a parallel or distributed environment, using the Distributed package and function praff. Let\'s use praff to solve the same problem from the beginning. First, the Distributed package has to be loaded and the number of workers has to be added. It is also possible to add the address of other machines.using Distributed\n\naddprocs(3) # Add 3 worker processesThis step can be replaced if Julia is initialized with the -p optionjulia -p 3Now we have to load RAFF and the fit function in all workers:@everywhere using RAFF\n\n@everywhere function gmodel!(x, t, g)\n    g[1] = t[1]^2\n    g[2] = 1.0\nend\n\n@everywhere function model(x, t)\n   x[1] * t[1]^2 + x[2]\nendthen, we call praff to solve the problem (note that we do not need to send the A matrix to all workers, since it will be automatically sent by praff).A=[-2.0  5.0;\n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;];\n\nn = 2\n\noutput = praff(model, gmodel!, A, n)\nRAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])The true effectiveness of parallelism occurs when option MAXMS is set, which changes the number of random initial points that are tried for each subproblem solved. Better solutions can be achieved with higher values of MAXMSn = 2\n\noutput = praff(model, gmodel!, A, n; MAXMS=1000)\nRAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])"
+    "text": "RAFF can be run in a parallel or distributed environment, using the Distributed package and function praff. Let\'s use praff to solve the same problem from the beginning. First, the Distributed package has to be loaded and the number of workers has to be added. It is also possible to add the address of other machines.using Distributed\n\naddprocs(3) # Add 3 worker processesThis step can be replaced if Julia is initialized with the -p optionjulia -p 3Now we have to load RAFF and the fit function in all workers:@everywhere using RAFF\n\n@everywhere function model(x, t)\n   x[1] * t[1]^2 + x[2]\nend\n\n@everywhere function gmodel!(x, t, g)\n    g[1] = t[1]^2\n    g[2] = 1.0\nendthen, we call praff to solve the problem (note that we do not need to send the A matrix to all workers, since it will be automatically sent by praff).A=[-2.0  5.0;\n  -1.5  3.25;\n  -1.0  2.0 ;\n  -0.5  1.25;\n   0.0  1.0 ;\n   0.5  2.55;\n   1.0  2.0 ;\n   1.5  3.25;\n   2.0  5.0 ;];\n\nn = 2\n\noutput = praff(model, gmodel!, A, n)\nRAFFOutput(1, [1.0, 0.999996], 6, 8, 4.0205772365906425e-11, [6])The true effectiveness of parallelism occurs when option MAXMS is set, which changes the number of random initial points that are tried for each subproblem solved. Better solutions can be achieved with higher values of MAXMSn = 2\n\noutput = praff(model, gmodel!, A, n; MAXMS=1000)\nRAFFOutput(1, [1.0, 1.0], 7, 8, 5.134133698545651e-13, [6])"
+},
+
+{
+    "location": "examples/#",
+    "page": "Examples",
+    "title": "Examples",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "examples/#Examples-1",
+    "page": "Examples",
+    "title": "Examples",
+    "category": "section",
+    "text": "In addition to the examples given in the Tutorial, the examples/ directory contains another ways of using RAFF. Currently, we only provide an example on how to load a problem from file, solve it using RAFF and visually check the results.cubic.jl: this example solves a problem using a cubic model, with 4 parameters. The example also illustrates how to use RAFF.model_list utility structure in order to load pre-defined models."
 },
 
 {
@@ -233,11 +249,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.model_list",
+    "page": "API",
+    "title": "RAFF.model_list",
+    "category": "constant",
+    "text": "This dictionary represents the list of models used in the generation of random tests. Return the tuple (n, model, model_str), where\n\nn is the number of parameters of the model\nmodel is the model of the form m(x, t), where x are the parameters and t are the variables\nmodel_str is the string representing the model, used to build random generated problems\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#Random-generation-1",
     "page": "API",
     "title": "Random generation",
     "category": "section",
-    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.generate_noisy_data"
+    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.generate_noisy_data\nRAFF.model_list"
 },
 
 {
@@ -254,6 +278,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Output type",
     "category": "section",
     "text": "RAFFOutput"
+},
+
+{
+    "location": "advanced/#",
+    "page": "Advanced",
+    "title": "Advanced",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "advanced/#Advanced-usage-1",
+    "page": "Advanced",
+    "title": "Advanced usage",
+    "category": "section",
+    "text": ""
+},
+
+{
+    "location": "advanced/#Test-Problems-1",
+    "page": "Advanced",
+    "title": "Test Problems",
+    "category": "section",
+    "text": "In order to develop a robust code, test problems regarding data fitting with outliers have been created. All the problems are available in directory test/test_problems. All the problems have the formbeginarrayccccc\n	k\n	t_11  t_12    t_1k  f_1\n	     \n	t_np1  t_np2    t_npk  f_np\nendarraywhere k is the number of variables of the model (not the number of parameters!), np is the number of data points to be adjusted, t_ij are the values selected for parameter j in experiment i and f_i is the result obtained for experiment i."
+},
+
+{
+    "location": "advanced/#Script-files-1",
+    "page": "Advanced",
+    "title": "Script files",
+    "category": "section",
+    "text": "During the development and testing of RAFF several scripts and pieces of Julia code have been created. Those files are mostly related to the automated generation of test problems and visualization of the solutions. All those files are located in the test/scripts directory.We explain each file below, so maybe more advanced users can modify and re-use the code to generate their own problems.calc_ratio.jl: this script contains a function that generates several tests for the same model and solve each one with RAFF. Then it prints the ratio of outliers that have successfully been detected but the method.\ndraw.jl: This script draws the solution of a given problem and also its data, which was taken from a file. Examples of such files are located in test/test_problems.\nrun_raff.jl: this script simply loads a problem data from a file, selects a given model and runs RAFF. Examples of such files are located in test/test_problems.\nrun_lmlovo.jl: the same as before, but only for lmlovo function. Used mostly for testing.\ngenerate_fit_tests.jl: script for generating random test problem files, using the pre-defined models given by RAFF.model_list. This function cannot be called inside Julia, since it uses ArgParse package.\ngen_circle.jl: specif script for generating random test problems related to the detection of circles in the plane. It also provides functions to draw the problem and the solution, which differ from the draw.jl script above."
 },
 
 ]}
