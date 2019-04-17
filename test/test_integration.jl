@@ -1,6 +1,6 @@
 @testset "Generated test set" begin
 
-    dir = "../examples/files/"
+    dir = "integration_test_files/"
 
     # Iterate over a list of small problems and solutions
     for prob in eachline(dir * "list.dat")

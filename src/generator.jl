@@ -1,7 +1,16 @@
 export generate_test_problems, generate_noisy_data
 
-# This dictionary represents the list of models used in the tests
-# Return the tuple (n, model, model_str)
+"""
+
+This dictionary represents the list of models used in the generation of random tests.
+Return the tuple `(n, model, model_str)`, where
+
+  - `n` is the number of parameters of the model
+  - `model` is the model of the form `m(x, t)`, where `x` are the
+    parameters and `t` are the variables
+  - `model_str` is the string representing the model, used to build random generated problems
+
+"""
 const model_list = Dict(
     "linear" => (2, (x, t) -> x[1] * t[1] + x[2],
                  "(x, t) -> x[1] * t[1] + x[2]"),

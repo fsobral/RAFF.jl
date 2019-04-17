@@ -29,6 +29,7 @@ RAFF.check_and_close
 RAFF.generate_test_problems
 RAFF.get_unique_random_points
 RAFF.generate_noisy_data
+RAFF.model_list
 ```
 
 ## Output type

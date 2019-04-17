@@ -5,7 +5,9 @@ makedocs(
     sitename = "RAFF- Robust Algebraic Fitting Function",
     pages = ["Overview" => "index.md",
 	     "Tutorial"=> "tutorial.md",
-	     "API" => "api.md"],
+	     "Examples" => "examples.md",
+             "API" => "api.md",
+             "Advanced" => "advanced.md"],
     #html_prettyurls = false
     #format = Documenter.HTML(prettyurls = false),
     modules = [RAFF]
