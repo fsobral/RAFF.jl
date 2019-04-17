@@ -9,16 +9,17 @@ form
 
 ```math
 \begin{array}{ccccc}
+	k
 	t_{11} & t_{12} & ... & t_{1k} & f_1\\
 	... & & & & \\
 	t_{np,1} & t_{np,2} & ... & t_{np,k} & f_{np}
 \end{array}
 ```
 
-where ``k`` is the number of variables of the model, ``np`` is the
-number of data points to be adjusted, ``t_{ij}`` are the values
-selected for parameter ``j`` in experiment ``i`` and ``f_i`` is the
-result obtained for experiment ``i``.
+where ``k`` is the number of *variables* of the model (not the number
+of parameters!), ``np`` is the number of data points to be adjusted,
+``t_{ij}`` are the values selected for parameter ``j`` in experiment
+``i`` and ``f_i`` is the result obtained for experiment ``i``.
 
 ## Script files
 
@@ -45,7 +46,8 @@ and re-use the code to generate their own problems.
     function. Used mostly for testing.
   - `generate_fit_tests.jl`: script for generating random test problem
     files, using the pre-defined models given by
-    [`RAFF.model_list`](@ref).
+    [`RAFF.model_list`](@ref). This function cannot be called inside
+    Julia, since it uses `ArgParse` package.
   - `gen_circle.jl`: specif script for generating random test problems
     related to the detection of circles in the plane. It also provides
     functions to draw the problem and the solution, which differ from
