@@ -13,6 +13,10 @@ From the Julia REPL, type `]` to enter into Pkg REPL mode and run:
 pkg> add RAFF
 ```
 
+In what follows, we provide some simple examples on how to solve
+problems with `RAFF`. All the examples, and some other ones, are given
+in the `examples/` directory as Julia scripts.
+
 ## Basic usage
 
 Just to illustrate the potential and basic usage of `RAFF`, let us consider
@@ -58,14 +62,14 @@ and define the data set and model:
 
 ```@repl docrepl
 A=[-2.0  5.0; 
-  -1.5  3.25;
-  -1.0  2.0 ;
-  -0.5  1.25;
-   0.0  1.0 ;
-   0.5  2.55;
-   1.0  2.0 ;
-   1.5  3.25;
-   2.0  5.0 ;]
+   -1.5  3.25;
+   -1.0  2.0 ;
+   -0.5  1.25;
+    0.0  1.0 ;
+    0.5  2.55;
+    1.0  2.0 ;
+    1.5  3.25;
+    2.0  5.0 ;];
 
 model(x, t) = x[1] * t[1]^2 + x[2]
 ```
@@ -127,11 +131,11 @@ of different dimensions. To illustrate how this works, consider the
 following example:
 
 ```@repl docrepl
-data = [1.0 1.0   2.0
-        0.0 0.0   4.0
-        7.0 1.5  -4.5
-        2.0 2.0 -17.0 # outlier
-        0.0 8.6  -4.6]
+data = [1.0 1.0    2.0
+        0.0 0.0    4.0
+        7.0 1.5   -4.5
+        2.0 2.0  -17.0 # outlier
+        0.0 8.6   -4.6]
 ```
 and the following model
 
@@ -221,13 +225,13 @@ workers:
 ```
 @everywhere using RAFF
 
+@everywhere function model(x, t)
+   x[1] * t[1]^2 + x[2]
+end
+
 @everywhere function gmodel!(x, t, g)
     g[1] = t[1]^2
     g[2] = 1.0
-end
-
-@everywhere function model(x, t)
-   x[1] * t[1]^2 + x[2]
 end
 ```
 
