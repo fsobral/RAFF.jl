@@ -49,6 +49,16 @@ Other useful examples are found in the documentation and also in directory [`exa
 julia> ] add RAFF
 ```
 
+## Advanced
+
+Several files with test problems are provided inside directory
+[`test/test_problems`](test/test_problems). We also provide some
+scripts to create new random test problems, visualize and solve them
+using `RAFF`. Those files can be found in
+[`test/scripts`](test/scripts). For a detailed explanation of each
+script file, please refer to the
+[documentation](https://fsobral.github.io/RAFF.jl/stable/advanced/).
+
 ## Credits
 
 * Francisco Sobral (Leader)
