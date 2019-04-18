@@ -54,10 +54,10 @@ import Base.show
 
 function show(io::IO, ro::RAFFOutput)
 	print(io,"** RAFFOutput ** \n")
-	print(io,"Status (.status) = $(RAFFOutput.status) \n")
-	print(io,"Solution (.solution) = $(RAFFOutput.solution) \n")
-	print(io,"Number of iterations (.iter) = $(RAFFOutput.iter) \n")
-	print(io,"Number of outliers (.p) = $(RAFFOutput.p) \n")
-	print(io,"Objetive function value (.f) = $(RAFFOutput.f) \n")
-	print(io,"Index of Outliers (.outliers)= $(RAFFOutput.outliers)\n")
+	print(io,"Status (.status) = $(ro.status) \n")
+	print(io,"Solution (.solution) = $(ro.solution) \n")
+	print(io,"Number of iterations (.iter) = $(ro.iter) \n")
+	print(io,"Number of outliers (.p) = $(ro.p) \n")
+	print(io,"Objetive function value (.f) = $(ro.f) \n")
+	print(io,"Index of outliers (.outliers)= $(ro.outliers)\n")
 end
