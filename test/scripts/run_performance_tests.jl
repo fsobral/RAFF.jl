@@ -4,7 +4,7 @@ using RAFF
 using Printf
 using DelimitedFiles
 
-fpath = "../test/test-problems/"
+fpath = "../test_problems/"
 
 getType = begin
 

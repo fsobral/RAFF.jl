@@ -48,7 +48,9 @@ and re-use the code to generate their own problems.
     files, using the pre-defined models given by
     [`RAFF.model_list`](@ref). This function cannot be called inside
     Julia, since it uses `ArgParse` package.
-  - `gen_circle.jl`: specif script for generating random test problems
+  - `gen_circle.jl`: specific script for generating random test problems
     related to the detection of circles in the plane. It also provides
     functions to draw the problem and the solution, which differ from
     the `draw.jl` script above.
+  - `run_performance_tests.jl`: script for generating some performance
+    tests, so we can compare different versions of RAFF.
