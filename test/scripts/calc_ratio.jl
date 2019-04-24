@@ -36,8 +36,8 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
 
         tmpsol .+= sol
         
-        data, tmpsol, tout = generateNoisyData(model, n, np, p,
-                                               tmpsol, 1.0, 30.0)
+        data, tmpsol, tout = generate_noisy_data(model, n, np, p,
+                                                 tmpsol, 1.0, 30.0)
 
         rsol, t, = @timed raff(model, data, n; MAXMS=maxms, initguess=x)
 

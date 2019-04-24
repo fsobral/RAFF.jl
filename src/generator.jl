@@ -1,7 +1,16 @@
-export generateTestProblems, generateNoisyData
+export generate_test_problems, generate_noisy_data
 
-# This dictionary represents the list of models used in the tests
-# Return the tuple (n, model, model_str)
+"""
+
+This dictionary represents the list of models used in the generation of random tests.
+Return the tuple `(n, model, model_str)`, where
+
+  - `n` is the number of parameters of the model
+  - `model` is the model of the form `m(x, t)`, where `x` are the
+    parameters and `t` are the variables
+  - `model_str` is the string representing the model, used to build random generated problems
+
+"""
 const model_list = Dict(
     "linear" => (2, (x, t) -> x[1] * t[1] + x[2],
                  "(x, t) -> x[1] * t[1] + x[2]"),
@@ -18,7 +27,7 @@ const model_list = Dict(
 
 """
 
-    generateTestProblems(datFilename::String, solFilename::String,
+    generate_test_problems(datFilename::String, solFilename::String,
                          model::Function, modelStr::String, n::Int,
                          np::Int, p::Int)
 
@@ -40,7 +49,7 @@ Generate random data files for testing fitting problems.
     approach.
 
 """
-function generateTestProblems(datFilename::String,
+function generate_test_problems(datFilename::String,
                               solFilename::String, model::Function,
                               modelStr::String,
                               n::Int, np::Int, p::Int;
@@ -63,7 +72,7 @@ function generateTestProblems(datFilename::String,
     
     open(datFilename, "w") do data
     
-        vdata, xsol, outliers = generateNoisyData(model, n, np, p;
+        vdata, xsol, outliers = generate_noisy_data(model, n, np, p;
                                    tMin=tMin, tMax=tMax, xSol=xSol,
                                    std=std, outTimes=outTimes)
     
@@ -124,14 +133,14 @@ end
 
 """
 
-    generateNoisyData(model::Function, n::Int, np::Int, p::Int;
+    generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
                       tMin::Float64=-10.0, tMax::Float64=10.0,
                       xSol::Vector{Float64}=10.0 * randn(Float64, n),
                       std::Float64=200.0, outTimes::Float64=7.0)
 
-    generateNoisyData(model::Function, n, np, p, tMin::Float64, tMax::Float64)
+    generate_noisy_data(model::Function, n, np, p, tMin::Float64, tMax::Float64)
 
-    generateNoisyData(model::Function, n::Int, np::Int, p::Int,
+    generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
                       xSol::Vector{Float64}, tMin::Float64, tMax::Float64)
 
 Random generate a fitting one-dimensional data problem.
@@ -152,7 +161,7 @@ It returns a tuple `(data, xSol, outliers)` where
   - `outliers`: the outliers of this data set
 
 """
-function generateNoisyData(model::Function, n::Int, np::Int, p::Int;
+function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
                            tMin::Float64=-10.0, tMax::Float64=10.0,
                            xSol::Vector{Float64}=10.0 * randn(Float64, n),
                            std::Float64=200.0, outTimes::Float64=7.0)
@@ -189,9 +198,9 @@ function generateNoisyData(model::Function, n::Int, np::Int, p::Int;
 
 end
 
-generateNoisyData(model::Function, n::Int, np::Int, p::Int, tMin::Float64, tMax::Float64) =
-    generateNoisyData(model, n, np, p; tMin=tMin, tMax=tMax)
+generate_noisy_data(model::Function, n::Int, np::Int, p::Int, tMin::Float64, tMax::Float64) =
+    generate_noisy_data(model, n, np, p; tMin=tMin, tMax=tMax)
 
-generateNoisyData(model::Function, n::Int, np::Int, p::Int,
+generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
                   xSol::Vector{Float64}, tMin::Float64, tMax::Float64) =
-                      generateNoisyData(model, n, np, p; tMin=tMin, tMax=tMax, xSol=xSol)
+                      generate_noisy_data(model, n, np, p; tMin=tMin, tMax=tMax, xSol=xSol)

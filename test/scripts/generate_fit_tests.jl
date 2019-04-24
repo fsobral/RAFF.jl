@@ -2,18 +2,7 @@ using RAFF
 using Printf
 using ArgParse
 
-const model_list = Dict(
-    "linear" => (2, (x, t) -> x[1] * t + x[2],
-                 "(x, t) -> x[1] * t + x[2]"),
-    "cubic" => (2, (x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4],
-                "(x, t) -> x[1] * t^3 + x[2] * t^2 + x[3] * t + x[4]"),
-    "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t),
-                "(x, t) -> x[1] + x[2] * exp(- x[3] * t)"),
-    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4]))),
-                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * (t - x[4])))")
-)
-
-function main()
+function mainf()
 
     s = ArgParseSettings()
 
@@ -33,6 +22,7 @@ function main()
         help = "Model function"
         arg_type = String
         default = "linear"
+        required = true
 
         "--fname"
         help = "File name"
@@ -49,7 +39,7 @@ function main()
 
     parsed_args = parse_args(ARGS, s)
 
-    n, model, modelStr = model_list[parsed_args["m"]]
+    n, model, modelStr = RAFF.model_list[parsed_args["m"]]
 
     tMin = - 0.0
 
@@ -64,7 +54,7 @@ function main()
         ffname = "/tmp/" * fname * ".txt"
         fsname = "/tmp/" * fname * "_sol.txt"
         
-        generateTestProblems(ffname, fsname, model, modelStr, n,
+        generate_test_problems(ffname, fsname, model, modelStr, n,
                              parsed_args["np"], parsed_args["p"];
                              tMin=tMin, tMax=tMax, xSol=xSol, std=200.0)
 
@@ -79,4 +69,4 @@ function main()
 
 end
 
-main()
+mainf()

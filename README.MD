@@ -10,7 +10,7 @@ This package implements a robust method to fit a given function
 the LOVO algorithm [1] and also in a suitable voting strategy in order
 automatically eliminate outliers.
 
-The potential use of this package is in statistical  problems which depend on fitting functions or in more specific fields like computer vision for problems related shape detection. 
+Potential use of this package is in statistical  problems which depend on fitting functions or in more specific fields like computer vision for problems related shape detection. 
 
 For a brief description of the potential of this program and the difference between related strategies in the literature, like least square, consider the following dataset
 
@@ -37,8 +37,27 @@ and when we apply RAFF strategy we get
 
 <img src="/docs/src/assets/figure_RAFF_example.png" height="80%" width="80%"/>
 
-Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RAFF detects the point `(0.5,2.55)` like an outilier and excludes the influence of this point for determine `f(t)`. 
+Note that RAFF detects (automatically) the model `f(t)=1.0*t^2 +1.0` that is, RAFF detects the point `(0.5,2.55)` like an outlier and excludes the influence of this point for determine `f(t)`. 
 Consequently, RAFF detects the number of possible outliers and in the same time, which their are. This fact distinguishes RAFF from other techniques like [1] or classical least square.
+
+Other useful examples are found in the documentation and also in directory [`examples/`](examples/).
+
+## Installation
+`RAFF` is a package registered in the `General repository`. Consequently, in order to install  `RAFF`, just type in `REPL`:
+
+```julia
+julia> ] add RAFF
+```
+
+## Advanced
+
+Several files with test problems are provided inside directory
+[`test/test_problems`](test/test_problems). We also provide some
+scripts to create new random test problems, visualize and solve them
+using `RAFF`. Those files can be found in
+[`test/scripts`](test/scripts). For a detailed explanation of each
+script file, please refer to the
+[documentation](https://fsobral.github.io/RAFF.jl/stable/advanced/).
 
 ## Performance
 

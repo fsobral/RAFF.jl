@@ -6,7 +6,7 @@
         
         v = [3.0, 2.0, 1.0]
 
-        pi, pv = RAFF.SortFun!(v, ind, 2)
+        pi, pv = RAFF.sort_fun!(v, ind, 2)
 
         @test(length(pi) == 2)
         @test(length(pv) == 2)
@@ -19,7 +19,7 @@
         
         v = [1.0, 3.0, 1.0, 1.0]
 
-        pi, pv = RAFF.SortFun!(v, ind, 3)
+        pi, pv = RAFF.sort_fun!(v, ind, 3)
 
         @test(issubset(pi, [1, 3, 4]))
         @test(pv == ones(3))
@@ -27,7 +27,7 @@
 
         v = [1.0, 3.0, 1.0, 1.0]
 
-        pi, pv = RAFF.SortFun!(v, ind, 1)
+        pi, pv = RAFF.sort_fun!(v, ind, 1)
 
         @test(pi == [1])
         @test(pv == [1.0])
@@ -38,13 +38,13 @@
                           
         v = [3.0, 2.0, 1.0]
 
-        pi, pv = RAFF.SortFun!(v, ind, 0)
+        pi, pv = RAFF.sort_fun!(v, ind, 0)
 
         @test(length(pi) == length(pv) == 0)
         @test(v == [3.0, 2.0, 1.0])
         @test(ind == zeros(3))
 
-        pi, pv = RAFF.SortFun!(v, ind, -1)
+        pi, pv = RAFF.sort_fun!(v, ind, -1)
 
         @test(length(pi) == length(pv) == 0)
         @test(v == [3.0, 2.0, 1.0])
@@ -70,7 +70,7 @@ end
 
     solf = "sol.dat"
 
-    generateTestProblems(datf, solf, model, modelStr, n, np, p)
+    generate_test_problems(datf, solf, model, modelStr, n, np, p)
 
     open(solf, "r") do fp
 
