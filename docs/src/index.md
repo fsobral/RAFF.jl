@@ -29,10 +29,10 @@ Mathematics, State University of Maringá, Brazil
 
 ## References
 
-[1]Andreani, R., Dunder, C. & Martínez, J.M. Math Meth Oper Res (2005) 61: 365. https://doi.org/10.1007/s001860400410
+[1] Andreani, R., Dunder, C. & Martínez, J.M. Math Meth Oper Res (2005) 61: 365. https://doi.org/10.1007/s001860400410
 
-[2] Andreani, R., Martínez, J. M., Martínez, L., & Yano, F. S. (2009). Low order-value  optimization and applications. *Journal of Global Optimization*, 43(1), 1-22.
+[2] Andreani, R., Martínez, J.M., Martínez, L. et al. J Glob Optim (2009) 43: 1. https://doi.org/10.1007/s10898-008-9280-3
 
-[3] Martínez, J.M. TOP (2012) 20:75.https://doi.org/10.1007/s11750-010-0169-1
+[3] Martínez, J.M. TOP (2012) 20: 75. https://doi.org/10.1007/s11750-010-0169-1
 
 
