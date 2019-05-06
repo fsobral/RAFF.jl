@@ -27,7 +27,7 @@ bibliography: paper.bib
 
 # Summary
 
-Let $f : \Re^n \to \Re$ be a function whose mathematical description
+Let $f : \mathbb{R}^n \to \mathbb{R}$ be a function whose mathematical description
 is not available. This function can be, for example, a black-box, a
 proprietary computer program or an experiment. Suppose that a data set
 $S = \{(t_1, f(t_1)), \dots, (t_m, f(t_m))\}$ of $m$ observations of
