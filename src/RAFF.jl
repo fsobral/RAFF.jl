@@ -30,10 +30,10 @@ include("dutils.jl")
 include("generator.jl")
 
 """
-    lmlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
+    lmlovo(model::Function [, t::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
 
-    lmlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
+    lmlovo(model::Function, gmodel!::Function [, t::Vector{Float64} = zeros(n)],
            data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int=200,
            ε::Float64=10.0^-4])
 
@@ -51,23 +51,23 @@ Matriz `data` is the data to be fit. This matrix should be in the form
 where `N` is the dimension of the argument of the model
 (i.e. dimension of `t`).
 
-If 'x' is provided, the it is used as the starting point.
+If 't' is provided, the it is used as the starting point.
 
 The signature of function `model` should be given by
 
-    model(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray})
+    model(x::Union{Vector{Float64}, SubArray}, t::Vector{Float64})
 
-where `x` is a `n`-dimensional vector of parameters and `t` is the
-argument. If the gradient of the model `gmodel!`
+where `x` are the variables and `t` is a `n`-dimensional vector of
+parameters. If the gradient of the model `gmodel!`
 
-    gmodel!(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray},
-            g::Vector{Float64})
+    gmodel!(g::Vector{Float64}, x::Union{Vector{Float64},
+            t::Vector{Float64}, SubArray} )
 
 is not provided, then the function ForwardDiff.gradient! is called to
 compute it.  **Note** that this choice has an impact in the
 computational performance of the algorithm. In addition, if
-ForwardDiff is being used, then one **MUST** remove the signature of
-vector `x` from the model.
+`ForwardDiff.jl` is being used, then one **MUST** remove the signature
+of vector `t` from the model.
 
 The optional arguments are
 
@@ -77,7 +77,7 @@ The optional arguments are
 Returns a [`RAFFOutput`](@ref) object.
 
 """
-function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
+function lmlovo(model::Function, gmodel!::Function, t::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200, ε::Float64=10.0^-4)
 
@@ -92,7 +92,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     end
 
-    (p == 0) && return RAFFOutput(1, x, 0, p, 0.0, [1:npun;])
+    (p == 0) && return RAFFOutput(1, t, 0, p, 0.0, [1:npun;])
     
     # Main function - the LOVO function
     LovoFun = let
@@ -106,10 +106,10 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         p_::Int = p
         
         # Return a ordered set index and lovo value
-        x -> begin
+        (t) -> begin
             
             @views for i = 1:npun_
-                F[i] = (model(x, data[i,1:(end - 1)]) - data[i, end])^2
+                F[i] = (model(data[i,1:(end - 1)]) - data[i, end], t)^2
             end
             
             indF, orderedF = sort_fun!(F, ind, p_)
@@ -130,13 +130,13 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
                 
         for (k, i) in enumerate(ind)
             
-            t = data[i, 1:(end - 1)]
+            x = data[i, 1:(end - 1)]
             
             r[k] = model(x, t) - data[i, end]
             
             v = @view(rJ[k, :])
             
-            gmodel!(x, t, v)
+            gmodel!(v, x, t)
 
         end
 
@@ -158,7 +158,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     maxoutind = min(p, 5)
 
     # Allocation
-    xnew = Vector{Float64}(undef, n)
+    tnew = Vector{Float64}(undef, n)
     d = Vector{Float64}(undef, n)
     y = Vector{Float64}(undef, n)
     G = Array{Float64, 2}(undef, n, n)
@@ -166,9 +166,9 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     
     # Initial steps
     
-    ind_lovo, best_val_lovo = LovoFun(x)
+    ind_lovo, best_val_lovo = LovoFun(t)
 
-    ResFun!(x, ind_lovo, val_res, jac_res)
+    ResFun!(t, ind_lovo, val_res, jac_res)
 
     BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
  
@@ -185,7 +185,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             @info("Iteration $(safecount)")
             @info("  Current value:   $(best_val_lovo)")
             @info("  ||grad_lovo||_2: $(ngrad_lovo)")
-            @info("  Current iterate: $(x)")
+            @info("  Current iterate: $(t)")
             @info("  Best indices (first $(maxoutind)): $(ind_lovo[1:maxoutind])")
             @info("  lambda: $(λ)")
 
@@ -212,26 +212,26 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             
                 @warn "Failed to solve the linear system. Will try new point."
                 d .= - 1.0 .* grad_lovo 
-                x .= rand(n)
+                t .= rand(n)
                 
             end
         else 
             d .= ad
         end
 
-        xnew .= x .+ d
+        tnew .= t .+ d
         
-        ind_lovo, val_lovo = LovoFun(xnew)
+        ind_lovo, val_lovo = LovoFun(tnew)
         
         if  val_lovo <= best_val_lovo
 
-            x .= xnew
+            t .= tnew
             
             best_val_lovo = val_lovo
             
             λ = λ / λ_down
             
-            ResFun!(x, ind_lovo, val_res, jac_res)
+            ResFun!(t, ind_lovo, val_res, jac_res)
 
             BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
 
@@ -286,7 +286,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         @info("""
 
         Final iteration (STATUS=$(status))
-          Solution found:       $(x)
+          Solution found:       $(t)
           ||grad_lovo||_2:      $(ngrad_lovo)
           Function value:       $(best_val_lovo)
           Number of iterations: $(safecount)
@@ -296,7 +296,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     end
     
-    return RAFFOutput(status, x, safecount, p, best_val_lovo, outliers)
+    return RAFFOutput(status, t, safecount, p, best_val_lovo, outliers)
 
 end
 
