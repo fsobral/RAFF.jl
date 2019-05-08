@@ -12,8 +12,7 @@
         model = (x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64}) -> θ[1] *
             x[1] + θ[2] * x[2] + θ[3]
 
-        gmodel! = (g::Union{Vector{Float64}, SubArray},
-                   x::Union{Vector{Float64}, SubArray},
+        gmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},
                    θ::Vector{Float64}) -> begin
 
             g[1] = x[1]

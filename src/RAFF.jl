@@ -51,7 +51,7 @@ Matriz `data` is the data to be fit. This matrix should be in the form
 where `N` is the dimension of the argument of the model
 (i.e. dimension of `x`).
 
-If 'θ' is provided, then it is used as the starting point.
+If `θ` is provided, then it is used as the starting point.
 
 The signature of function `model` should be given by
 
@@ -60,14 +60,14 @@ The signature of function `model` should be given by
 where `x` are the variables and `θ` is a `n`-dimensional vector of
 parameters. If the gradient of the model `gmodel!`
 
-    gmodel!(g::Vector{Float64}, x::Union{Vector{Float64},
-            θ::Vector{Float64}, SubArray} )
+    gmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},
+               θ::Vector{Float64})
 
 is not provided, then the function ForwardDiff.gradient! is called to
 compute it.  **Note** that this choice has an impact in the
 computational performance of the algorithm. In addition, if
 `ForwardDiff.jl` is being used, then one **MUST** remove the signature
-of vector `θ` from the model.
+of vector `θ` from function `model`.
 
 The optional arguments are
 
@@ -340,7 +340,7 @@ points to fit the `model`.
 
   - `model`: function to fit data. Its signature should be given by
 
-    model(x, θ)
+        model(x, θ)
 
     where `x` is the multidimensional argument and `θ` is the
     `n`-dimensional vector of parameters
