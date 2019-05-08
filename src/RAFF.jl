@@ -44,12 +44,12 @@ Levenberg-Marquardt algorithm is implemented in this version.
 
 Matriz `data` is the data to be fit. This matrix should be in the form
 
-    t11 t12 ... t1N y1
-    t21 t22 ... t2N y2
+    x11 x12 ... x1N y1
+    x21 x22 ... x2N y2
     :
 
 where `N` is the dimension of the argument of the model
-(i.e. dimension of `t`).
+(i.e. dimension of `x`).
 
 If 'θ' is provided, then it is used as the starting point.
 
@@ -316,7 +316,7 @@ function lmlovo(model::Function, θ::Vector{Float64}, data::Array{Float64,2},
 
     end
 
-    return lmlovo(model, grad_model, θ, data, n, p; kwargs...)
+    return lmlovo(model, grad_model!, θ, data, n, p; kwargs...)
     
 end
 
@@ -340,27 +340,28 @@ points to fit the `model`.
 
   - `model`: function to fit data. Its signature should be given by
 
-        model(x, t)
+    model(x, θ)
 
-    where `x` is a `n`-dimensional vector of parameters and `t` is the
-    multidimensional argument
+    where `x` is the multidimensional argument and `θ` is the
+    `n`-dimensional vector of parameters
 
   - `gmodel!`: gradient of the model function. Its signature should be
     given by
 
-        gmodel!(x, t, g)
+        gmodel!(g, x, θ)
 
-    where `x` is a `n`-dimensional vector of parameters, `t` is the
-    multidimensional argument and the gradient is written in `g`.
+    where `x` is the multidimensional argument, `θ` is the
+    `n`-dimensional vector of parameters and the gradient is written
+    in `g`.
 
   - `data`: data to be fit. This matrix should be in the form
 
-        t11 t12 ... t1N y1
-        t21 t22 ... t2N y2
+        x11 x12 ... x1N y1
+        x21 x22 ... x2N y2
         :
 
     where `N` is the dimension of the argument of the model
-    (i.e. dimension of `t`).
+    (i.e. dimension of `x`).
 
   - `n`: dimension of the parameter vector in the model function
 
@@ -406,11 +407,11 @@ function raff(model::Function, gmodel!::Function,
             end
             
             # Starting point
-            x = randn(seedMS, Float64, n)
-            # x .= x .+ vbest.solution
+            θ = randn(seedMS, Float64, n)
+            # θ .= θ .+ vbest.solution
         
             # Call function and store results
-            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; ε=ε, MAXITER=400)
+            sols[ind] = lmlovo(model, gmodel!, θ, data, n, i; ε=ε, MAXITER=400)
 
             # Update the best point and functional value
             (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
@@ -512,18 +513,18 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
+    # 'x' is considered as global for this function
+    model_cl(θ) = model(x, θ)
     
-    grad_model(x, t_, g) = begin
+    grad_model!(g, x_, θ) = begin
 
-        global t = t_
+        global x = x_
         
-        return ForwardDiff.gradient!(g, model_cl, x)
+        return ForwardDiff.gradient!(g, model_cl, θ)
 
     end
 
-    return raff(model, grad_model, data, n; kwargs...)
+    return raff(model, grad_model!, data, n; kwargs...)
 
 end
 
