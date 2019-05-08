@@ -13,12 +13,12 @@ addprocs(3)
 # mandatory, just an example)
 @everywhere using RAFF
 
-@everywhere function model(x, t)
-   x[1] * t[1]^2 + x[2]
+@everywhere function model(x, θ)
+   θ[1] * x[1]^2 + θ[2]
 end
 
-@everywhere function gmodel!(x, t, g)
-    g[1] = t[1]^2
+@everywhere function gmodel!(g, x, θ)
+    g[1] = x[1]^2
     g[2] = 1.0
 end
 
