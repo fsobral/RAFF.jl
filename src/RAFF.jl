@@ -109,7 +109,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
         (θ) -> begin
             
             @views for i = 1:npun_
-                F[i] = (model(data[i,1:(end - 1)]) - data[i, end], θ)^2
+                F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
             end
             
             indF, orderedF = sort_fun!(F, ind, p_)
