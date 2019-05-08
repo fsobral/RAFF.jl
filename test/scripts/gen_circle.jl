@@ -6,14 +6,14 @@ using DelimitedFiles
 
 """
 
-Generate perturbed points in a circle given by `xSol`. Construct a
+Generate perturbed points in a circle given by `θSol`. Construct a
 test file for `RAFF`.
 
 """
-function gen_circle(xSol, var, np)
+function gen_circle(θSol, var, np)
 
-    p = (α, ρ) -> [ρ * cos(α) + xSol[1], ρ * sin(α) + xSol[2]]
-    f = (x) -> (x[1] - xSol[1])^2 + (x[2] - xSol[2])^2 - xSol[3]^2
+    p = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+    f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
 
     α = 0.0
 
@@ -23,7 +23,7 @@ function gen_circle(xSol, var, np)
     
     while α < 2.0 * π
 
-        pt = p(α, xSol[3] + var * randn())
+        pt = p(α, θSol[3] + var * randn())
 
         data[i, 1:2] = pt
         data[i,   3] = 0.0 #f(pt)
@@ -47,7 +47,7 @@ function gen_circle(xSol, var, np)
         end
 
         # Inner outlier
-        pt =  p(3 * π / 4, xSol[3] * 0.6)
+        pt =  p(3 * π / 4, θSol[3] * 0.6)
 
         data[i, 1:2] = pt
         data[i,   3] = 0.0 #f(pt)
@@ -59,7 +59,7 @@ function gen_circle(xSol, var, np)
     
         # Outer outlier
     
-        pt =  p(5 * π / 4, xSol[3] * 1.3)
+        pt =  p(5 * π / 4, θSol[3] * 1.3)
 
         data[i, 1:2] = pt
         data[i,   3] = 0.0 # f(pt)
@@ -153,7 +153,7 @@ function draw_circle_sol(tSol, fSol, lsSol)
     PyPlot.yticks([])
 
     PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-                   cmap=PyPlot.cm["Paired"], alpha=0.9)
+                   cmap=PyPlot.cm."Paired", alpha=0.9)
 
     PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
 
