@@ -774,18 +774,18 @@ function praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
+    # 'x' is considered as global parameter for this function
+    model_cl(θ) = model(x, θ)
     
-    grad_model(x, t_, g) = begin
+    grad_model!(g, x_, θ) = begin
 
-        global t = t_
+        global x = x_
         
-        return ForwardDiff.gradient!(g, model_cl, x)
+        return ForwardDiff.gradient!(g, model_cl, θ)
 
     end
 
-    return praff(model, grad_model, data, n; kwargs...)
+    return praff(model, grad_model!, data, n; kwargs...)
 
 end
 
