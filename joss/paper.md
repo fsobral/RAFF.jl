@@ -39,18 +39,25 @@ package developed to find the optimal parameters $x$ for $\phi$ in
 order to adjust it to the observed values $S$ of the unknown function
 $f$.
 
-The adjustment of mathematical functions to data is a problem that
-appears in many areas of science. When data comes from real
-experiments, non-expected errors may cause the appearance of
-outliers. Detection of outliers is always regarded as the statistical
-part of data adjustment. ``RAFF`` provides automatic detection of
-outliers using a voting system. It is an optimization-based package,
-based on algorithms for Lower Order-Value Optimization (LOVO)
-which were introduced in [@Andreani2005] and revisited in [@Andreani2009] 
-to fit the user-provided models $\phi$ to experimental
-data. Recently, a good review can be found in [@Martinez2012]. In order to 
-find a robust adjustment, a voting system is used,
-which is also responsible for the detection of possible outliers.
+Linear and nonlinear regression is essentially the adjustment of
+mathematical functions to data and is a problem that appears in many
+areas of science. When data comes from real experiments, non-expected
+errors may cause the appearance of outliers, which might be
+responsible for causing the regression calculated by sum of deviations
+to result in misleading approximations. Regression is strongly
+connected to Statistics but practical methods to detect outliers are
+not very common. In [@Motulsky2006a], for example, the authors develop
+a method for outlier detection based on the assumption that the error
+follows a Lorentzian distribution around the function and use
+nonlinear regression based on least squares. ``RAFF.jl`` provides
+automatic detection of outliers using a voting system. It is an
+optimization-based package, based on algorithms for Lower Order-Value
+Optimization (LOVO) which were introduced in [@Andreani2005] and
+revisited in [@Andreani2009] to fit the user-provided models $\phi$ to
+experimental data. Recently, a good review can be found in
+[@Martinez2012]. In order to find a robust adjustment, a voting system
+is used, which is also responsible for the detection of possible
+outliers.
 
 # Functionality
 
