@@ -27,22 +27,24 @@ bibliography: paper.bib
 
 # Summary
 
-Let $f : \mathbb{R}^n \to \mathbb{R}$ be a function whose mathematical description
-is not available. This function can be, for example, a black-box, a
-proprietary computer program or an experiment. Suppose that a data set
-$S = \{(x_1, f(x_1)), \dots, (x_m, f(x_m))\}$ of $m$ observations of
-$f$ are available and we want to approximate $f$ by a known model
-$\phi$. Model $\phi$ can be defined as $\phi(x, \theta)$, where $x$ are the
-$n$ independent variables of $f$ and $\theta$ represents some parameters of
-$\phi$. ``RAFF.jl`` (Robust Algebraic Fitting Function) is a Julia
-package developed to find the optimal parameters $\theta$ for $\phi$ in
-order to adjust it to the observed values $S$ of the unknown function
-$f$. Following [@Liu2008], in general, the adjustment can be related to 
+Let $f : \mathbb{R}^n \to \mathbb{R}$ be a function whose mathematical
+description is not available. This function can be, for example, a
+black-box, a proprietary computer program or an experiment. Suppose
+that a data set $S = \{(x_1, y_1), \dots, (x_m, y_m)\}$ is available,
+where $y_i$ is an approximation of $f(x_i)$ (from an experimental
+procedure, numerical approximation, etc.) and we want to approximate
+$f$ by a known model $\phi$. Model $\phi$ can be defined as $\phi(x,
+\theta)$, where $x$ are the $n$ independent variables of $f$ and
+$\theta$ represents some parameters of $\phi$. ``RAFF.jl`` (Robust
+Algebraic Fitting Function) is a Julia package developed to find the
+optimal parameters $\theta$ for $\phi$ in order to adjust it to the
+observed values $S$ of the unknown function $f$. Following [@Liu2008],
+in general, the adjustment can be related to
 
 1. Classical least squares (algebraic fit): which considers the sum of deviations of type
-$\vert \phi(x_i, \theta) - f(x_i) \vert^2$, also known as regression;
+$\vert \phi(x_i, \theta) - y_i \vert^2$, also known as regression;
 2. Orthogonal least squares (geometric fit): which considers the sum of deviations of type
-$\Vert \phi(x, \theta)-(x_i,f(x_i))\Vert^2$ (orthogonal projection on the
+$\min_x \Vert (x, \phi(x, \theta))-(x_i, y_i)\Vert^2$ (orthogonal projection on the
 curve to be adjusted).
 
 ``RAFF.jl`` was developed to solve a generalization of the first case.
@@ -61,12 +63,11 @@ nonlinear regression based on least squares. ``RAFF.jl`` provides
 automatic detection of outliers using a voting system. It is an
 optimization-based package, based on algorithms for Lower Order-Value
 Optimization (LOVO) which were introduced in [@Andreani2005] and
-revisited in [@Andreani2009]. Recently, a good review can be found in
-[@Martinez2012]. In order to find a robust adjustment, a voting system
-is used, which is also responsible for the detection of possible
-outliers.
+revisited in [@Andreani2009]. Recently, a complete review about LOVO problems considering 
+theoretical aspects of algorithms to solve it and potential applications 
+can be found in [@Martinez2012].
 
-# Background Material
+# Background
 
 To elucidate the essence of how ``RAFF.jl`` works, let us detail some aspects related
 to the LOVO problem and its resolution. Let us consider $m$ functions
@@ -80,48 +81,58 @@ $$
 Considering a value $1\leq p \leq m$, we can define the LOVO function as 
 $$S_p(\theta)=\sum_{k=1}^{p} F_{i_k(\theta)}(\theta)$$
 and the LOVO problem as 
-$$\min_{\theta \in \mathbb{R^n}}S_p(\theta).$$
+$$\min_{\theta \in \mathbb{R}^{n}}S_p(\theta).$$
 
 Assuming that $F_i, i=1,...,m$ are continuous functions we have that
 $S_p$ is a continuous function but assuming that $F_i$'s are differentiable
-functions we cannot conclude that $S_p$ is differentiable. It can see by
+functions we cannot conclude that $S_p$ is differentiable. This can be seen by
 reformulating the LOVO problem as follows. Denoting 
 $\mathcal{C}=\{\mathcal{C}_1,...,\mathcal{C}_r\}$ as the set of all
 combinations of $\{1,...,m\}$ taken $p$ at time, we can define for each $i\in
-\{1,...,r\}$ the following functions
+\{1,...,r\}$ the following function
 $$f_i(\theta)=\sum_{k\in \mathcal{C}_i} F_k(\theta)$$
 and 
 $$f_{min}(\theta)=\min\{f_1(\theta),...,f_r(\theta)\}.$$
-It is simple to note that $f_{\min}(\theta)=S_p(\theta)$ and consequently is
-easy to see the possible non differentiability of LOVO function. In
-[@Andreani2009] the authors introduced methods using linear search and handle with the possible 
-singularities in a clever way, using an approximation for the gradient of $\nabla f_{min}$
-of kind of $$\nabla f_{min}(\theta)=\nabla f_i(\theta),$$ where $i \in \mathcal{I}
-(\theta)=\{k \in \{1,...,r\};f_k(\theta)=f_{min}(\theta)\}$. Naturally, this
-approach to approximate the gradient can be extend for second order derivatives.
+It can be observed that, for a given $\theta$, $f_{min}(\theta)$ is obtained by a combination $\mathcal{C}_j$ which contains the smallest sum of $p$ elements of the set $\{F_i(\theta),i=1,...,m\}$. Therefore $f_{\min}(\theta)=S_p(\theta)$ and, consequently,
+the LOVO function is non differentiable. In
+[@Andreani2009], the authors introduced line search methods and handled the possible 
+singularities in a clever way, using the following approximation for $\nabla f_{min}(\theta)$
+$$\nabla f_{min}(\theta)=\nabla f_i(\theta),$$ where $i \in \mathcal{I}
+(\theta)=\{k \in \{1,...,r\};f_k(\theta)=f_{min}(\theta)\}$. This
+approach can naturally be extended for second order derivatives.
 
 An important point for practical purposes is when we consider the LOVO
-problem with $p=m$ and $F_i(\theta)=(\phi(x_i,\theta)-f(x_i))^2$. In this case,
-LOVO problem coincides with classical least square and consequently, it can see
-like a generalization of least square problem. When $p\leq m$, the solution
-$\theta$ provides a model $\phi(x,\theta)$ free from influence of $m-p$ worst
-points, that is, $m-p$ possible outliers were identified.
+problem with $p=m$ and $F_i(\theta)=(\phi(x_i,\theta)- y_i)^2$. In
+this case, the LOVO problem coincides with classical least squares
+and, consequently, it can be seen as a generalization of the least
+squares problem. When $p < m$ and $F_i(\theta)=(\phi(x_i,\theta)-
+y_i)^2$, the solution $\theta$ provides a model $\phi(x,\theta)$ free
+from influence of the $m-p$ points with the highest deviation. The
+number $p$ can be interpreted as the number of trusted points, that
+is, $m - p$ possible outliers were identified.
 
-One of the most usual ways to solve the problem of least square is by using the 
-Levenberg-Marquardt method [@more1978levenberg] which is a first order method,
-where derivatives of the model $\phi$ is used to compute the gradient of the
-objective function of the associated least square problem. The reason for wide
+One of the most usual ways to solve the problem of least squares is by using the 
+Levenberg-Marquardt method [@more1978levenberg]. This method is a first-order method,
+where derivatives of the model $\phi$ *with respect to $\theta$* are used to compute the gradient of the
+objective function in the associated least squares problem. The reason for the wide
 use of Levenberg-Marquardt method is, in general, associated with quadratic convergence
 properties even using only first-order derivatives. In this direction, it is relevant 
-to ask about Levenberg-Marquadt-based methods to solve LOVO problems in the context 
+to ask about Levenberg-Marquardt-based methods to solve LOVO problems in the context 
 of adjustment functions. 
 
-``RAFF.jl`` implements a Levenberg-Marquardt algorithm in the context of LOVO problems. 
-Moreover, LOVO problems need the number of possible outliers (or equivalently trust 
-points) to be given by the user. ``RAFF.jl`` solves this limitation by implementing a 
-voting system. A voting system is a brute force algorithm, where several LOVO problems 
-are solved with different numbers of possible outliers. The solution which most occurs 
-among them is declared as the solution by ``RAFF.jl``.
+``RAFF.jl`` implements a Levenberg-Marquardt algorithm in the context
+of LOVO problems, i. e., it solves the problem of minimizing
+$f_{min}(\theta)$, where $F_i(\theta)=(\phi(x_i,\theta)- y_i)^2$, for
+$i = 1,\dots, m$. In this sense, first-order derivatives are necessary
+and the same strategy of [@Andreani2009] is used. It uses first-order
+derivatives of the model $\phi$ with respect to $\theta$ to
+approximate the gradient of $f_{min}(\theta)$, which is a non
+differentiable function. Moreover, LOVO problems need the number $p$
+of possible trusted points to be given by the user. ``RAFF.jl`` solves
+this limitation by implementing a voting system. A voting system is a
+brute force algorithm, where several LOVO subproblems are solved with
+different numbers of possible trusted points. The solution which most
+occurs among them is declared as the solution.
 
 # Functionality
 
@@ -134,7 +145,7 @@ model representing the logistic function $$ \phi(x, \theta) =
 \theta_1 + \frac{\theta_2}{1.0 + \exp(- \theta_3 x + \theta_4)}.
 $$ The observed data can be represented by the following table:
 
- $x$      $f(x)$
+ $x$        $y$
 -------  ---------
  0.0000  1166.0892
  3.3333  1384.4495
@@ -152,38 +163,42 @@ In this example, the true function was given by $$ f(x) = 1000 +
 generated as random normal perturbations around the graphic of $f$ and
 is shown in [Figure 1](#logistic). The dots and triangles represent
 the observed data, where the red triangles are the outliers. Using the
-Least Squares technique with the model above, the green function is
+least squares technique with the model above, the green function is
 found. When `RAFF.jl` is applied to the same problem, it correctly
 identifies the two outliers. The resulting function is depicted as the
 red one, very close to $f$.
 
-![Points representing the logistic function. The red triangles are two outliers that should be ignored. The blue dashed function is the true one, while the green was obtained by traditional Least Squares techniques and the red one was obtained by `RAFF.jl`.](logistic.png){#logistic
+![Points representing the logistic function. The red triangles are two outliers that should be ignored. The blue dashed function is the true one, while the green was obtained by traditional least squares techniques and the red one was obtained by `RAFF.jl`.](logistic.png){#logistic
 width=60%, height=60%}
 
 # Additional features
 
-The user may also provide more information to ``RAFF.jl``, such as the expected
-number of *trusted* observations. Additional methods and options are also
-available to more advanced users, such as generation of random test data and
-multistart strategies. Derivatives of the model $\phi$ can also be provided,
-which results in a faster executing time. When they are not provided by the user,
+The user may also provide more information to ``RAFF.jl``, such as an
+rough approximation to the expected number of *trusted*
+observations. Additional methods and options are also available to
+more advanced users, such as generation of random test data and
+multistart strategies. First-order derivatives of the model $\phi$
+with respect to $\theta$ can also be provided, which results in a
+faster executing time. When they are not provided by the user,
 ``RAFF.jl`` uses Julia's ``ForwardDiff.jl`` [@Revels2016] package.
 
-``RAFF.jl`` can be run in serial, parallel and distributed environments.
-Parallel and distributed methods use the native
+``RAFF.jl`` can be run in serial, parallel and distributed
+environments.  Parallel and distributed methods use the native
 [``Distributed.jl``](https://docs.julialang.org/en/v1.0/stdlib/Distributed/)
-package. The distributed version is a centralized implementation that does not
-use shared arrays, therefore, can be run both locally or in a cluster of
-computers.
+package. The distributed version is a master-slave implementation that
+does not use shared arrays, therefore, can be run both locally or in a
+cluster of computers.
 
 This package is intended to be used by all experimental researchers who know a
 little about mathematical modeling and fitting functions.
 
-# Instalation and usage
+# Installation and usage
 
-``RAFF.jl`` is an open-source software that can be [downloaded from
-Github](https://github.com/fsobral/RAFF.jl). All the description for first time
-usage or its API is available at its
+``RAFF.jl`` is an open-source software that can be
+[downloaded from Github](https://github.com/fsobral/RAFF.jl). It is a
+registered package and can be directly installed from Julia package
+repository. All the description for first time usage or its API is
+available at its
 [documentation](https://fsobral.github.io/RAFF.jl/stable/).
 
 # References
