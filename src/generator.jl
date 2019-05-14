@@ -6,22 +6,22 @@ This dictionary represents the list of models used in the generation of random t
 Return the tuple `(n, model, model_str)`, where
 
   - `n` is the number of parameters of the model
-  - `model` is the model of the form `m(x, t)`, where `x` are the
-    parameters and `t` are the variables
+  - `model` is the model of the form `m(x, θ)`, where `x` are the
+    variables and `θ` are the parameters
   - `model_str` is the string representing the model, used to build random generated problems
 
 """
 const model_list = Dict(
-    "linear" => (2, (x, t) -> x[1] * t[1] + x[2],
-                 "(x, t) -> x[1] * t[1] + x[2]"),
-    "cubic" => (4, (x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4],
-                "(x, t) -> x[1] * t[1]^3 + x[2] * t[1]^2 + x[3] * t[1] + x[4]"),
-    "expon" => (3, (x, t) -> x[1] + x[2] * exp(- x[3] * t[1]),
-                "(x, t) -> x[1] + x[2] * exp(- x[3] * t[1])"),
-    "logistic" => (4, (x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4])),
-                   "(x, t) -> x[1] + x[2] / (1.0 + exp(- x[3] * t[1] + x[4]))"),
-    "circle" => (3, (x, t) -> (t[1] - x[1])^2 + (t[2] - x[2])^2 - x[3]^2,
-                 "(t[1] - x[1])^2 + (t[2] - x[2])^2 - x[3]^2")
+    "linear" => (2, (x, θ) -> θ[1] * x[1] + θ[2],
+                 "(x, θ) -> θ[1] * x[1] + θ[2]"),
+    "cubic" => (4, (x, θ) -> θ[1] * x[1]^3 + θ[2] * x[1]^2 + θ[3] * x[1] + θ[4],
+                "(x, θ) -> θ[1] * x[1]^3 + θ[2] * x[1]^2 + θ[3] * x[1] + θ[4]"),
+    "expon" => (3, (x, θ) -> θ[1] + θ[2] * exp(- θ[3] * x[1]),
+                "(x, θ) -> θ[1] + θ[2] * exp(- θ[3] * x[1])"),
+    "logistic" => (4, (x, θ) -> θ[1] + θ[2] / (1.0 + exp(- θ[3] * x[1] + θ[4])),
+                   "(x, θ) -> θ[1] + θ[2] / (1.0 + exp(- θ[3] * x[1] + θ[4]))"),
+    "circle" => (3, (x, θ) -> (x[1] - θ[1])^2 + (x[2] - θ[2])^2 - θ[3]^2,
+                 "(x, θ) -> (x[1] - θ[1])^2 + (x[2] - θ[2])^2 - θ[3]^2")
 )
 
 
@@ -38,11 +38,11 @@ Generate random data files for testing fitting problems.
   - `model` is the model function and `modelStr` is a string
     representing this model function, e.g.
 
-         model = (x, t) -> x[1] * t[1] + x[2]
-         modelStr = "(x, t) -> x[1] * t[1] + x[2]"
+         model = (x, θ) -> θ[1] * x[1] + θ[2]
+         modelStr = "(x, θ) -> θ[1] * x[1] + θ[2]"
 
-    where vector `x` represents the parameters (to be found) of the
-    model and vector `t` are the variables of the model.
+    where vector `θ` represents the parameters (to be found) of the
+    model and vector `x` are the variables of the model.
   - `n` is the number of parameters
   - `np` is the number of points to be generated.
   - `p` is the number of trusted points to be used in the LOVO
@@ -53,8 +53,8 @@ function generate_test_problems(datFilename::String,
                               solFilename::String, model::Function,
                               modelStr::String,
                               n::Int, np::Int, p::Int;
-                              tMin=-10.0, tMax=10.0,
-                              xSol=10.0 * randn(n), std=200.0, outTimes=7.0)
+                              xMin=-10.0, xMax=10.0,
+                              θSol=10.0 * randn(n), std=200.0, outTimes=7.0)
 
     # Generate solution file
     
@@ -62,7 +62,7 @@ function generate_test_problems(datFilename::String,
     
         println(sol, n) # number of variables
 
-        println(sol, xSol) # parameters
+        println(sol, θSol) # parameters
         
         println(sol, modelStr) # function expression
 
@@ -72,8 +72,8 @@ function generate_test_problems(datFilename::String,
     
     open(datFilename, "w") do data
     
-        vdata, xsol, outliers = generate_noisy_data(model, n, np, p;
-                                   tMin=tMin, tMax=tMax, xSol=xSol,
+        vdata, θsol, outliers = generate_noisy_data(model, n, np, p;
+                                   xMin=xMin, xMax=xMax, θSol=θSol,
                                    std=std, outTimes=outTimes)
     
         # Dimension of the domain of the function to fit
@@ -134,42 +134,42 @@ end
 """
 
     generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
-                      tMin::Float64=-10.0, tMax::Float64=10.0,
-                      xSol::Vector{Float64}=10.0 * randn(Float64, n),
+                      xMin::Float64=-10.0, xMax::Float64=10.0,
+                      θSol::Vector{Float64}=10.0 * randn(Float64, n),
                       std::Float64=200.0, outTimes::Float64=7.0)
 
-    generate_noisy_data(model::Function, n, np, p, tMin::Float64, tMax::Float64)
+    generate_noisy_data(model::Function, n, np, p, xMin::Float64, xMax::Float64)
 
     generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
-                      xSol::Vector{Float64}, tMin::Float64, tMax::Float64)
+                      θSol::Vector{Float64}, xMin::Float64, xMax::Float64)
 
 Random generate a fitting one-dimensional data problem.
 
-This function receives a `model(x, t)` function, the number of parameters
+This function receives a `model(x, θ)` function, the number of parameters
 `n`, the number of points `np` to be generated and the number of
 trusted points `p`. 
 
-If the `n`-dimensional vector `xSol` is provided, the the exact
-solution will not be random generated. The interval `[tMin, tMax]` for
+If the `n`-dimensional vector `θSol` is provided, then the exact
+solution will not be random generated. The interval `[xMin, xMax]` for
 generating the values to evaluate `model` can also be provided.
 
-It returns a tuple `(data, xSol, outliers)` where
+It returns a tuple `(data, θSol, outliers)` where
 
-  - `data`: (`np` x `2`) array, where each row contains `t` and
-    `model(xSol, t)`.
-  - `xSol`: `n`-dimensional vector with the exact solution.
+  - `data`: (`np` x `2`) array, where each row contains `x` and
+    `model(x, θSol)`.
+  - `θSol`: `n`-dimensional vector with the exact solution.
   - `outliers`: the outliers of this data set
 
 """
 function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
-                           tMin::Float64=-10.0, tMax::Float64=10.0,
-                           xSol::Vector{Float64}=10.0 * randn(Float64, n),
+                           xMin::Float64=-10.0, xMax::Float64=10.0,
+                           θSol::Vector{Float64}=10.0 * randn(Float64, n),
                            std::Float64=200.0, outTimes::Float64=7.0)
 
-    @assert(tMin <= tMax, "Invalid interval for random number generation")
+    @assert(xMin <= xMax, "Invalid interval for random number generation")
     
-    # Generate (ti,yi) where tMin <= t_i <= tMax (data)
-    t = [tMin:(tMax - tMin) / (np - 1):tMax;]
+    # Generate (xi,yi) where xMin <= x_i <= xMax (data)
+    x = [xMin:(xMax - xMin) / (np - 1):xMax;]
     
     data = Array{Float64}(undef, np, 3)
 
@@ -179,28 +179,28 @@ function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
     # Add noise to some random points
     for k = 1:np
             
-        y = model(xSol, t[k]) + randn() * std
+        y = model(x[k], θSol) + randn() * std
 
         noise = 0.0
             
         if k in v 
-            y = model(xSol, t[k])
+            y = model(x[k], θSol)
             noise = outTimes * std * sign(randn())
         end
             
-        data[k, 1] = t[k]
+        data[k, 1] = x[k]
         data[k, 2] = y + noise
         data[k, 3] = noise
 
     end
 
-    return data, xSol, v
+    return data, θSol, v
 
 end
 
-generate_noisy_data(model::Function, n::Int, np::Int, p::Int, tMin::Float64, tMax::Float64) =
-    generate_noisy_data(model, n, np, p; tMin=tMin, tMax=tMax)
+generate_noisy_data(model::Function, n::Int, np::Int, p::Int, xMin::Float64, xMax::Float64) =
+    generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax)
 
 generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
-                  xSol::Vector{Float64}, tMin::Float64, tMax::Float64) =
-                      generate_noisy_data(model, n, np, p; tMin=tMin, tMax=tMax, xSol=xSol)
+                  θSol::Vector{Float64}, xMin::Float64, xMax::Float64) =
+                      generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax, θSol=θSol)

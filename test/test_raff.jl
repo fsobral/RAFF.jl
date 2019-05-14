@@ -1,20 +1,20 @@
 @testset "Simple tests" begin
 
-    model(x, t) = x[1] * exp(t[1] * x[2])
+    model(x, θ) = θ[1] * exp(x[1] * θ[2])
 
-    gmodel!(x, t, g) = begin
+    gmodel!(g, x, θ) = begin
 
-        g[1] = exp(t[1] * x[2])
-        g[2] = t[1] * x[1] * exp(t[1] * x[2])
+        g[1] = exp(x[1] * θ[2])
+        g[2] = x[1] * θ[1] * exp(x[1] * θ[2])
 
     end
 
     @testset "Basic usage" begin
     
-        data = [-1.0   3.2974425414002564;
-                -0.75  2.9099828292364025;
-                -0.5    2.568050833375483;
-                -0.25  2.2662969061336526;
+        data = [-1.0  3.2974425414002564;
+                -0.75 2.9099828292364025;
+                -0.5   2.568050833375483;
+                -0.25 2.2662969061336526;
                 0.0                  2.0;
                 0.25   1.764993805169191;
                 0.5   1.5576015661428098;
@@ -36,23 +36,23 @@
 
         answer = [2.0, -0.5]
 
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
-        rout = lmlovo(model, x, data, 2, 18)
+        rout = lmlovo(model, θ, data, 2, 18)
 
         @test rout.status == 1
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
         
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
         # Test with small p
-        rout = lmlovo(model, x, data, 2, 3)
+        rout = lmlovo(model, θ, data, 2, 3)
 
         @test rout.status == 1
         @test rout.p == 3
 
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
         rout = raff(model, data, 2)
         
@@ -60,28 +60,28 @@
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
 
-        @test_throws AssertionError lmlovo(model, x, data, 0, 1)
-        @test_throws AssertionError lmlovo(model, x, data, 2, -1)
+        @test_throws AssertionError lmlovo(model, θ, data, 0, 1)
+        @test_throws AssertionError lmlovo(model, θ, data, 2, -1)
 
-        rout = lmlovo(model, x, data, 2, 0)
+        rout = lmlovo(model, θ, data, 2, 0)
 
         @test rout.status == 1
         @test rout.iter == 0
         @test rout.f == 0
         @test rout.outliers == [1:size(data)[1];]
-        @test rout.solution == x
+        @test rout.solution == θ
 
         # lmlovo with function and gradient
 
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
-        rout = lmlovo(model, gmodel!, x, data, 2, 18)
+        rout = lmlovo(model, gmodel!, θ, data, 2, 18)
         
         @test rout.status == 1
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
 
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
         rout = raff(model, gmodel!, data, 2)
         
@@ -89,16 +89,16 @@
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
 
-        @test_throws AssertionError lmlovo(model, gmodel!, x, data, 0, 1)
-        @test_throws AssertionError lmlovo(model, gmodel!, x, data, 2, -1)
+        @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 0, 1)
+        @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 2, -1)
 
-        rout = lmlovo(model, gmodel!, x, data, 2, 0)
+        rout = lmlovo(model, gmodel!, θ, data, 2, 0)
 
         @test rout.status == 1
         @test rout.iter == 0
         @test rout.f == 0
         @test rout.outliers == [1:size(data)[1];]
-        @test rout.solution == x
+        @test rout.solution == θ
 
     end
 
@@ -106,7 +106,7 @@
     
     @testset "Error in printing" begin
 
-        m(x, t) = x[1] * t[1]^2 + x[2]
+        m(x, θ) = θ[1] * x[1]^2 + θ[2]
 
         A = [ -2.0  5.00;
               -1.5  3.25;
@@ -118,12 +118,12 @@
               1.5  3.25;
               2.0  5.00 ]
 
-        x = [0.0, 0.0]
+        θ = [0.0, 0.0]
 
         # Changes log just for this test
         rout = with_logger(NullLogger()) do
             
-            lmlovo(m, x, A, 2, 4)
+            lmlovo(m, θ, A, 2, 4)
 
         end
 

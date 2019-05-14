@@ -9,14 +9,14 @@
                 0.0 8.6  -4.6]
 
         # This is the most complete way of defining the arguments for model and gmodel!
-        model = (x::Vector{Float64}, t::Union{Vector{Float64}, SubArray}) -> x[1] *
-            t[1] + x[2] * t[2] + x[3]
+        model = (x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64}) -> θ[1] *
+            x[1] + θ[2] * x[2] + θ[3]
 
-        gmodel! = (x::Vector{Float64}, t::Vector{Float64},
-                   g::Union{Vector{Float64}, SubArray}) -> begin
+        gmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},
+                   θ::Vector{Float64}) -> begin
 
-            g[1] = t[1]
-            g[2] = t[2]
+            g[1] = x[1]
+            g[2] = x[2]
             g[3] = 1.0
             
         end
@@ -25,16 +25,16 @@
 
         p = 4
 
-        xsol = [- 1.0, - 1.0, 4.0]
+        θsol = [- 1.0, - 1.0, 4.0]
         
         rout = lmlovo(model, gmodel!, data, n, p; ε=1.0e-8)
 
-        @test rout.solution ≈ xsol atol=1.0e-4
+        @test rout.solution ≈ θsol atol=1.0e-4
         @test rout.outliers == [4]
 
         rout = raff(model, gmodel!, data, n)
 
-        @test rout.solution ≈ xsol atol=1.0e-3
+        @test rout.solution ≈ θsol atol=1.0e-3
         @test rout.p == 4
         @test rout.outliers == [4]
         
@@ -42,17 +42,17 @@
         
         # This is the most complete way of defining the arguments for
         # model when automatic differentiation is being used
-        model = (x, t::Union{Vector{Float64}, SubArray}) -> x[1] *
-            t[1] + x[2] * t[2] + x[3]
+        model = (x::Union{Vector{Float64}, SubArray}, θ) -> θ[1] *
+            x[1] + θ[2] * x[2] + θ[3]
 
         rout = lmlovo(model, data, n, p; ε=1.0e-8)
 
-        @test rout.solution ≈ xsol atol=1.0e-4
+        @test rout.solution ≈ θsol atol=1.0e-4
         @test rout.outliers == [4]
 
         rout = raff(model, data, n)
 
-        @test rout.solution ≈ xsol atol=1.0e-3
+        @test rout.solution ≈ θsol atol=1.0e-3
         @test rout.p == 4
         @test rout.outliers == [4]
         
@@ -70,9 +70,9 @@
                 3.17364817766693	0.015192246987791869	0.0 # noise
                 1.766044443118978	0.3572123903134604	0.0]
 
-        xsol = [1.0, 1.0, 1.0]
+        θsol = [1.0, 1.0, 1.0]
 
-        model = (x, t::Union{Vector{Float64}, SubArray}) -> (t[1] - x[1])^2 + (t[2] - x[2])^2 - x[3]
+        model = (x::Union{Vector{Float64}, SubArray}, θ) -> (x[1] - θ[1])^2 + (x[2] - θ[2])^2 - θ[3]
 
         n = 3
 
@@ -80,14 +80,14 @@
         
         rout = lmlovo(model, [0.0, 0.0, 2.0], data, n, p; ε=1.0e-8)
 
-        @test rout.solution ≈ xsol atol=1.0e-4
+        @test rout.solution ≈ θsol atol=1.0e-4
         @test rout.outliers == [8]
 
         rout = raff(model, data, n; ε=1.0e-8)
 
         @test rout.p == 8
         @test rout.outliers == [8]
-        @test rout.solution ≈ xsol atol=1.0e-4
+        @test rout.solution ≈ θsol atol=1.0e-4
 
     end
     

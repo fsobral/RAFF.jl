@@ -25,7 +25,7 @@ function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
     
     while isopen(channel)
 
-        x = try
+        θ = try
             
             take!(channel)
             
@@ -45,7 +45,7 @@ function update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})
 
         for i = 1:n
         
-            bestx[i] = (N * bestx[i] + x[i]) / (N + 1)
+            bestx[i] = (N * bestx[i] + θ[i]) / (N + 1)
 
         end
 
@@ -121,10 +121,10 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
             for j = 1:MAXMS
 
                 # New random starting point
-                x = randn(seedMS, n)
+                θ = randn(seedMS, n)
                 
                 # Call function and store results
-                rout = lmlovo(model, gmodel!, x, data, n, k)
+                rout = lmlovo(model, gmodel!, θ, data, n, k)
 
                 (rout.status == 1) && (rout.f < wbest.f) && (wbest = rout)
 

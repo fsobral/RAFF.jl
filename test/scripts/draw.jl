@@ -21,13 +21,13 @@ sol = [533.077, 5389.48, 0.153425, 2.04606]
 
 n, model, modelstr = RAFF.model_list["logistic"]
 
-modl1 = (t) -> model(sol, t)
-modl2 = (t) -> model(xSol, t)
+modl1 = (x) -> model(x, sol)
+modl2 = (x) -> model(x, θSol)
 
 t = minimum(x):0.01:maximum(x)
 PyPlot.plot(t, modl1.(t), "r", label="Ajustado RAFF")
 
-xSol = [1000.0, 5000.0, 0.2, 3.0]
+θSol = [1000.0, 5000.0, 0.2, 3.0]
 PyPlot.plot(t, modl2.(t), "b--", label="Verdadeiro")
 
 PyPlot.legend(loc=4)
@@ -35,7 +35,7 @@ PyPlot.legend(loc=4)
 c[9] = 1.0
 
 PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-               cmap=PyPlot.cm["Paired"], alpha=0.6)
+               cmap=PyPlot.cm."Paired", alpha=0.6)
 
 
 

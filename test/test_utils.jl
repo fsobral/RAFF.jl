@@ -56,7 +56,7 @@ end
 
 @testset "Random generator" begin
 
-    modelStr = "(x, t) -> x[1] * t + x[2]"
+    modelStr = "(x, θ) -> θ[1] * x[1] + θ[2]"
 
     model = eval(Meta.parse(modelStr))
 

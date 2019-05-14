@@ -41,17 +41,17 @@ result given by second column. It is easy to see that the fitting
 function in this case is accurate and given by 
 
 ```math
-\phi(t)=t^2 +1
+\phi(x) = x^2 + 1
 ```
 
 Now let's perturb one result of second column of ``A``. For example, 
 consider ``A_{6,2} = 2.55``. Assuming the model for fitting given by
 ```math
-\varphi(x,t)=x_1 t^2 +x_2 
+\varphi(x; \theta) = \theta_1 x^2 + \theta_2 
 ```
-we have by classical least squares as result `x = [0.904329,
-1.3039]`. On the other hand, when we consider the `RAFF` algorithm we
-obtain the correct answer `x=[1.0, 1.0]`. Moreover, we also have a
+we have by classical least squares as result `θ = [0.904329,
+1.3039]`. On the other hand, when we consider `RAFF` algorithm we
+obtain the correct answer `θ = [1.0, 1.0]`. Moreover, we also have a
 list of the possible outliers.
 
 In order to run `RAFF` algorithm we need to setup 
@@ -71,7 +71,7 @@ A=[-2.0  5.0;
     1.5  3.25;
     2.0  5.0 ;];
 
-model(x, t) = x[1] * t[1]^2 + x[2]
+model(x, θ) = θ[1] * x[1]^2 + θ[2]
 ```
 
 After that, we can run method [`raff`](@ref):
@@ -81,7 +81,7 @@ raff(model, A, 2)
 ```
 The number `2` above is the number of variables in model, i. e., the
 number of parameters to adjust in the model. The output is a
-[`RAFFOutput`](@ref) type. For example to access only the parameters of
+[`RAFFOutput`](@ref) type. For example, to access only the parameters of
 solution, we can use
 
 ```@repl docrepl
@@ -102,23 +102,22 @@ in [API section](api.md).
 
 
 By default `RAFF` uses automatic differentiation, more specifically
-[ForwardDiff package](https://github.com/JuliaDiff/ForwardDiff.jl). But is possible
-to call `RAFF` methods with gradient vector of model. For
+[ForwardDiff.jl package](https://github.com/JuliaDiff/ForwardDiff.jl). But
+is possible to call `RAFF` methods with gradient vector of model. For
 example, considering the above example, we have,
 
 ```math
-\nabla \varphi(x, t) = [t^2, 1].
+\nabla \varphi(x; \theta) = [x^2, 1].
 ```
-Programming this gradient and run raff we have
+Programming this gradient and running `RAFF` we have
 
 ```@repl docrepl
-gmodel(x, t, g)=begin
-   g[1] = t[1]^2
+gmodel!(g, x, θ) = begin
+   g[1] = x[1]^2
    g[2] = 1.0
-   return g
 end
 
-raff(model, gmodel, A, 2)
+raff(model, gmodel!, A, 2)
 ```
 
 Preliminary tests have shown that the use of explicit derivatives is
@@ -140,18 +139,19 @@ data = [1.0 1.0    2.0
 and the following model
 
 ```@repl docrepl
-model(x, t) = x[1] * t[1] + x[2] * t[2] + x[3]            
+model(x, θ) = θ[1] * x[1] + θ[2] * x[2] + θ[3]
 ```
 
-Note that this model has two variables ``(t_1, t_2)``. Naturally, this
-problem has one outlier (`data[4,:]`), so there are 4 trust
-points. Let's run `RAFF` and check the answer.
+Note that this model has two variables ``(x_1, x_2)`` and three
+parameters ``(\theta_1, \theta_2, \theta_3)``. This problem has one
+outlier (`data[4,:]`), so there are 4 trusted points. Let's run `RAFF`
+and check the answer.
 
 ```@repl docrepl
 output = raff(model, data, 3)
 ```
 
-The right answer is `[- 1.0, - 1.0, 4.0]`. As we can note, `RAFF` get
+The right answer is `[-1.0, -1.0, 4.0]`. As we can note, `RAFF` get
 a good fit for the data set. Handling the output follows the same
 pattern as the one-dimensional case.
 
@@ -159,24 +159,24 @@ In order to get improvements in processing time, we can code the
 gradient vector of model too:
 
 ```@repl docrepl
-gmodel(x, t, g) = begin 
-    g[1] = t[1]
-    g[2] = t[2]
+gmodel!(g, x, θ) = begin 
+    g[1] = x[1]
+    g[2] = x[2]
     g[3] = 1.0
-    return g
 end
 ```
-```@repl docrepl
-output = raff(model,data, 3)
-```
 
+```@repl docrepl
+output = raff(model, gmodel!, data, 3)
+```
 
 ## Changing some options
 
-Naturally, `RAFF` has options like precision of gradient stopping criteria and initial guess. 
+`RAFF` has tunning options like precision of gradient stopping
+criteria and initial guess.
 
 ```@repl docrepl
-output = raff(model,data, 3;initguess=[0.5,0.5,0.5],ε=1.0e-4)
+output = raff(model, data, 3; initguess=[0.5,0.5,0.5], ε=1.0e-4)
 ```
 
 `RAFF` is based on an optimization method. In this way, it is subject to
@@ -225,12 +225,12 @@ workers:
 ```
 @everywhere using RAFF
 
-@everywhere function model(x, t)
-   x[1] * t[1]^2 + x[2]
+@everywhere function model(x, θ)
+   θ[1] * x[1]^2 + θ[2]
 end
 
-@everywhere function gmodel!(x, t, g)
-    g[1] = t[1]^2
+@everywhere function gmodel!(g, x, θ)
+    g[1] = x[1]^2
     g[2] = 1.0
 end
 ```

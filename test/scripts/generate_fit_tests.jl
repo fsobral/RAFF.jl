@@ -41,11 +41,11 @@ function mainf()
 
     n, model, modelStr = RAFF.model_list[parsed_args["m"]]
 
-    tMin = - 0.0
+    xMin = - 0.0
 
-    tMax =   30.0
+    xMax =   30.0
 
-    xSol = [1000.0, 5000.0, 0.2, 15.0]
+    θSol = [1000.0, 5000.0, 0.2, 15.0]
 
     fname = parsed_args["fname"]
 
@@ -56,7 +56,7 @@ function mainf()
         
         generate_test_problems(ffname, fsname, model, modelStr, n,
                              parsed_args["np"], parsed_args["p"];
-                             tMin=tMin, tMax=tMax, xSol=xSol, std=200.0)
+                             xMin=xMin, xMax=xMax, θSol=θSol, std=200.0)
 
         @printf("Created problem and solution files.\n")
 

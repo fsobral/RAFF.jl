@@ -9,16 +9,16 @@ form
 
 ```math
 \begin{array}{ccccc}
-	k
-	t_{11} & t_{12} & ... & t_{1k} & f_1\\
+	k & & & & \\
+	x_{11} & x_{12} & ... & x_{1k} & f_1\\
 	... & & & & \\
-	t_{np,1} & t_{np,2} & ... & t_{np,k} & f_{np}
+	x_{np,1} & x_{np,2} & ... & x_{np,k} & f_{np}
 \end{array}
 ```
 
 where ``k`` is the number of *variables* of the model (not the number
 of parameters!), ``np`` is the number of data points to be adjusted,
-``t_{ij}`` are the values selected for parameter ``j`` in experiment
+``x_{ij}`` are the values selected for parameter ``j`` in experiment
 ``i`` and ``f_i`` is the result obtained for experiment ``i``.
 
 ## Script files

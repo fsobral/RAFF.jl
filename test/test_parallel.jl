@@ -1,11 +1,11 @@
 @testset "Parallel tests" begin
 
-    gmodel!(x, t_, g) = begin
-        g[1] = 1.0
-        g[2] = t_[1]
-    end
+    model(x, θ) = θ[1]  + θ[2] * x[1]
 
-    model(x, t) = x[1]  + x[2] * t[1]
+    gmodel!(g, x, θ) = begin
+        g[1] = 1.0
+        g[2] = x[1]
+    end
 
     n = 2
 
@@ -15,7 +15,7 @@
 
     Random.seed!(123456789)
     
-    data, xSol, = RAFF.generate_noisy_data(model, n, np, p; std=0.0)
+    data, θSol, = RAFF.generate_noisy_data(model, n, np, p; std=0.0)
 
     # Remove outlier information
     data = data[:, 1:2]
@@ -24,13 +24,13 @@
 
         bqueue = RemoteChannel(() -> Channel{Vector{Float64}}(0))
 
-        bestx = SharedArray{Float64, 1}(n)
+        bestθ = SharedArray{Float64, 1}(n)
 
-        bestx .= 0.0
+        bestθ .= 0.0
 
-        fut = @async RAFF.update_best(bqueue, bestx)
+        fut = @async RAFF.update_best(bqueue, bestθ)
 
-        # Should update bestx
+        # Should update bestθ
 
         newbest1 = ones(Float64, n)
 
@@ -38,9 +38,9 @@
 
         sleep(0.1)
 
-        @test bestx == newbest1
+        @test bestθ == newbest1
 
-        # Should update bestx again
+        # Should update bestθ again
 
         newbest2 = rand(Float64, n)
 
@@ -48,7 +48,7 @@
 
         sleep(0.1)
 
-        @test bestx == (newbest1 + newbest2) / 2.0
+        @test bestθ == (newbest1 + newbest2) / 2.0
 
         # Should not throw an error nor die with invalid element
         # The following test if failing in Julia Nightly. They do not
@@ -115,7 +115,7 @@
         @test rout.p == p
         @test rout.status == 1
         @test rout.f ≈ 0.0 atol=1.0e-1
-        @test rout.solution ≈ xSol atol=1.0e-1
+        @test rout.solution ≈ θSol atol=1.0e-1
 
         # Test with interval
 
@@ -333,12 +333,12 @@
 
     @testset "PRAFF" begin
 
-        model(x, t) = x[1] * exp(t[1] * x[2])
+        model(x, θ) = θ[1] * exp(x[1] * θ[2])
         
-        gmodel!(x, t, g) = begin
+        gmodel!(g, x, θ) = begin
             
-            g[1] = exp(t[1] * x[2])
-            g[2] = t[1] * x[1] * exp(t[1] * x[2])
+            g[1] = exp(x[1] * θ[2])
+            g[2] = x[1] * θ[1] * exp(x[1] * θ[2])
 
         end
 

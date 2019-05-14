@@ -30,10 +30,10 @@ include("dutils.jl")
 include("generator.jl")
 
 """
-    lmlovo(model::Function [, x::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
+    lmlovo(model::Function [, θ::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
 
-    lmlovo(model::Function, gmodel!::Function [, x::Vector{Float64} = zeros(n)],
+    lmlovo(model::Function, gmodel!::Function [, θ::Vector{Float64} = zeros(n)],
            data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int=200,
            ε::Float64=10.0^-4])
 
@@ -44,30 +44,30 @@ Levenberg-Marquardt algorithm is implemented in this version.
 
 Matriz `data` is the data to be fit. This matrix should be in the form
 
-    t11 t12 ... t1N y1
-    t21 t22 ... t2N y2
+    x11 x12 ... x1N y1
+    x21 x22 ... x2N y2
     :
 
 where `N` is the dimension of the argument of the model
-(i.e. dimension of `t`).
+(i.e. dimension of `x`).
 
-If 'x' is provided, the it is used as the starting point.
+If `θ` is provided, then it is used as the starting point.
 
 The signature of function `model` should be given by
 
-    model(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray})
+    model(x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64})
 
-where `x` is a `n`-dimensional vector of parameters and `t` is the
-argument. If the gradient of the model `gmodel!`
+where `x` are the variables and `θ` is a `n`-dimensional vector of
+parameters. If the gradient of the model `gmodel!`
 
-    gmodel!(x::Vector{Float64}, t::Union{Vector{Float64}, SubArray},
-            g::Vector{Float64})
+    gmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},
+               θ::Vector{Float64})
 
 is not provided, then the function ForwardDiff.gradient! is called to
 compute it.  **Note** that this choice has an impact in the
 computational performance of the algorithm. In addition, if
-ForwardDiff is being used, then one **MUST** remove the signature of
-vector `x` from the model.
+`ForwardDiff.jl` is being used, then one **MUST** remove the signature
+of vector `θ` from function `model`.
 
 The optional arguments are
 
@@ -77,7 +77,7 @@ The optional arguments are
 Returns a [`RAFFOutput`](@ref) object.
 
 """
-function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
+function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
                 data::Array{Float64,2}, n::Int, p::Int;
                 MAXITER::Int=200, ε::Float64=10.0^-4)
 
@@ -92,7 +92,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     end
 
-    (p == 0) && return RAFFOutput(1, x, 0, p, 0.0, [1:npun;])
+    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, [1:npun;])
     
     # Main function - the LOVO function
     LovoFun = let
@@ -106,10 +106,10 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         p_::Int = p
         
         # Return a ordered set index and lovo value
-        x -> begin
+        (θ) -> begin
             
             @views for i = 1:npun_
-                F[i] = (model(x, data[i,1:(end - 1)]) - data[i, end])^2
+                F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
             end
             
             indF, orderedF = sort_fun!(F, ind, p_)
@@ -125,18 +125,18 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     jac_res::Array{Float64, 2} = Array{Float64}(undef, p, n)
     
     # This function returns the residue and Jacobian of residue
-    ResFun!(x::Vector{Float64}, ind, r::Vector{Float64},
+    ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64},
             rJ::Array{Float64, 2}) = begin
                 
         for (k, i) in enumerate(ind)
             
-            t = data[i, 1:(end - 1)]
+            x = data[i, 1:(end - 1)]
             
-            r[k] = model(x, t) - data[i, end]
+            r[k] = model(x, θ) - data[i, end]
             
             v = @view(rJ[k, :])
             
-            gmodel!(x, t, v)
+            gmodel!(v, x, θ)
 
         end
 
@@ -158,7 +158,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     maxoutind = min(p, 5)
 
     # Allocation
-    xnew = Vector{Float64}(undef, n)
+    θnew = Vector{Float64}(undef, n)
     d = Vector{Float64}(undef, n)
     y = Vector{Float64}(undef, n)
     G = Array{Float64, 2}(undef, n, n)
@@ -166,9 +166,9 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
     
     # Initial steps
     
-    ind_lovo, best_val_lovo = LovoFun(x)
+    ind_lovo, best_val_lovo = LovoFun(θ)
 
-    ResFun!(x, ind_lovo, val_res, jac_res)
+    ResFun!(θ, ind_lovo, val_res, jac_res)
 
     BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
  
@@ -185,7 +185,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             @info("Iteration $(safecount)")
             @info("  Current value:   $(best_val_lovo)")
             @info("  ||grad_lovo||_2: $(ngrad_lovo)")
-            @info("  Current iterate: $(x)")
+            @info("  Current iterate: $(θ)")
             @info("  Best indices (first $(maxoutind)): $(ind_lovo[1:maxoutind])")
             @info("  lambda: $(λ)")
 
@@ -212,26 +212,26 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
             
                 @warn "Failed to solve the linear system. Will try new point."
                 d .= - 1.0 .* grad_lovo 
-                x .= rand(n)
+                θ .= rand(n)
                 
             end
         else 
             d .= ad
         end
 
-        xnew .= x .+ d
+        θnew .= θ .+ d
         
-        ind_lovo, val_lovo = LovoFun(xnew)
+        ind_lovo, val_lovo = LovoFun(θnew)
         
         if  val_lovo <= best_val_lovo
 
-            x .= xnew
+            θ .= θnew
             
             best_val_lovo = val_lovo
             
             λ = λ / λ_down
             
-            ResFun!(x, ind_lovo, val_res, jac_res)
+            ResFun!(θ, ind_lovo, val_res, jac_res)
 
             BLAS.gemv!('T', 1.0, jac_res, val_res, 0.0, grad_lovo)
 
@@ -286,7 +286,7 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
         @info("""
 
         Final iteration (STATUS=$(status))
-          Solution found:       $(x)
+          Solution found:       $(θ)
           ||grad_lovo||_2:      $(ngrad_lovo)
           Function value:       $(best_val_lovo)
           Number of iterations: $(safecount)
@@ -296,27 +296,27 @@ function lmlovo(model::Function, gmodel!::Function, x::Vector{Float64},
 
     end
     
-    return RAFFOutput(status, x, safecount, p, best_val_lovo, outliers)
+    return RAFFOutput(status, θ, safecount, p, best_val_lovo, outliers)
 
 end
 
-function lmlovo(model::Function, x::Vector{Float64}, data::Array{Float64,2},
+function lmlovo(model::Function, θ::Vector{Float64}, data::Array{Float64,2},
                 n::Int, p::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
+    # 'x' is considered as global parameter for this function
+    model_cl(θ) = model(x, θ)
     
-    grad_model(x, t_, g) = begin
+    grad_model!(g, x_, θ) = begin
 
-        global t = t_
+        global x = x_
         
-        ForwardDiff.gradient!(g, model_cl, x)
+        ForwardDiff.gradient!(g, model_cl, θ)
 
     end
 
-    return lmlovo(model, grad_model, x, data, n, p; kwargs...)
+    return lmlovo(model, grad_model!, θ, data, n, p; kwargs...)
     
 end
 
@@ -340,27 +340,28 @@ points to fit the `model`.
 
   - `model`: function to fit data. Its signature should be given by
 
-        model(x, t)
+        model(x, θ)
 
-    where `x` is a `n`-dimensional vector of parameters and `t` is the
-    multidimensional argument
+    where `x` is the multidimensional argument and `θ` is the
+    `n`-dimensional vector of parameters
 
   - `gmodel!`: gradient of the model function. Its signature should be
     given by
 
-        gmodel!(x, t, g)
+        gmodel!(g, x, θ)
 
-    where `x` is a `n`-dimensional vector of parameters, `t` is the
-    multidimensional argument and the gradient is written in `g`.
+    where `x` is the multidimensional argument, `θ` is the
+    `n`-dimensional vector of parameters and the gradient is written
+    in `g`.
 
   - `data`: data to be fit. This matrix should be in the form
 
-        t11 t12 ... t1N y1
-        t21 t22 ... t2N y2
+        x11 x12 ... x1N y1
+        x21 x22 ... x2N y2
         :
 
     where `N` is the dimension of the argument of the model
-    (i.e. dimension of `t`).
+    (i.e. dimension of `x`).
 
   - `n`: dimension of the parameter vector in the model function
 
@@ -406,11 +407,11 @@ function raff(model::Function, gmodel!::Function,
             end
             
             # Starting point
-            x = randn(seedMS, Float64, n)
-            # x .= x .+ vbest.solution
+            θ = randn(seedMS, Float64, n)
+            # θ .= θ .+ vbest.solution
         
             # Call function and store results
-            sols[ind] = lmlovo(model, gmodel!, x, data, n, i; ε=ε, MAXITER=400)
+            sols[ind] = lmlovo(model, gmodel!, θ, data, n, i; ε=ε, MAXITER=400)
 
             # Update the best point and functional value
             (sols[ind].status == 1) && (sols[ind].f < vbest.f) && (vbest = sols[ind])
@@ -512,18 +513,18 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
+    # 'x' is considered as global for this function
+    model_cl(θ) = model(x, θ)
     
-    grad_model(x, t_, g) = begin
+    grad_model!(g, x_, θ) = begin
 
-        global t = t_
+        global x = x_
         
-        return ForwardDiff.gradient!(g, model_cl, x)
+        return ForwardDiff.gradient!(g, model_cl, θ)
 
     end
 
-    return raff(model, grad_model, data, n; kwargs...)
+    return raff(model, grad_model!, data, n; kwargs...)
 
 end
 
@@ -773,18 +774,18 @@ function praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 
     # Define closures for derivative and initializations
 
-    # 't' is considered as global parameter for this function
-    model_cl(x) = model(x, t)
+    # 'x' is considered as global parameter for this function
+    model_cl(θ) = model(x, θ)
     
-    grad_model(x, t_, g) = begin
+    grad_model!(g, x_, θ) = begin
 
-        global t = t_
+        global x = x_
         
-        return ForwardDiff.gradient!(g, model_cl, x)
+        return ForwardDiff.gradient!(g, model_cl, θ)
 
     end
 
-    return praff(model, grad_model, data, n; kwargs...)
+    return praff(model, grad_model!, data, n; kwargs...)
 
 end
 
