@@ -38,8 +38,8 @@ $f$ by a known model $\phi$. Model $\phi$ can be defined as $\phi(x,
 $\theta$ represents some parameters of $\phi$. ``RAFF.jl`` (Robust
 Algebraic Fitting Function) is a Julia package developed to find the
 optimal parameters $\theta$ for $\phi$ in order to adjust it to the
-observed values $S$ of the unknown function $f$. Following [@Liu2008],
-in general, the adjustment can be related to
+observed values $S$ of the unknown function $f$. Following [@Liu2008] and
+[@keles2018], in general, the adjustment can be related to
 
 1. Classical least squares (algebraic fit): which considers the sum of deviations of type
 $\vert \phi(x_i, \theta) - y_i \vert^2$, also known as regression;
