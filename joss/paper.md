@@ -111,28 +111,34 @@ from influence of the $m-p$ points with the highest deviation. The
 number $p$ can be interpreted as the number of trusted points, that
 is, $m - p$ possible outliers were identified.
 
-One of the most usual ways to solve the problem of least squares is by using the 
-Levenberg-Marquardt method [@more1978levenberg]. This method is a first-order method,
-where derivatives of the model $\phi$ *with respect to $\theta$* are used to compute the gradient of the
-objective function in the associated least squares problem. The reason for the wide
-use of Levenberg-Marquardt method is, in general, associated with quadratic convergence
-properties even using only first-order derivatives. In this direction, it is relevant 
-to ask about Levenberg-Marquardt-based methods to solve LOVO problems in the context 
-of adjustment functions. 
+One of the most usual ways to solve the problem of nonlinear least
+squares is by using the Levenberg-Marquardt method
+[@more1978levenberg]. This method is a first-order method, where
+derivatives of the model $\phi$ *with respect to $\theta$* are used to
+compute the gradient of the objective function in the associated least
+squares problem. The reason for the wide use of Levenberg-Marquardt
+method is, in general, associated with quadratic convergence
+properties even using only first-order derivatives. In this direction,
+it is relevant to ask about Levenberg-Marquardt-based methods to solve
+LOVO problems in the context of adjustment functions.
 
 ``RAFF.jl`` implements a Levenberg-Marquardt algorithm in the context
-of LOVO problems, i. e., it solves the problem of minimizing
+of LOVO problems, i.e., it solves the problem of minimizing
 $f_{min}(\theta)$, where $F_i(\theta)=(\phi(x_i,\theta)- y_i)^2$, for
 $i = 1,\dots, m$. In this sense, first-order derivatives are necessary
 and the same strategy of [@Andreani2009] is used. It uses first-order
 derivatives of the model $\phi$ with respect to $\theta$ to
 approximate the gradient of $f_{min}(\theta)$, which is a non
-differentiable function. Moreover, LOVO problems need the number $p$
-of possible trusted points to be given by the user. ``RAFF.jl`` solves
-this limitation by implementing a voting system. A voting system is a
-brute force algorithm, where several LOVO subproblems are solved with
-different numbers of possible trusted points. The solution which most
-occurs among them is declared as the solution.
+differentiable function. Moreover, LOVO problems have the limitation
+that the number $p$ of possible trusted points needs to be given by
+the user. ``RAFF.jl`` solves this limitation by implementing a voting
+system. In this voting system, several LOVO subproblems are solved
+with different values for $p$, the number of possible trusted
+points. Each solution of a LOVO subproblem is associated to a vector
+parameter $\theta$. The vector parameters are compared against each
+other using the Euclidian distance, where small distances (using a
+threshold) are considered the same solution. The parameter $\theta^*$
+which most occurs among them is declared as the solution.
 
 # Functionality
 
@@ -185,7 +191,7 @@ faster executing time. When they are not provided by the user,
 ``RAFF.jl`` can be run in serial, parallel and distributed
 environments.  Parallel and distributed methods use the native
 [``Distributed.jl``](https://docs.julialang.org/en/v1.0/stdlib/Distributed/)
-package. The distributed version is a master-slave implementation that
+package. The distributed version is a primary-worker implementation that
 does not use shared arrays, therefore, can be run both locally or in a
 cluster of computers.
 
