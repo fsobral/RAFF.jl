@@ -94,8 +94,41 @@ $$f_i(\theta)=\sum_{k\in \mathcal{C}_i} F_k(\theta)$$
 and 
 $$f_{min}(\theta)=\min\{f_1(\theta),...,f_r(\theta)\}.$$
 It can be observed that, for a given $\theta$, $f_{min}(\theta)$ is obtained by a combination $\mathcal{C}_j$ which contains the smallest sum of $p$ elements of the set $\{F_i(\theta),i=1,...,m\}$. Therefore $f_{\min}(\theta)=S_p(\theta)$ and, consequently,
-the LOVO function is non differentiable. In
-[@Andreani2009], the authors introduced line search methods and handled the possible 
+the LOVO function is non differentiable. The LOVO problem description can become
+more clear considering an example. In this sense, consider the dataset given by
+
+  $x$        $y$
+-------  ---------
+ -0.5     0.119447 
+  0.0     0.3
+  0.5     0.203551
+  0.75    0.423998
+ 
+and the model defined by $\phi(x,\theta)=\theta (sin(x)+cos(x))$.
+Naturally, we have $m=4$ and let us consider $p=3$. According to definition of
+$F_i$'s, we have:
+$$F_1(\theta)=(0.119447 -\phi(-0.5,\theta))^2,$$ 
+$$F_2(\theta)=(0.3 -\phi(0.0,\theta))^2,$$ 
+$$F_3(\theta)=(0.203551 -\phi(0.5,\theta))^2,$$ 
+$$F_4(\theta)=(0.423998 -\phi(-0.75,\theta))^2.$$ 
+Since $m=4$ and $p=3$, we have 4 possibility of subsets with 3 elements of
+$\{1,2,3,4\}$: 
+$$\mathcal{C}_1=\{1,2,3\},\mathcal{C}_2=\{1,2,4\},\mathcal{C}_3=\{1,3,4\},\mathcal{C}_4=\{2,3,4\}.$$
+Thus, associated to each $\mathcal{C}_i,i=1,...,4$, we can define a $f_i$
+function as follows
+$$f_1(\theta)=F_1(\theta)+F_2(\theta)+F_3(\theta),$$
+$$f_2(\theta)=F_1(\theta)+F_2(\theta)+F_4(\theta),$$
+$$f_3(\theta)=F_1(\theta)+F_3(\theta)+F_4(\theta),$$
+$$f_4(\theta)=F_2(\theta)+F_3(\theta)+F_4(\theta),$$
+and consequently,
+$$f_{min}(\theta)=\min\{f_1(\theta),f_2(\theta),f_3(\theta),f_4(\theta)\}=S_3(\theta).$$
+As previously pointed out, this function is continuous but, in general, it is
+non differentiable as illustrated in [Figure 2](#lovo).
+
+![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1,f_2,f_3,f_4$ differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
+
+
+In [@Andreani2009], the authors introduced line search methods and handled the possible 
 singularities in a clever way, using the following approximation for $\nabla f_{min}(\theta)$
 $$\nabla f_{min}(\theta)=\nabla f_i(\theta),$$ where $i \in \mathcal{I}
 (\theta)=\{k \in \{1,...,r\};f_k(\theta)=f_{min}(\theta)\}$. This
