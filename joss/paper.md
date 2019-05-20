@@ -21,7 +21,7 @@ authors:
 affiliations:
  - name: Department of Mathematics, State University of Maringá, Paraná, Brazil
    index: 1
-date: 11 March 2019
+date: 19 May 2019
 bibliography: paper.bib
 ---
 
@@ -95,7 +95,7 @@ and
 $$f_{min}(\theta)=\min\{f_1(\theta),...,f_r(\theta)\}.$$
 It can be observed that, for a given $\theta$, $f_{min}(\theta)$ is obtained by a combination $\mathcal{C}_j$ which contains the smallest sum of $p$ elements of the set $\{F_i(\theta),i=1,...,m\}$. Therefore $f_{\min}(\theta)=S_p(\theta)$ and, consequently,
 the LOVO function is non differentiable. The LOVO problem description can become
-more clear considering an example. In this sense, consider the dataset given by
+more clear by considering an example. In this sense, let us consider the dataset given by
 
   $x$        $y$
 -------  ---------
@@ -104,28 +104,36 @@ more clear considering an example. In this sense, consider the dataset given by
   0.5     0.203551
   0.75    0.423998
  
-and the model defined by $\phi(x,\theta)=\theta (sin(x)+cos(x))$.
+and the model defined by $\phi(x,\theta)=\theta (\sin(x)+\cos(x))$.
 Naturally, we have $m=4$ and let us consider $p=3$. According to definition of
 $F_i$'s, we have:
-$$F_1(\theta)=(0.119447 -\phi(-0.5,\theta))^2,$$ 
-$$F_2(\theta)=(0.3 -\phi(0.0,\theta))^2,$$ 
-$$F_3(\theta)=(0.203551 -\phi(0.5,\theta))^2,$$ 
-$$F_4(\theta)=(0.423998 -\phi(-0.75,\theta))^2.$$ 
-Since $m=4$ and $p=3$, we have 4 possibility of subsets with 3 elements of
+$$
+\begin{aligned}
+  F_1(\theta) & =(0.119447 -\phi(-0.5,\theta))^2, \\
+  F_2(\theta) & =(0.3 -\phi(0.0,\theta))^2, \\
+  F_3(\theta) & =(0.203551 -\phi(0.5,\theta))^2, \\
+  F_4(\theta) & =(0.423998 -\phi(-0.75,\theta))^2.
+\end{aligned}
+$$
+Since $m=4$ and $p=3$, we have 4 possible subsets with 3 elements each from set
 $\{1,2,3,4\}$: 
-$$\mathcal{C}_1=\{1,2,3\},\mathcal{C}_2=\{1,2,4\},\mathcal{C}_3=\{1,3,4\},\mathcal{C}_4=\{2,3,4\}.$$
-Thus, associated to each $\mathcal{C}_i,i=1,...,4$, we can define a $f_i$
-function as follows
-$$f_1(\theta)=F_1(\theta)+F_2(\theta)+F_3(\theta),$$
-$$f_2(\theta)=F_1(\theta)+F_2(\theta)+F_4(\theta),$$
-$$f_3(\theta)=F_1(\theta)+F_3(\theta)+F_4(\theta),$$
-$$f_4(\theta)=F_2(\theta)+F_3(\theta)+F_4(\theta),$$
+$$\mathcal{C}_1=\{1,2,3\},\mathcal{C}_2=\{1,2,4\},\mathcal{C}_3=\{1,3,4\}\ \text{and}\ \mathcal{C}_4=\{2,3,4\}.$$
+Thus, associated to each $\mathcal{C}_i,i=1,...,4$, we can define function $f_i$
+as follows
+$$
+\begin{aligned}
+	f_1(\theta) & =F_1(\theta)+F_2(\theta)+F_3(\theta),\\
+	f_2(\theta) & =F_1(\theta)+F_2(\theta)+F_4(\theta),\\
+	f_3(\theta) & =F_1(\theta)+F_3(\theta)+F_4(\theta),\\
+	f_4(\theta) & =F_2(\theta)+F_3(\theta)+F_4(\theta),
+\end{aligned}
+$$
 and consequently,
 $$f_{min}(\theta)=\min\{f_1(\theta),f_2(\theta),f_3(\theta),f_4(\theta)\}=S_3(\theta).$$
 As previously pointed out, this function is continuous but, in general, it is
 non differentiable as illustrated in [Figure 2](#lovo).
 
-![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1,f_2,f_3,f_4$ differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
+![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1$, $f_2$, $f_3$ and f_4$ as differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
 
 
 In [@Andreani2009], the authors introduced line search methods and handled the possible 
@@ -169,7 +177,7 @@ system. In this voting system, several LOVO subproblems are solved
 with different values for $p$, the number of possible trusted
 points. Each solution of a LOVO subproblem is associated to a vector
 parameter $\theta$. The vector parameters are compared against each
-other using the Euclidian distance, where small distances (using a
+other using the Euclidean distance, where small distances (using a
 threshold) are considered the same solution. The parameter $\theta^*$
 which most occurs among them is declared as the solution.
 
@@ -201,11 +209,11 @@ In this example, the true function was given by $$ f(x) = 1000 +
 \frac{5000}{1.0 + \exp(- 0.2 x + 3)}. $$ The observed data was
 generated as random normal perturbations around the graphic of $f$ and
 is shown in [Figure 1](#logistic). The dots and triangles represent
-the observed data, where the red triangles are the outliers. Using the
-least squares technique with the model above, the green function is
-found. When `RAFF.jl` is applied to the same problem, it correctly
-identifies the two outliers. The resulting function is depicted as the
-red one, very close to $f$.
+the observed data, where the red triangles were manually set to be the
+outliers. Using the least squares technique with the model above, the
+green function is found. When `RAFF.jl` is applied to the same
+problem, it correctly identifies the two outliers. The resulting
+function is depicted as the red one, very close to $f$.
 
 ![Points representing the logistic function. The red triangles are two outliers that should be ignored. The blue dashed function is the true one, while the green was obtained by traditional least squares techniques and the red one was obtained by `RAFF.jl`.](logistic.png){#logistic
 width=60%, height=60%}
