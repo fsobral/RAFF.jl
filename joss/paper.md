@@ -130,10 +130,10 @@ $$
 $$
 and consequently,
 $$f_{min}(\theta)=\min\{f_1(\theta),f_2(\theta),f_3(\theta),f_4(\theta)\}=S_3(\theta).$$
-As previously pointed out, this function is continuous but, in general, it is
-non differentiable as illustrated in [Figure 2](#lovo).
+As previously pointed out, this function is continuous but it is
+not differentiable as illustrated in [Figure 2](#lovo).
 
-![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1$, $f_2$, $f_3$ and f_4$ as differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
+![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1$, $f_2$, $f_3$ and $f_4$ as differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
 
 
 In [@Andreani2009], the authors introduced line search methods and handled the possible 
