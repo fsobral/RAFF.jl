@@ -105,8 +105,8 @@ more clear by considering an example. In this sense, let us consider the dataset
   0.75    0.423998
  
 and the model defined by $\phi(x,\theta)=\theta (\sin(x)+\cos(x))$.
-Naturally, we have $m=4$ and let us consider $p=3$. According to definition of
-$F_i$'s, we have:
+Naturally, we have $m=4$ and let us consider $p=3$. The $F_i$'s can assume diferent forms. To leave the example closest to our approach, let's consider
+$F_i$'s as:
 $$
 \begin{aligned}
   F_1(\theta) & =(0.119447 -\phi(-0.5,\theta))^2, \\
