@@ -16,7 +16,7 @@ A=[-2.0  5.0;
     2.0  5.0 ;]
 
 # Define the model to fit data
-model(x, t) = x[1] * t[1]^2 + x[2]
+model(x, θ) = θ[1] * x[1]^2 + θ[2]
 
 # Number of parameters in the model
 n = 2

@@ -38,15 +38,15 @@ y = data[:, 2]
 c = data[:, 3]
 
 # Plot the obtained solution
-modl1 = (t) -> model(rsol.solution, t)
+modl1 = (x) -> model(x, rsol.solution)
 
 t = minimum(x):0.01:maximum(x)
 PyPlot.plot(t, modl1.(t), "r", label="RAFF")
 
 # Plot the 'true' solutios, i. e., the one use to generate the
 # problem.
-xSol = [2.0, 0, -4.0, -10]
-modl2 = (t) -> model(xSol, t)
+θSol = [2.0, 0, -4.0, -10]
+modl2 = (x) -> model(x, θSol)
 
 PyPlot.plot(t, modl2.(t), "b--", label="True Solution")
 

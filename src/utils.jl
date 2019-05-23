@@ -84,9 +84,9 @@ function eliminate_local_min!(model::Function, data::Array{Float64, 2},
             for i = 1:nump
 
                 y  = data[i, end]
-                t  = @view data[i, 1:(end - 1)]
-                y1 = model(maxp.solution, t)
-                y2 = model(sec_sol.solution, t)
+                x  = @view data[i, 1:(end - 1)]
+                y1 = model(x, maxp.solution)
+                y2 = model(x, sec_sol.solution)
                 
                 (abs(y - y1) < abs(y - y2)) && (nmin += 1)
 

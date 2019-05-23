@@ -14,9 +14,9 @@ data = [1.0 1.0    2.0
         0.0 8.6   -4.6]
 
 # Define the model to fit data
-model(x, t) = x[1] * t[1] + x[2] * t[2] + x[3]            
+model(x, θ) = θ[1] * x[1] + θ[2] * x[2] + θ[3]            
 
-# Number of parameters in the model (dimension of x)
+# Number of parameters in the model (dimension of θ)
 n = 3
 
 # Run RAFF. Uncomment the other piece of code, in order to run RAFF

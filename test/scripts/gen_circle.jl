@@ -7,16 +7,16 @@ using RAFF
 
 """
 
-Generate perturbed points in a circle given by `xSol`. Construct a
+Generate perturbed points in a circle given by `θSol`. Construct a
 test file for `RAFF`.
 
 """
 function gen_circle(np::Int, p::Int; std::Float64=0.1,
-                    xSol::Vector{Float64}=10.0*randn(Float64, 3),
+                    θSol::Vector{Float64}=10.0*randn(Float64, 3),
                     outTimes::Float64=5.0, interval::Vector{Float64}=rand(np)*2.0*π)
 
-    c = (α, ρ) -> [ρ * cos(α) + xSol[1], ρ * sin(α) + xSol[2]]
-    f = (x) -> (x[1] - xSol[1])^2 + (x[2] - xSol[2])^2 - xSol[3]^2
+    p = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+    f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
 
     data = Array{Float64, 2}(undef, np, 3) 
 
@@ -25,11 +25,11 @@ function gen_circle(np::Int, p::Int; std::Float64=0.1,
 
     for (i, α) in enumerate(interval)
     
-        pt = c(α, xSol[3] + std * randn())
+        pt = c(α, θSol[3] + std * randn())
 
         if i in v
 
-            pt = c(α, xSol[3] * (1 + outTimes * std * sign(randn())))
+            pt = c(α, θSol[3] * (1 + outTimes * std * sign(randn())))
 
         end
         
@@ -139,7 +139,7 @@ function draw_circle_sol(tSol, fSol, lsSol)
     PyPlot.yticks([])
 
     PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-                   cmap=PyPlot.cm["Paired"], alpha=0.9)
+                   cmap=PyPlot.cm."Paired", alpha=0.9)
 
     PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
 
