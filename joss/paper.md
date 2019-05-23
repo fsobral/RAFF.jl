@@ -233,11 +233,12 @@ faster executing time. When they are not provided by the user,
 environments.  Parallel and distributed methods use the native
 [``Distributed.jl``](https://docs.julialang.org/en/v1.0/stdlib/Distributed/)
 package. The distributed version is a primary-worker implementation that
-does not use shared arrays, therefore, can be run both locally or in a
+does not use shared arrays, therefore, can be run both locally or on a
 cluster of computers.
 
-This package is intended to be used by all experimental researchers who know a
-little about mathematical modeling and fitting functions.
+This package is intended to be used by any experimental researcher
+with a little knowledge about mathematical modeling and fitting
+functions.
 
 # Installation and usage
 
