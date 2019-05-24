@@ -2,41 +2,61 @@ using DelimitedFiles
 using PyPlot
 using RAFF
 
-datafile = "/tmp/output.txt"
+function draw_problem(;raff_output=nothing, model_str="logistic")
 
-fp = open(datafile, "r")
+    datafile = "/tmp/output.txt"
 
-N = parse(Int, readline(fp))
+    fp = open(datafile, "r")
 
-M = readdlm(fp)
+    N = parse(Int, readline(fp))
 
-close(fp)
+    M = readdlm(fp)
 
-x = M[:, 1]
-y = M[:, 2]
-c = M[:, 3]
+    close(fp)
 
-# sol = [699.522, 5476.89, 0.16228, 2.32653]
-sol = [533.077, 5389.48, 0.153425, 2.04606]
+    x = M[:, 1]
+    y = M[:, 2]
+    c = M[:, 3]
 
-n, model, modelstr = RAFF.model_list["logistic"]
+    true_outliers = findall(c .== 1)
 
-modl1 = (x) -> model(x, sol)
-modl2 = (x) -> model(x, θSol)
+    PyPlot.scatter(x[c .== 0.0], y[c .== 0.0], c=PyPlot.cm."Pastel1"(1.0),
+                   marker="o", s=50.0, linewidths=0.2)
 
-# t = minimum(x):0.01:maximum(x)
-# PyPlot.plot(t, modl1.(t), "r", label="Ajustado RAFF")
+    PyPlot.scatter(x[c .== 1.0], y[c .== 1.0], c=PyPlot.cm."Pastel1"(1.0),
+                   marker="^", s=50.0, linewidths=0.2, label="Outliers")
 
-# θSol = [1000.0, 5000.0, 0.2, 3.0]
-# PyPlot.plot(t, modl2.(t), "b--", label="Verdadeiro")
+    if raff_output != nothing
+        
+        n, model, modelstr = RAFF.model_list[model_str]
 
-# PyPlot.legend(loc=4)
+        modl1 = (x) -> model(x, raff_output.solution)
 
-PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-               cmap=PyPlot.cm."Paired", alpha=0.6)
+        t = minimum(x):0.01:maximum(x)
+        PyPlot.plot(t, modl1.(t), c=PyPlot.cm."Set1"(2.0/9.0))
 
+        # Draw outliers found by RAFF
+        
+        true_positives = intersect(true_outliers, raff_output.outliers)
+        false_positives = setdiff(raff_output.outliers, true_positives)
+        
+        PyPlot.scatter(x[false_positives], y[false_positives],
+                   c=PyPlot.cm."Pastel1"(0.0/9.0), marker="o", s=50.0,
+                   linewidths=0.2, label="False positives")
+        
+        PyPlot.scatter(x[true_positives], y[true_positives],
+                       c=PyPlot.cm."Pastel1"(0.0/9.0), marker="^",
+                       s=50.0, linewidths=0.2, label="Identified outliers")
 
+    end
 
-PyPlot.show()
+    # θSol = [1000.0, 5000.0, 0.2, 3.0]
+    # PyPlot.plot(t, modl2.(t), "b--", label="Verdadeiro")
 
-PyPlot.savefig("/tmp/figure.png", DPI=100)
+    PyPlot.legend(loc=4)
+
+    PyPlot.show()
+    
+    PyPlot.savefig("/tmp/figure.png", DPI=100)
+
+end
