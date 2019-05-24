@@ -24,7 +24,7 @@ function run_raff(maxms=1, initguess=nothing)
 
     end
 
-    rsol = raff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess, ε=1.0e-6)
+    rsol = raff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess)
     
     @printf("Solution found:
             fbest = %f
