@@ -18,11 +18,10 @@ function mainf()
         arg_type = Int
         required = true
 
-        "-m" "--model"
+        "--model"
         help = "Model function"
         arg_type = String
         default = "linear"
-        required = true
 
         "--fname"
         help = "File name"
@@ -39,13 +38,13 @@ function mainf()
 
     parsed_args = parse_args(ARGS, s)
 
-    n, model, modelStr = RAFF.model_list[parsed_args["m"]]
+    n, model, modelStr = RAFF.model_list[parsed_args["model"]]
 
     xMin = - 0.0
 
     xMax =   30.0
 
-    θSol = [1000.0, 5000.0, 0.2, 15.0]
+    θSol = [1000.0, 5000.0, 0.2, 3.0]
 
     fname = parsed_args["fname"]
 
