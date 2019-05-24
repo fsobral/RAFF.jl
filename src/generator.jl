@@ -29,7 +29,8 @@ const model_list = Dict(
 
     generate_test_problems(datFilename::String, solFilename::String,
                          model::Function, modelStr::String, n::Int,
-                         np::Int, p::Int)
+                         np::Int, p::Int; xMin=-10.0, xMax=10.0,
+                         θSol=10.0 * randn(n), std=200.0, out_times=7.0)
 
 Generate random data files for testing fitting problems.
 
@@ -48,13 +49,21 @@ Generate random data files for testing fitting problems.
   - `p` is the number of trusted points to be used in the LOVO
     approach.
 
+Additional parameters:
+
+  - `xMin`, `xMax`: minimum and maximum interval for generating points
+    in one dimensional tests
+  - `θSol`: true solution, used for generating perturbed points
+  - `std`: standard deviation
+  - `out_times`: deviation for outliers will be `out_times * std`.
+
 """
 function generate_test_problems(datFilename::String,
                               solFilename::String, model::Function,
                               modelStr::String,
                               n::Int, np::Int, p::Int;
                               xMin=-10.0, xMax=10.0,
-                              θSol=10.0 * randn(n), std=200.0, outTimes=7.0)
+                              θSol=10.0 * randn(n), std=200.0, out_times=7.0)
 
     # Generate solution file
     
@@ -74,7 +83,7 @@ function generate_test_problems(datFilename::String,
     
         vdata, θsol, outliers = generate_noisy_data(model, n, np, p;
                                    xMin=xMin, xMax=xMax, θSol=θSol,
-                                   std=std, outTimes=outTimes)
+                                   std=std, out_times=out_times)
     
         # Dimension of the domain of the function to fit
         @printf(data, "%d\n", 1)
@@ -136,7 +145,7 @@ end
     generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
                       xMin::Float64=-10.0, xMax::Float64=10.0,
                       θSol::Vector{Float64}=10.0 * randn(Float64, n),
-                      std::Float64=200.0, outTimes::Float64=7.0)
+                      std::Float64=200.0, out_times::Float64=7.0)
 
     generate_noisy_data(model::Function, n, np, p, xMin::Float64, xMax::Float64)
 
@@ -164,7 +173,7 @@ It returns a tuple `(data, θSol, outliers)` where
 function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
                            xMin::Float64=-10.0, xMax::Float64=10.0,
                            θSol::Vector{Float64}=10.0 * randn(Float64, n),
-                           std::Float64=200.0, outTimes::Float64=7.0)
+                           std::Float64=200.0, out_times::Float64=7.0)
 
     @assert(xMin <= xMax, "Invalid interval for random number generation")
     
@@ -185,7 +194,7 @@ function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
             
         if k in v 
             y = model(x[k], θSol)
-            noise = outTimes * std * sign(randn())
+            noise = out_times * std * sign(randn())
         end
             
         data[k, 1] = x[k]
