@@ -244,8 +244,8 @@ functions.
 
 ``RAFF.jl`` is an open-source software that can be
 [downloaded from Github](https://github.com/fsobral/RAFF.jl). It is a
-registered package and can be directly installed from Julia package
-repository. All the description for first time usage or its API is
+registered package and can be directly installed from Julia's package
+repository. The whole description for first time usage or its API is
 available at its
 [documentation](https://fsobral.github.io/RAFF.jl/stable/).
 
