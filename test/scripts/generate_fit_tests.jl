@@ -55,7 +55,7 @@ function mainf()
         
         generate_test_problems(ffname, fsname, model, modelStr, n,
                              parsed_args["np"], parsed_args["p"];
-                             xMin=xMin, xMax=xMax, θSol=θSol, std=200.0)
+                             xMin=xMin, xMax=xMax, θSol=θSol, std=200.0, out_times=10.0)
 
         @printf("Created problem and solution files.\n")
 
