@@ -11,6 +11,7 @@ using Printf
 using Random
 using SharedArrays
 using Logging
+using ProgressMeter
 
 export lmlovo, raff, praff
 
@@ -392,7 +393,7 @@ function raff(model::Function, gmodel!::Function,
     
     sols = Vector{RAFFOutput}(undef, lv)
 
-    for i = pliminf:plimsup
+    @showprogress for i = pliminf:plimsup
 
         vbest = RAFFOutput(0, initguess, -1, i, Inf, [])
         
@@ -622,7 +623,8 @@ function praff(model::Function, gmodel!::Function,
         raff_logger)
 
     # Populate the task queue with jobs
-    for p = pliminf:batches:plimsup
+    
+    @showprogress for p = pliminf:batches:plimsup
 
         try
             
@@ -646,6 +648,7 @@ function praff(model::Function, gmodel!::Function,
 
         end
                 
+
     end
 
     # The task queue can be closed, since all the problems have been
@@ -684,7 +687,7 @@ function praff(model::Function, gmodel!::Function,
             end
             
         end
-        
+
     end
     
     close(bqueue)
