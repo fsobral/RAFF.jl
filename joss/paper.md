@@ -84,7 +84,7 @@ and the LOVO problem as
 $$\min_{\theta \in \mathbb{R}^{n}}S_p(\theta).$$
 
 Assuming that $F_i, i=1,...,m$ are continuous functions we have that
-$S_p$ is a continuous function but assuming that $F_i$'s are differentiable
+$S_p$ is a continuous function, but assuming that $F_i$'s are differentiable
 functions we cannot conclude that $S_p$ is differentiable. This can be seen by
 reformulating the LOVO problem as follows. Denoting 
 $\mathcal{C}=\{\mathcal{C}_1,...,\mathcal{C}_r\}$ as the set of all
