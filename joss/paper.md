@@ -36,8 +36,8 @@ procedure, numerical approximation, etc.) and we want to approximate
 $f$ by a known model $\phi$. Model $\phi$ can be defined as $\phi(x,
 \theta)$, where $x$ are the $n$ independent variables of $f$ and
 $\theta$ represents some parameters of $\phi$. ``RAFF.jl`` (Robust
-Algebraic Fitting Function) is a Julia package developed to find the
-optimal parameters $\theta$ for $\phi$ in order to adjust it to the
+Algebraic Fitting Function) is a Julia package developed to find 
+parameters $\theta$ for $\phi$ in order to adjust it to the
 observed values $S$ of the unknown function $f$. Following [@Liu2008] and
 [@keles2018], in general, the adjustment can be related to
 
