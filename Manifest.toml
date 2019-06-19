@@ -51,9 +51,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "InteractiveUtils", "LinearAlgebra", "NaNMath", "Random", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test"]
-git-tree-sha1 = "b91250044374764e7c29af59a774c4b8d6100b6e"
+git-tree-sha1 = "4c4d727f1b7e0092134fabfab6396b8945c1ea5b"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.1"
+version = "0.10.3"
 
 [[InteractiveUtils]]
 deps = ["LinearAlgebra", "Markdown"]
