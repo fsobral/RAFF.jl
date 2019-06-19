@@ -80,12 +80,14 @@
 
         seedMS = MersenneTwister(1234)
 
+        initguess = zeros(Float64, n)
+
         MAXMS = 1
 
         worker1 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS)
+                                MAXMS, seedMS, initguess)
             true
         end
 
@@ -162,7 +164,7 @@
         worker2 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS)
+                                MAXMS, seedMS, initguess)
             true
         end
 
@@ -190,6 +192,8 @@
 
         seedMS = MersenneTwister(1234)
 
+        initguess = zeros(Float64, n)
+
         MAXMS = 1
 
         # Check if the worker dies after closing the task queue
@@ -197,7 +201,7 @@
         worker1 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS)
+                                MAXMS, seedMS, initguess)
             true
         end
 
@@ -223,7 +227,7 @@
         worker = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS)
+                                MAXMS, seedMS, initguess)
             true
         end
 

@@ -380,8 +380,8 @@ Returns a [`RAFFOutput`](@ref) object with the best parameter found.
 """
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789, initguess=zeros(Float64, n), ε=1.0e-4,
-              noutliers::Int=-1)
+              SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n),
+              ε=1.0e-4, noutliers::Int=-1)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -408,7 +408,7 @@ function raff(model::Function, gmodel!::Function,
             
             # Starting point
             θ = randn(seedMS, Float64, n)
-            # θ .= θ .+ vbest.solution
+            θ .= θ .+ initguess
         
             # Call function and store results
             sols[ind] = lmlovo(model, gmodel!, θ, data, n, i; ε=ε, MAXITER=400)
@@ -560,7 +560,8 @@ Returns a [`RAFFOutput`](@ref) object containing the solution.
 """
 function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-               SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),
+               SEEDMS::Int=123456789, batches::Int=1,
+               initguess::Vector{Float64}=zeros(Float64, n),
                ε::Float64=1.0e-4, noutliers::Int=-1)
 
     # Initialize random generator
@@ -601,7 +602,7 @@ function praff(model::Function, gmodel!::Function,
                                               
             consume_tqueue(bqueue, tqueue, squeue,
                            model, gmodel!, data, n, pliminf,
-                           plimsup, MAXMS, seedMS)
+                           plimsup, MAXMS, seedMS, initguess)
             catch e
                                               
                @error("Unable to start worker $(t).", e)

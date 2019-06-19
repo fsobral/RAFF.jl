@@ -80,7 +80,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                         model::Function, gmodel!::Function,
                         data::Array{Float64, 2}, n::Int, pliminf::Int,
                         plimsup::Int, MAXMS::Int,
-                        seedMS::MersenneTwister)
+                        seedMS::MersenneTwister, initguess::Vector{Float64})
 
     @debug("Started worker $(myid())")
 
@@ -122,6 +122,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
                 # New random starting point
                 θ = randn(seedMS, n)
+                θ .= θ .+ initguess
                 
                 # Call function and store results
                 rout = lmlovo(model, gmodel!, θ, data, n, k)
