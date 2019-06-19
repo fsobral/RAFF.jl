@@ -194,7 +194,7 @@ function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
             
         if k in v 
             y = model(x[k], θSol)
-            noise = out_times * std * sign(randn())
+            noise = (1.0 + 2 * rand()) * out_times * std * sign(randn())
         end
             
         data[k, 1] = x[k]
