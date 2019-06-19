@@ -328,11 +328,12 @@ lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
 
 """
     raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-         SEEDMS::Int=123456789, initguess=zeros(Float64, n))
+         SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n))
 
     raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
-         [MAXMS::Int=1, SEEDMS::Int=123456789, initguess=zeros(Float64, n),
-          kwargs...])
+         [MAXMS::Int=1, SEEDMS::Int=123456789,
+         initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,
+         noutliers::Int=-1])
 
 Robust Algebric Fitting Function (RAFF) algorithm. This function uses
 a voting system to automatically find the number of trusted data
@@ -381,7 +382,7 @@ Returns a [`RAFFOutput`](@ref) object with the best parameter found.
 function raff(model::Function, gmodel!::Function,
               data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
               SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n),
-              ε=1.0e-4, noutliers::Int=-1)
+              ε::Float64=1.0e-4, noutliers::Int=-1)
 
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
@@ -531,11 +532,12 @@ end
 """
     praff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
           SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),
-          ε=1.0e-4)
+          ε::Float64=1.0e-4, noutliers::Int=-1)
 
     praff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
           MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,
-          initguess=zeros(Float64, n), ε::Float64=1.0e-4)
+          initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,
+          noutliers::Int=-1)
 
 Multicore distributed version of RAFF. See the description of the
 [`raff`](@ref) function for the main (non-optional) arguments. All the
