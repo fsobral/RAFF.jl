@@ -19,7 +19,7 @@ function mainf()
         required = true
 
         "--model"
-        help = "Model function"
+        help = "Model function: linear, cubic, expon, logistic"
         arg_type = String
         default = "linear"
 
@@ -28,9 +28,10 @@ function mainf()
         arg_type = String
         default = "output"
         
-        "-s"
+        "--sol"
         help = "Solution"
-        arg_type = Vector
+        nargs = '*'
+        arg_type = Float64
         
     end
 
@@ -44,7 +45,21 @@ function mainf()
 
     xMax =   30.0
 
-    θSol = [1000.0, 5000.0, 0.2, 3.0]
+    θSol = Vector{Float64}(undef, n)
+
+    if length(parsed_args["sol"]) == 0
+
+        map!(x->randn(), θSol, θSol)
+
+    elseif length(parsed_args["sol"]) == n
+
+        θSol .= parsed_args["sol"]
+
+    else
+
+        error("Incorrect number of elements in solution")
+
+    end
 
     fname = parsed_args["fname"]
 
