@@ -7,7 +7,7 @@ using Logging
 using Base.CoreLogging
 
 function run_raff(maxms=1, initguess=nothing;
-                  model_str="logistic")
+                  model_str="logistic", foutliers=0.5)
     
     n, model, modelstr = RAFF.model_list[model_str]
 
@@ -25,7 +25,8 @@ function run_raff(maxms=1, initguess=nothing;
 
     end
 
-    rsol = raff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess)
+    rsol = raff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess,
+                noutliers=Int(round(foutliers * size(data)[1])))
     
     @printf("Solution found:
             fbest = %f

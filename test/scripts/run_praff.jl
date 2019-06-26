@@ -15,9 +15,9 @@ Load and run the parallel/distributed version of RAFF. It assumes that
 there is a problem file `/tmp/output.txt`.
 
 """
-function run_praff(maxms=1, initguess=nothing)
+function run_praff(maxms=1, initguess=nothing; model_str="logistic", foutliers=0.5)
     
-    n, model, modelstr = RAFF.model_list["logistic"]
+    n, model, modelstr = RAFF.model_list[model_str]
 
     open("/tmp/output.txt") do fp
         
@@ -33,7 +33,8 @@ function run_praff(maxms=1, initguess=nothing)
 
     end
 
-    rsol = praff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess)
+    rsol = praff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess,
+                 noutliers=Int(round(foutliers * size(data)[1])))
     
     @printf("Solution found:
             fbest = %f
