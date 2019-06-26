@@ -20,10 +20,10 @@ function draw_problem(;raff_output=nothing, model_str="logistic")
 
     true_outliers = findall(c .== 1)
 
-    PyPlot.scatter(x[c .== 0.0], y[c .== 0.0], c=PyPlot.cm."Pastel1"(1.0),
+    PyPlot.scatter(x[c .== 0.0], y[c .== 0.0], color=PyPlot.cm."Pastel1"(1.0),
                    marker="o", s=50.0, linewidths=0.2)
 
-    PyPlot.scatter(x[c .== 1.0], y[c .== 1.0], c=PyPlot.cm."Pastel1"(1.0),
+    PyPlot.scatter(x[c .== 1.0], y[c .== 1.0], color=PyPlot.cm."Pastel1"(1.0),
                    marker="^", s=50.0, linewidths=0.2, label="Outliers")
 
     if raff_output != nothing
@@ -33,7 +33,7 @@ function draw_problem(;raff_output=nothing, model_str="logistic")
         modl1 = (x) -> model(x, raff_output.solution)
 
         t = minimum(x):0.01:maximum(x)
-        PyPlot.plot(t, modl1.(t), c=PyPlot.cm."Set1"(2.0/9.0))
+        PyPlot.plot(t, modl1.(t), color=PyPlot.cm."Set1"(2.0/9.0))
 
         # Draw outliers found by RAFF
         
@@ -41,11 +41,11 @@ function draw_problem(;raff_output=nothing, model_str="logistic")
         false_positives = setdiff(raff_output.outliers, true_positives)
         
         PyPlot.scatter(x[false_positives], y[false_positives],
-                   c=PyPlot.cm."Pastel1"(0.0/9.0), marker="o", s=50.0,
+                   color=PyPlot.cm."Pastel1"(0.0/9.0), marker="o", s=50.0,
                    linewidths=0.2, label="False positives")
         
         PyPlot.scatter(x[true_positives], y[true_positives],
-                       c=PyPlot.cm."Pastel1"(0.0/9.0), marker="^",
+                       color=PyPlot.cm."Pastel1"(0.0/9.0), marker="^",
                        s=50.0, linewidths=0.2, label="Identified outliers")
 
     end
