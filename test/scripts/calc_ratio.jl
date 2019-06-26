@@ -21,6 +21,7 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
     tot_tim = 0.0
     n_match = zeros(Int, ntests)
     n_exact = 0
+    n_out = 0
     
     for i = 1:ntests
     
@@ -50,6 +51,8 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
 
         end
 
+        n_out += length(rsol.outliers)
+
         n_match[i] = cnt
 
         (cnt == np - p) && (length(rsol.outliers) == np - p) && (n_exact += 1)
@@ -58,9 +61,10 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
 
     end
 
-    @printf("%10s %5d %5d %10.8f %10.8f %5d %5d %5d %8.4f\n", modelStr, np, p,
+    @printf("%10s %5d %5d %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n", modelStr, np, p,
             count(n_match .== np - p) / (1.0 * ntests),
             n_exact / (1.0 * ntests),
+            n_out / ntests,
             count(n_match .== 0), count(n_match .== 1),
             count(n_match .== 2), tot_tim)
 
