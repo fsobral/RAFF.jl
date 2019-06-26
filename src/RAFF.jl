@@ -422,6 +422,13 @@ function raff(model::Function, gmodel!::Function,
 
         sols[ind] = vbest
 
+        with_logger(raff_logger) do
+                
+            @debug("Best solution for p = $(i).", vbest.solution)
+                
+        end
+        
+
     end
 
     # Remove possible stationary points, i.e., points with lower
