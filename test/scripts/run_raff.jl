@@ -6,9 +6,10 @@ using Printf
 using Logging
 using Base.CoreLogging
 
-function run_raff(maxms=1, initguess=nothing)
+function run_raff(maxms=1, initguess=nothing;
+                  model_str="logistic")
     
-    n, model, modelstr = RAFF.model_list["logistic"]
+    n, model, modelstr = RAFF.model_list[model_str]
 
     open("/tmp/output.txt") do fp
         
