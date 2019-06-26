@@ -458,7 +458,7 @@ function raff(model::Function, gmodel!::Function,
 
             if sols[i].status == 1 && sols[j].status == 1
 
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
 
                 pos += 1
 
