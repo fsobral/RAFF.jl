@@ -107,6 +107,10 @@ Choose exactly `npp` unique random points from a set containing `np`
 points. This function is similar to `rand(vector)`, but does not allow
 repetitions.
 
+If `npp` < `np`, returns all the `np` points. Note that this function
+is not very memory efficient, since the process of selecting unique
+elements involves creating several temporary vectors.
+
 Return a vector with the selected points.
 
 """
@@ -118,6 +122,47 @@ function get_unique_random_points(np::Int, npp::Int)
     ntp = min(npp, np)
     
     v = Vector{Int}(undef, ntp)
+    
+    return get_unique_random_points!(v, np, npp)
+
+end
+
+"""
+
+    get_unique_random_points!(v::Vector{Int}, np::Int, npp::Int)
+
+Choose exactly `npp` unique random points from a set containing `np`
+points. This function is similar to `rand(vector)`, but does not allow
+repetitions.
+
+If `npp` < `np`, returns all the `np` points. Note that this function
+is not very memory efficient, since the process of selecting unique
+elements involves creating several temporary vectors.
+
+Return the vector `v` provided as argument filled with the selected
+points.
+
+"""
+function get_unique_random_points!(v::Vector{Int}, np::Int, npp::Int)
+
+    # Check invalid arguments
+    ((np <= 0) || (npp <=0)) && return v
+
+    ntp = min(np, npp)
+    
+    # Check invalid size
+    (length(v) < ntp) && throw(DimensionMismatch("Incorrect size for vector."))
+    
+    # Check small np for efficiency
+    if np == ntp
+
+        for i = 1:np
+            v[i] = i
+        end
+
+        return v
+
+    end
 
     points = [1:np;]
 
@@ -175,15 +220,71 @@ function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
                            θSol::Vector{Float64}=10.0 * randn(Float64, n),
                            std::Float64=200.0, out_times::Float64=7.0)
 
-    @assert(xMin <= xMax, "Invalid interval for random number generation")
-    
-    # Generate (xi,yi) where xMin <= x_i <= xMax (data)
-    x = [xMin:(xMax - xMin) / (np - 1):xMax;]
-    
+    # Data matrix
     data = Array{Float64}(undef, np, 3)
 
     # Points selected to be outliers
-    v = get_unique_random_points(np, np - p)
+    v = Vector{Int}(undef, np - p)
+
+    return generate_noisy_data!(data, v, model, n, np, p; xMin=xMin, xMax=xMax,
+                                θSol=θSol, std=std, out_times=out_times)
+    
+end
+
+generate_noisy_data(model::Function, n::Int, np::Int, p::Int, xMin::Float64, xMax::Float64) =
+    generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax)
+
+generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
+                  θSol::Vector{Float64}, xMin::Float64, xMax::Float64) =
+                      generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax, θSol=θSol)
+
+"""
+
+    generate_noisy_data!(data::Array{Float64, 2}, v::Vector{Int},
+           model::Function, n::Int, np::Int, p::Int;
+           xMin::Float64=-10.0, xMax::Float64=10.0,
+           θSol::Vector{Float64}=10.0 * randn(Float64, n),
+           std::Float64=200.0, out_times::Float64=7.0)
+
+    generate_noisy_data!(model::Function, n, np, p, xMin::Float64, xMax::Float64)
+
+    generate_noisy_data!(model::Function, n::Int, np::Int, p::Int,
+                      θSol::Vector{Float64}, xMin::Float64, xMax::Float64)
+
+Random generate a fitting one-dimensional data problem, storing the
+data in matrix `data` and the outliers in vector `v`.
+
+This function receives a `model(x, θ)` function, the number of parameters
+`n`, the number of points `np` to be generated and the number of
+trusted points `p`. 
+
+If the `n`-dimensional vector `θSol` is provided, then the exact
+solution will not be random generated. The interval `[xMin, xMax]` for
+generating the values to evaluate `model` can also be provided.
+
+It returns a tuple `(data, θSol, outliers)` where
+
+  - `data`: (`np` x `2`) array, where each row contains `x` and
+    `model(x, θSol)`.
+  - `θSol`: `n`-dimensional vector with the exact solution.
+  - `outliers`: the outliers of this data set
+
+"""
+function generate_noisy_data!(data::Array{Float64, 2},
+           v::Vector{Int}, model::Function, n::Int, np::Int, p::Int;
+           xMin::Float64=-10.0, xMax::Float64=10.0,
+           θSol::Vector{Float64}=10.0 * randn(Float64, n),
+           std::Float64=200.0, out_times::Float64=7.0)
+
+    @assert(xMin <= xMax, "Invalid interval for random number generation.")
+    @assert(size(data) == (np, 3), "Invalid size of data matrix.")
+    @assert(length(v) >= np - p, "Invalid size for vector of outliers.")
+    
+    # Generate (xi,yi) where xMin <= x_i <= xMax (data)
+    x = LinRange(xMin, xMax, np)
+    
+    # Points selected to be outliers
+    get_unique_random_points!(v, np, np - p)
     
     # Add noise to some random points
     for k = 1:np
@@ -207,9 +308,4 @@ function generate_noisy_data(model::Function, n::Int, np::Int, p::Int;
 
 end
 
-generate_noisy_data(model::Function, n::Int, np::Int, p::Int, xMin::Float64, xMax::Float64) =
-    generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax)
 
-generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
-                  θSol::Vector{Float64}, xMin::Float64, xMax::Float64) =
-                      generate_noisy_data(model, n, np, p; xMin=xMin, xMax=xMax, θSol=θSol)
