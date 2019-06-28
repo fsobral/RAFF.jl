@@ -1,4 +1,6 @@
-export generate_test_problems, generate_noisy_data
+export generate_test_problems, generate_noisy_data!,
+    generate_noisy_data, generate_clustered_noisy_data,
+    generate_clustered_noisy_data!
 
 """
 
@@ -270,14 +272,14 @@ It returns a tuple `(data, θSol, outliers)` where
   - `outliers`: the outliers of this data set
 
 """
-function generate_noisy_data!(data::Array{Float64, 2},
+function generate_noisy_data!(data::Union{SubArray, Array{Float64, 2}},
            v::Vector{Int}, model::Function, n::Int, np::Int, p::Int;
            xMin::Float64=-10.0, xMax::Float64=10.0,
            θSol::Vector{Float64}=10.0 * randn(Float64, n),
            std::Float64=200.0, out_times::Float64=7.0)
 
     @assert(xMin <= xMax, "Invalid interval for random number generation.")
-    @assert(size(data) == (np, 3), "Invalid size of data matrix.")
+    @assert(size(data) == (np, 3), "Invalid size of data matrix. $(size(data)) != $((np, 3)).")
     @assert(length(v) >= np - p, "Invalid size for vector of outliers.")
     
     # Generate (xi,yi) where xMin <= x_i <= xMax (data)
@@ -308,4 +310,74 @@ function generate_noisy_data!(data::Array{Float64, 2},
 
 end
 
+function generate_clustered_noisy_data(model::Function, n::Int,
+            np::Int, p::Int, x_interval::Tuple{Float64,Float64},
+            cluster_interval::Tuple{Float64, Float64})
 
+    data = Array{Float64, 2}(undef, np, 3)
+
+    v = Vector{Int}(undef, np - p)
+
+    return generate_clustered_noisy_data!(data, v, model, n, np, p,
+               x_interval, cluster_interval)
+
+end
+
+"""
+
+Generate a test set with clustered outliers. The arguments are the
+same for [generate_noisy_data](@ref), with exception of tuple
+`cluster_interval` which is the interval to generate the clustered
+outliers.
+
+"""
+function generate_clustered_noisy_data!(data::Array{Float64, 2},
+            v::Vector{Int}, model::Function, n::Int, np::Int,
+            p::Int, x_interval::Tuple{Float64,Float64},
+            cluster_interval::Tuple{Float64, Float64};
+            θSol::Vector{Float64}=10.0 * randn(Float64, n))
+
+    if !(x_interval[1] <= cluster_interval[1] < cluster_interval[2] <=
+         x_interval[2])
+
+        error("Bad interval for data generation.")
+
+    end
+    
+    interval_len = x_interval[2] - x_interval[1]
+ 
+    fr1 = (cluster_interval[1] - x_interval[1]) / interval_len
+    fr2 = (cluster_interval[2] - cluster_interval[1]) / interval_len
+    fr3 = (x_interval[2] - cluster_interval[2]) / interval_len
+
+    # Distribute data in a proportional way
+    
+    # Interval 2 will contain the clustered outliers
+    np2 = max(np - p, Int(round(fr2 * np)))
+    np1 = max(np - np2, Int(round(fr1 * np)))
+    # Interval 3 will contain the remaining points
+    np3 = max(0, np - np1 - np2)
+
+    @debug("Clustered points: $(np1), $(np2), $(np3).")
+    
+    # Generate data
+
+    tmpv = Vector{Int}()
+    
+    generate_noisy_data!(@view(data[1:np1, :]), tmpv, model, n, np1,
+        np1; θSol=θSol, xMin=x_interval[1], xMax=cluster_interval[1])
+
+    generate_noisy_data!(@view(data[np1 + 1:np1 + np2, :]), v, model,
+        n, np2, np2 - (np - p); θSol=θSol, xMin=cluster_interval[1],
+        xMax=cluster_interval[2])
+
+    # Update the outlier number with the correct number
+    map!((x) -> x + np2, v, v)
+    
+    generate_noisy_data!(@view(data[np1 + np2 + 1:np, :]), tmpv, model,
+        n, np3, np3; θSol=θSol, xMin=cluster_interval[2],
+        xMax=x_interval[2])
+
+    return data, θSol, v
+    
+end

@@ -151,4 +151,37 @@
         
     end
 
+    @testset "Cluster" begin
+
+        n, model, model_s = RAFF.model_list["linear"]
+
+        θSol = [1.0, 1.0]
+        
+        np = 10
+
+        p = 5
+
+        x_int = (-10.0, 10.0)
+
+        c_int = (0.0, 5.0)
+
+        data, θSol1, v = generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        @test size(data) == (np, 3)
+
+        @test length(θSol1) == n
+
+        @test length(v) == np - p
+
+        out_ind = findall(abs.(data[:, 3]) .> 0.0)
+
+        @test length(out_ind) == length(v)
+
+        @test all(data[v, 1] .>= c_int[1])
+
+        @test all(data[v, 1] .<= c_int[2])
+        
+    end
+
 end
