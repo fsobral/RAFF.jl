@@ -242,7 +242,7 @@ generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
 
 """
 
-    generate_noisy_data!(data::Array{Float64, 2}, v::Vector{Int},
+    generate_noisy_data!(data::AbstractArray{Float64, 2}, v::Vector{Int},
            model::Function, n::Int, np::Int, p::Int;
            xMin::Float64=-10.0, xMax::Float64=10.0,
            θSol::Vector{Float64}=10.0 * randn(Float64, n),
@@ -272,7 +272,7 @@ It returns a tuple `(data, θSol, outliers)` where
   - `outliers`: the outliers of this data set
 
 """
-function generate_noisy_data!(data::Union{SubArray, Array{Float64, 2}},
+function generate_noisy_data!(data::AbstractArray{Float64, 2},
            v::Vector{Int}, model::Function, n::Int, np::Int, p::Int;
            xMin::Float64=-10.0, xMax::Float64=10.0,
            θSol::Vector{Float64}=10.0 * randn(Float64, n),
@@ -368,8 +368,8 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
         np1; θSol=θSol, xMin=x_interval[1], xMax=cluster_interval[1])
 
     generate_noisy_data!(@view(data[np1 + 1:np1 + np2, :]), v, model,
-        n, np2, np2 - (np - p); θSol=θSol, xMin=cluster_interval[1],
-        xMax=cluster_interval[2])
+        n, np2, np2 - (np - p); θSol=θSol, xMin=cluster_interval[1] + δ_c,
+        xMax=cluster_interval[2] - δ_c)
 
     # Update the outlier number with the correct number
     map!((x) -> x + np2, v, v)
