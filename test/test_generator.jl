@@ -181,6 +181,52 @@
         @test all(data[v, 1] .>= c_int[1])
 
         @test all(data[v, 1] .<= c_int[2])
+
+        # This loop checks if the points are generated in order and
+        # there is no repetition between groups of points
+        is_ordered = true
+        for i = 1:np - 1
+            (data[i, 1] >= data[i + 1, 1]) && (is_ordered = false)
+        end
+        
+        @test is_ordered
+
+        # Non enclosing cluster interval
+        
+        x_int = (-10.0, 10.0)
+
+        c_int = (-11.0, 0.0)
+
+        @test_throws ErrorException generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        # Singleton cluster interval with np - p > 1
+
+        np = 10
+
+        p = 5
+        
+        x_int = (-10.0, 10.0)
+
+        c_int = (1.0, 1.0)
+
+        @test_throws ErrorException generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        # Singleton cluster interval with no outliers
+
+        np = 10
+
+        p = 10
+        
+        x_int = (-10.0, 10.0)
+
+        c_int = (1.0, 1.0)
+
+        data, θSol1, v = generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        @test length(v) == 0
         
     end
 

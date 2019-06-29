@@ -337,10 +337,11 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
             cluster_interval::Tuple{Float64, Float64};
             θSol::Vector{Float64}=10.0 * randn(Float64, n))
 
-    if !(x_interval[1] <= cluster_interval[1] < cluster_interval[2] <=
-         x_interval[2])
+    if (np - p > 0) &&
+        !(x_interval[1] <= cluster_interval[1] <
+          cluster_interval[2] <= x_interval[2])
 
-        error("Bad interval for data generation.")
+        error("Bad interval for clustered data generation.")
 
     end
     
@@ -359,6 +360,10 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
     np3 = max(0, np - np1 - np2)
 
     @debug("Clustered points: $(np1), $(np2), $(np3).")
+
+    # Avoid repetition in the borders of the intervals
+    
+    δ_c = (cluster_interval[2] - cluster_interval[1]) / (np2 + 2)
     
     # Generate data
 
