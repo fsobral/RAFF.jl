@@ -312,14 +312,14 @@ end
 
 function generate_clustered_noisy_data(model::Function, n::Int,
             np::Int, p::Int, x_interval::Tuple{Float64,Float64},
-            cluster_interval::Tuple{Float64, Float64})
+            cluster_interval::Tuple{Float64, Float64}; kwargs...)
 
     data = Array{Float64, 2}(undef, np, 3)
 
     v = Vector{Int}(undef, np - p)
 
     return generate_clustered_noisy_data!(data, v, model, n, np, p,
-               x_interval, cluster_interval)
+               x_interval, cluster_interval; kwargs...)
 
 end
 
@@ -334,8 +334,7 @@ outliers.
 function generate_clustered_noisy_data!(data::Array{Float64, 2},
             v::Vector{Int}, model::Function, n::Int, np::Int,
             p::Int, x_interval::Tuple{Float64,Float64},
-            cluster_interval::Tuple{Float64, Float64};
-            θSol::Vector{Float64}=10.0 * randn(Float64, n))
+            cluster_interval::Tuple{Float64, Float64}; kwargs...)
 
     if (np - p > 0) &&
         !(x_interval[1] <= cluster_interval[1] <
@@ -369,19 +368,20 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
 
     tmpv = Vector{Int}()
     
-    generate_noisy_data!(@view(data[1:np1, :]), tmpv, model, n, np1,
-        np1; θSol=θSol, xMin=x_interval[1], xMax=cluster_interval[1])
+    tmpd, θSol, tmpv = generate_noisy_data!(@view(data[1:np1, :]),
+        tmpv, model, n, np1, np1; xMin=x_interval[1],
+        xMax=cluster_interval[1], kwargs...)
 
     generate_noisy_data!(@view(data[np1 + 1:np1 + np2, :]), v, model,
-        n, np2, np2 - (np - p); θSol=θSol, xMin=cluster_interval[1] + δ_c,
-        xMax=cluster_interval[2] - δ_c)
+        n, np2, np2 - (np - p); xMin=cluster_interval[1] + δ_c,
+        xMax=cluster_interval[2] - δ_c, θSol=θSol, kwargs...)
 
     # Update the outlier number with the correct number
-    map!((x) -> x + np2, v, v)
+    map!((x) -> x + np1, v, v)
     
-    generate_noisy_data!(@view(data[np1 + np2 + 1:np, :]), tmpv, model,
-        n, np3, np3; θSol=θSol, xMin=cluster_interval[2],
-        xMax=x_interval[2])
+    generate_noisy_data!(@view(data[np1 + np2 + 1:np, :]), tmpv,
+        model, n, np3, np3; xMin=cluster_interval[2],
+        xMax=x_interval[2], θSol=θSol, kwargs...)
 
     return data, θSol, v
     
