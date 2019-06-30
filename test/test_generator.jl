@@ -159,7 +159,7 @@
         
         np = 10
 
-        p = 5
+        p = 7
 
         x_int = (-10.0, 10.0)
 
@@ -191,6 +191,19 @@
         
         @test is_ordered
 
+        # Cluster interval at the beginning
+
+        x_int = (-10.0, 10.0)
+
+        c_int = (-10.0, 0.0)
+
+        data, θSol1, v = generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        @test length(v) == np - p
+        
+        @test any(data[:, 1] .> 0.0)
+        
         # Non enclosing cluster interval
         
         x_int = (-10.0, 10.0)

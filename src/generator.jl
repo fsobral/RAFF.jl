@@ -354,7 +354,7 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
     
     # Interval 2 will contain the clustered outliers
     np2 = max(np - p, Int(round(fr2 * np)))
-    np1 = max(np - np2, Int(round(fr1 * np)))
+    np1 = min(np - np2, Int(round(fr1 * np)))
     # Interval 3 will contain the remaining points
     np3 = max(0, np - np1 - np2)
 
