@@ -27,10 +27,18 @@ bibliography: paper.bib
 
 # Summary
 
+`RAFF.jl` is a Julia package for the adjustment of a function to a dataset
+coming from some experiment. This package is an alternative to classical
+adjustment techniques such as linear and nonlinear regression. The goal of this
+package is to find robust adjustments free from the influence of possible outliers
+(discrepant points of the adjustment).
+
+# Motivation
+
 Let $f : \mathbb{R}^n \to \mathbb{R}$ be a function whose mathematical
 description is not available. This function can be, for example, a
 black-box, a proprietary computer program or an experiment. Suppose
-that a data set $S = \{(x_1, y_1), \dots, (x_m, y_m)\}$ is available,
+that a dataset $S = \{(x_1, y_1), \dots, (x_m, y_m)\}$ is available,
 where $y_i$ is an approximation of $f(x_i)$ (from an experimental
 procedure, numerical approximation, etc.) and we want to approximate
 $f$ by a known model $\phi$. Model $\phi$ can be defined as $\phi(x,
@@ -183,7 +191,7 @@ which most occurs among them is declared as the solution.
 
 # Functionality
 
-``RAFF.jl`` main methods expect as input a data set of the observed
+``RAFF.jl`` main methods expect as input a dataset of the observed
 data and a model function, whose parameters one intends to adjust. The
 model function is a regular Julia function with 2 arguments: $\theta$
 represents the parameters of the model and $x$ represents the
