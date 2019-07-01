@@ -26,7 +26,6 @@ const model_list = Dict(
                  "(x, θ) -> (x[1] - θ[1])^2 + (x[2] - θ[2])^2 - θ[3]^2")
 )
 
-
 """
 
     generate_test_problems(datFilename::String, solFilename::String,
@@ -112,8 +111,8 @@ end
 
 function generate_test_problems(datFilename::String,
     solFilename::String, model::Function, modelStr::String, n::Int,
-    np::Int, p::Int, cluster_interval::Tuple{Float64, Float64};
-    gn_kwargs...)
+    np::Int, p::Int, x_interval::Tuple{Float64, Float64},
+    cluster_interval::Tuple{Float64, Float64}; gn_kwargs...)
 
     # Generate data file
     
