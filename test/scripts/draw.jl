@@ -4,11 +4,14 @@ using RAFF
 
 """
 
-    draw_problem(;raff_output=nothing, model_str="logistic",
-                  datafile="/tmp/output.txt")
+    draw_problem(M; raff_output=nothing, model_str="logistic",
+                 datafile="/tmp/output.txt")
 
-Draw the problem data. By default it is assumed that the model is
-given by the logistic model and the data file is given in file
+    draw_problem(datafile::String="/tmp/output.txt"; kwargs...)
+
+Draw the problem data given by a (`m`x`3`) `M` matrix. By default it
+is assumed that the model is given by the logistic model. If no
+arguments are given it is assumed that the data file is given in file
 `/tmp/output.txt`.
 
 If a [RAFFOutput](@ref) object is provided, then it plots the model
@@ -20,18 +23,9 @@ Optional arguments:
     obtained
   - `model_str`: a string with the name of the model to be used to
     plot the solution. See [model_list](@ref) for details.
-  - `datafile`: file containing the data.
 
 """
-function draw_problem(;raff_output=nothing, model_str="logistic", datafile="/tmp/output.txt")
-
-    fp = open(datafile, "r")
-
-    N = parse(Int, readline(fp))
-
-    M = readdlm(fp)
-
-    close(fp)
+function draw_problem(M; raff_output=nothing, model_str="logistic")
 
     x = M[:, 1]
     y = M[:, 2]
@@ -42,7 +36,7 @@ function draw_problem(;raff_output=nothing, model_str="logistic", datafile="/tmp
     PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
                    marker="o", s=50.0, linewidths=0.2)
 
-    PyPlot.scatter(x[co .== 1.0], y[co .== 1.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+    PyPlot.scatter(x[co .!= 0.0], y[co .!= 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
                    marker="^", s=50.0, linewidths=0.2, label="Outliers")
 
     if raff_output != nothing
@@ -78,4 +72,18 @@ function draw_problem(;raff_output=nothing, model_str="logistic", datafile="/tmp
     
     PyPlot.savefig("/tmp/figure.png", DPI=100)
 
+end
+
+function draw_problem(datafile::String="/tmp/output.txt"; kwargs...)
+
+    fp = open(datafile, "r")
+
+    N = parse(Int, readline(fp))
+
+    M = readdlm(fp)
+
+    close(fp)
+
+    draw_problem(M; kwargs...)
+    
 end
