@@ -368,7 +368,7 @@ end
 Generate a test set with clustered outliers.
 
 The arguments and optional arguments are the same for
-[generate_noisy_data!](@ref), with exception of tuple
+[`generate_noisy_data!`](@ref), with exception of tuple
 `cluster_interval` which is the interval to generate the clustered
 outliers.
 
@@ -406,7 +406,7 @@ the content of (`np` x `3`) matrix `data` and vector `v` with integer
 indices to the position of outliers in `data`.
 
 The arguments and optional arguments are the same for
-[generate_noisy_data!](@ref), with exception of tuple
+[`generate_noisy_data!`](@ref), with exception of tuple
 `cluster_interval` which is the interval to generate the clustered
 outliers.
 

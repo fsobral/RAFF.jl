@@ -28,7 +28,11 @@ RAFF.check_and_close
 ```@docs
 RAFF.generate_test_problems
 RAFF.get_unique_random_points
+RAFF.get_unique_random_points!
+RAFF.generate_noisy_data!
 RAFF.generate_noisy_data
+RAFF.generate_clustered_noisy_data!
+RAFF.generate_clustered_noisy_data
 RAFF.model_list
 ```
 
