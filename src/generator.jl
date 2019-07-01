@@ -101,6 +101,46 @@ function generate_test_problems(datFilename::String,
     
 end
 
+function generate_test_problems(datFilename::String,
+    solFilename::String, model::Function, modelStr::String, n::Int,
+    np::Int, p::Int, cluster_interval::Tuple{Float64, Float64};
+    xMin=-10.0, xMax=10.0, θSol=10.0 * randn(n), std=200.0,
+    out_times=7.0)
+
+    # Generate solution file
+    
+    open(solFilename, "w") do sol
+    
+        println(sol, n) # number of variables
+
+        println(sol, θSol) # parameters
+        
+        println(sol, modelStr) # function expression
+
+    end
+
+    # Generate data file
+    
+    open(datFilename, "w") do data
+    
+        vdata, θsol, outliers = generate_clustered_noisy_data(model,
+            n, np, p, (xMin, xMax), cluster_interval; θSol=θSol,
+            std=std, out_times=out_times)
+    
+        # Dimension of the domain of the function to fit
+        @printf(data, "%d\n", 1)
+
+        for k = 1:np
+
+            @printf(data, "%20.15f %20.15f %1d\n",
+                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
+
+        end
+
+    end
+    
+end
+
 """
 
     get_unique_random_points(np::Int, npp::Int)
