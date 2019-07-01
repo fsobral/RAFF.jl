@@ -129,11 +129,13 @@
 
         # Test if the solution provided is maintained and also the interval
 
-        data, θSol1, v = RAFF.generate_noisy_data(model, n, np, p, θSol, -10.0, 10.0)
+        x_interval = (-10.0, 10.0)
+        
+        data, θSol1, v = RAFF.generate_noisy_data(model, n, np, p, θSol, x_interval)
 
-        @test all(data[:, 1] .>= -10.0)
+        @test all(data[:, 1] .>= x_interval[1])
 
-        @test all(data[:, 1] .<=  10.0)
+        @test all(data[:, 1] .<= x_interval[2])
 
         @test θSol == θSol1
 

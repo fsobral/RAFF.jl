@@ -69,8 +69,8 @@ function mainf()
         fsname = "/tmp/" * fname * "_sol.txt"
         
         generate_test_problems(ffname, fsname, model, modelStr, n,
-                             parsed_args["np"], parsed_args["p"];
-                             xMin=xMin, xMax=xMax, θSol=θSol, std=200.0, out_times=10.0)
+            parsed_args["np"], parsed_args["p"]; x_interval=(xMin,
+            xMax), θSol=θSol, std=200.0, out_times=10.0)
 
         @printf("Created problem and solution files.\n")
 
