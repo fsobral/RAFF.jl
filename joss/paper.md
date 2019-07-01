@@ -38,8 +38,8 @@ $f$ by a known model $\phi$. Model $\phi$ can be defined as $\phi(x,
 $\theta$ represents some parameters of $\phi$. ``RAFF.jl`` (Robust
 Algebraic Fitting Function) is a Julia package developed to find 
 parameters $\theta$ for $\phi$ in order to adjust it to the
-observed values $S$ of the unknown function $f$. Following [@Liu2008] and
-[@keles2018], in general, the adjustment can be related to
+observed values $S$ of the unknown function $f$. Following @Liu2008 and
+@keles2018, in general, the adjustment can be related to
 
 1. Classical least squares (algebraic fit): which considers the sum of deviations of type
 $\vert \phi(x_i, \theta) - y_i \vert^2$, also known as regression;
@@ -56,16 +56,16 @@ errors may cause the appearance of outliers, which might be
 responsible for causing the regression calculated by sum of deviations
 to result in misleading approximations. Regression is strongly
 connected to Statistics but practical methods to detect outliers are
-not very common. In [@Motulsky2006a], for example, the authors develop
+not very common. @Motulsky2006a, for example, develop
 a method for outlier detection based on the assumption that the error
 follows a Lorentzian distribution around the function and use
 nonlinear regression based on least squares. ``RAFF.jl`` provides
 automatic detection of outliers using a voting system. It is an
 optimization-based package, based on algorithms for Lower Order-Value
-Optimization (LOVO) which were introduced in [@Andreani2005] and
-revisited in [@Andreani2009]. Recently, a complete review about LOVO problems considering 
-theoretical aspects of algorithms to solve it and potential applications 
-can be found in [@Martinez2012].
+Optimization (LOVO) which were introduced by @Andreani2005 and
+revisited by @Andreani2009. Recently, @Martinez2012 performed a complete review 
+about LOVO problems considering theoretical aspects of algorithms to solve it 
+and potential applications.
 
 # Background
 
@@ -136,7 +136,7 @@ not differentiable as illustrated in [Figure 2](#lovo).
 ![The red function represents the LOVO function. Observing the interval $[0.2,0.25]$ we can note a singular point even considering $f_1$, $f_2$, $f_3$ and $f_4$ as differentiable functions.](lovo_desc.png){#lovo width=60%,height=60%}
 
 
-In [@Andreani2009], the authors introduced line search methods and handled the possible 
+@Andreani2009 introduced line search methods and handled the possible 
 singularities in a clever way, using the following approximation for $\nabla f_{min}(\theta)$
 $$\nabla f_{min}(\theta)=\nabla f_i(\theta),$$ where $i \in \mathcal{I}
 (\theta)=\{k \in \{1,...,r\};f_k(\theta)=f_{min}(\theta)\}$. This
@@ -167,7 +167,7 @@ LOVO problems in the context of adjustment functions.
 of LOVO problems, i.e., it solves the problem of minimizing
 $f_{min}(\theta)$, where $F_i(\theta)=(\phi(x_i,\theta)- y_i)^2$, for
 $i = 1,\dots, m$. In this sense, first-order derivatives are necessary
-and the same strategy of [@Andreani2009] is used. It uses first-order
+and the same strategy of @Andreani2009 is used. It uses first-order
 derivatives of the model $\phi$ with respect to $\theta$ to
 approximate the gradient of $f_{min}(\theta)$, which is a non
 differentiable function. Moreover, LOVO problems have the limitation
@@ -227,7 +227,7 @@ more advanced users, such as generation of random test data and
 multistart strategies. First-order derivatives of the model $\phi$
 with respect to $\theta$ can also be provided, which results in a
 faster executing time. When they are not provided by the user,
-``RAFF.jl`` uses Julia's ``ForwardDiff.jl`` [@Revels2016] package.
+``RAFF.jl`` uses Julia's ``ForwardDiff.jl`` package [@Revels2016].
 
 ``RAFF.jl`` can be run in serial, parallel and distributed
 environments.  Parallel and distributed methods use the native
