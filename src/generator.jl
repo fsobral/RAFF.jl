@@ -73,9 +73,28 @@ Additional parameters:
 """
 function generate_test_problems(datFilename::String,
     solFilename::String, model::Function, modelStr::String, n::Int,
-    np::Int, p::Int; x_interval::Tuple{Float64, Float64}=(-10.0,
-    10.0), θSol::Vector{Float64}=10.0 * randn(n), std::Float64=200.0,
-    out_times::Float64=7.0)
+    np::Int, p::Int; gn_kwargs...)
+
+    # Generate data file
+    
+    θSol = nothing
+    
+    open(datFilename, "w") do data
+    
+        vdata, θSol, outliers = generate_noisy_data(model, n, np, p;
+                                                    gn_kwargs...)
+    
+        # Dimension of the domain of the function to fit
+        @printf(data, "%d\n", 1)
+
+        for k = 1:np
+
+            @printf(data, "%20.15f %20.15f %1d\n",
+                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
+
+        end
+
+    end
 
     # Generate solution file
     
@@ -89,34 +108,33 @@ function generate_test_problems(datFilename::String,
 
     end
 
-    # Generate data file
-    
-    open(datFilename, "w") do data
-    
-        vdata, θsol, outliers = generate_noisy_data(model, n, np, p;
-                                   x_interval=x_interval, θSol=θSol,
-                                   std=std, out_times=out_times)
-    
-        # Dimension of the domain of the function to fit
-        @printf(data, "%d\n", 1)
-
-        for k = 1:np
-
-            @printf(data, "%20.15f %20.15f %1d\n",
-                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
-
-        end
-
-    end
-    
 end
 
 function generate_test_problems(datFilename::String,
     solFilename::String, model::Function, modelStr::String, n::Int,
     np::Int, p::Int, cluster_interval::Tuple{Float64, Float64};
-    x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),
-    θSol::Vector{Float64}=10.0 * randn(n), std::Float64=200.0,
-    out_times::Float64=7.0)
+    gn_kwargs...)
+
+    # Generate data file
+    
+    θSol = nothing
+    
+    open(datFilename, "w") do data
+    
+        vdata, θSol, outliers = generate_clustered_noisy_data(model,
+            n, np, p, x_interval, cluster_interval; gn_kwargs...)
+    
+        # Dimension of the domain of the function to fit
+        @printf(data, "%d\n", 1)
+
+        for k = 1:np
+
+            @printf(data, "%20.15f %20.15f %1d\n",
+                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
+
+        end
+
+    end
 
     # Generate solution file
     
@@ -130,26 +148,6 @@ function generate_test_problems(datFilename::String,
 
     end
 
-    # Generate data file
-    
-    open(datFilename, "w") do data
-    
-        vdata, θsol, outliers = generate_clustered_noisy_data(model,
-            n, np, p, x_interval, cluster_interval; θSol=θSol,
-            std=std, out_times=out_times)
-    
-        # Dimension of the domain of the function to fit
-        @printf(data, "%d\n", 1)
-
-        for k = 1:np
-
-            @printf(data, "%20.15f %20.15f %1d\n",
-                    vdata[k, 1], vdata[k, 2], Int(k in outliers))
-
-        end
-
-    end
-    
 end
 
 """
@@ -271,9 +269,7 @@ It returns a tuple `(data, θSol, outliers)` where
 
 """
 function generate_noisy_data(model::Function, n::Int, np::Int,
-    p::Int; x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),
-    θSol::Vector{Float64}=10.0 * randn(Float64, n),
-    std::Float64=200.0, out_times::Float64=7.0)
+    p::Int; gn_kwargs...)
 
     # Data matrix
     data = Array{Float64}(undef, np, 3)
@@ -281,8 +277,8 @@ function generate_noisy_data(model::Function, n::Int, np::Int,
     # Points selected to be outliers
     v = Vector{Int}(undef, np - p)
 
-    return generate_noisy_data!(data, v, model, n, np, p; x_interval=x_interval,
-                                θSol=θSol, std=std, out_times=out_times)
+    return generate_noisy_data!(data, v, model, n, np, p;
+                                gn_kwargs...)
     
 end
 
