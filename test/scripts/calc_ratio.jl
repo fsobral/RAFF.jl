@@ -6,7 +6,7 @@ using Random
 using Logging
 using Base.CoreLogging
 
-function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
+function calc_ratio(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1, fp=stdout)
     
     # Set Logging
     global_logger(ConsoleLogger(stdout, Logging.Error))
@@ -61,7 +61,7 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
 
     end
 
-    @printf("%10s %5d %5d %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n", modelStr, np, p,
+    @printf(fp, "%10s %5d %5d %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n", modelStr, np, p,
             count(n_match .== np - p) / (1.0 * ntests),
             n_exact / (1.0 * ntests),
             n_out / ntests,
@@ -70,4 +70,27 @@ function run_raff(modelStr, np, p, sol, ntests=10, initguess=nothing, maxms=1)
 
     return n_match
     
+end
+
+function run_calc_ratio()
+
+    for (modelStr, sol) in [("linear", [1.0, -7.0])] #, "cubic", "expon", "logistic"]
+
+        for (np, p) in [(100, 99), (100, 90)]
+            #(10, 9), (10, 8) , (100, 99), (100, 90), (1000, 1)]
+
+            for maxms in [1, 10, 100, 1000]
+
+                open("/tmp/table.txt", "a") do fp
+
+                    calc_ratio(modelStr, np, p, sol, 100, nothing, maxms, fp);
+
+                end
+
+            end
+
+        end
+
+    end
+
 end
