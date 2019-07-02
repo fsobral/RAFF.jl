@@ -1,5 +1,8 @@
-__precompile__(false)
+"""
 
+`RAFF.jl` is a Jula package.
+
+"""
 module RAFF
 
 # Dependencies
@@ -11,7 +14,6 @@ using Printf
 using Random
 using SharedArrays
 using Logging
-using ProgressMeter
 
 export lmlovo, raff, praff
 
@@ -394,7 +396,7 @@ function raff(model::Function, gmodel!::Function,
     
     sols = Vector{RAFFOutput}(undef, lv)
 
-    @showprogress for i = pliminf:plimsup
+    for i = pliminf:plimsup
 
         vbest = RAFFOutput(0, initguess, -1, i, Inf, [])
         
@@ -634,7 +636,7 @@ function praff(model::Function, gmodel!::Function,
 
     # Populate the task queue with jobs
     
-    @showprogress for p = pliminf:batches:plimsup
+    for p = pliminf:batches:plimsup
 
         try
             
