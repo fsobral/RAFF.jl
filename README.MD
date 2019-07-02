@@ -84,6 +84,12 @@ encouraged to participate on the project in the following ways:
 * Ronaldo Lopes
 * Wesley Shirabayashi
 
+If you would like to cite this package, please use
+
+> Castelani et al., (2019). RAFF.jl: Robust Algebraic Fitting Function
+> in Julia. Journal of Open Source Software, 4(39), 1385,
+> https://doi.org/10.21105/joss.01385.
+
 ## References
 
 [1] Andreani, R., Martínez, J. M., Martínez, L., & Yano, F. S. (2009). Low order-value 
