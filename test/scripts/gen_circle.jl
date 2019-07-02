@@ -150,10 +150,10 @@ function draw_circle_sol(tSol, fSol, lsSol)
 
     close(fp)
 
-    x = M[:, 1]
-    y = M[:, 2]
-    ρ = M[:, 3]
-    c = M[:, 4]
+    x  = M[:, 1]
+    y  = M[:, 2]
+    ρ  = M[:, 3]
+    co = M[:, 4]
 
     t = [0:0.1:2.1 * π;]
     
@@ -174,12 +174,18 @@ function draw_circle_sol(tSol, fSol, lsSol)
 
     PyPlot.plot(pptx.(t), ppty.(t), "g-", label="RAFF")
     
-    # LS solution
+    # # LS solution
     
-    pptx = (α) -> ptx(α, lsSol[3], lsSol[1:2])
-    ppty = (α) -> pty(α, lsSol[3], lsSol[1:2])
+    # pptx = (α) -> ptx(α, lsSol[3], lsSol[1:2])
+    # ppty = (α) -> pty(α, lsSol[3], lsSol[1:2])
 
-    PyPlot.plot(pptx.(t), ppty.(t), "r-", label="Least squares")
+    # PyPlot.plot(pptx.(t), ppty.(t), "r-", label="Least squares")
+
+    PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="o", s=50.0, linewidths=0.2)
+
+    PyPlot.scatter(x[co .!= 0.0], y[co .!= 0.0], color=PyPlot.cm."Pastel1"(1.0/9.0),
+                   marker=".", s=25.0, linewidths=0.2, label="Outliers")
 
     PyPlot.legend(loc=4)
     
@@ -188,9 +194,6 @@ function draw_circle_sol(tSol, fSol, lsSol)
     PyPlot.xticks([])
 
     PyPlot.yticks([])
-
-    PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-                   cmap=PyPlot.cm."Paired", alpha=0.9)
 
     PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
 
