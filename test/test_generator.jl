@@ -235,13 +235,64 @@
         p = 10
         
         x_int = (-10.0, 10.0)
-
+        
         c_int = (1.0, 1.0)
 
         data, θSol1, v = generate_clustered_noisy_data(model, n, np,
             p, x_int, c_int)
 
         @test length(v) == 0
+        
+    end
+
+    @testset "Rand Interv." begin
+
+        n = 2
+        
+        x = Vector{Float64}(undef, n)
+
+        l = [1.0, -5.0]
+        u = [2.0, -1.0]
+        
+        interval = [i for i in zip(l, u)]
+        
+        RAFF.interval_rand!(x, interval)
+
+        @test all(x .>= l)
+        
+        @test all(x .<= u)
+
+        n = 5
+
+        x = zeros(Float64, n)
+
+        RAFF.interval_rand!(x, interval)
+
+        @test all(x[1:2] .>= l)
+        
+        @test all(x[1:2] .<= u)
+
+        @test all(x[3:n] .== 0.0)
+
+        n = 1
+
+        x = zeros(Float64, n)
+
+        @test_throws ErrorException RAFF.interval_rand!(x, interval)
+
+        # Bad interval
+        
+        n = 2
+        
+        x = Vector{Float64}(undef, n)
+
+        l = [ 1.0, -5.0]
+        u = [-1.0, -1.0]
+        
+        interval = [i for i in zip(l, u)]
+        
+        @test_throws ErrorException RAFF.interval_rand!(x, interval)
+
         
     end
 

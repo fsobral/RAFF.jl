@@ -28,6 +28,35 @@ const model_list = Dict(
 
 """
 
+    interval_rand!(x::Vector{Float64},
+        intervals::Vector{Tuple{Float64, Float64}})
+
+Fill a vector `x` with uniformly distributed random numbers generated
+in the interval given by `intervals`. It is assumed that `length(x) ==
+length(intervals)`.
+
+Throws an `ErrorException` if the dimension of `x` is smaller the
+dimension of `intervals` or if the intervals are invalid.
+
+"""
+function interval_rand!(x::Vector{Float64},
+    intervals::Vector{Tuple{Float64, Float64}})
+
+    (length(x) < length(intervals)) &&
+        error("Length of vector smaller than length of intervals.")
+
+    for v in intervals
+
+        (v[1] > v[2]) && error("Bad interval $(v[1])>$(v[2]).")
+
+    end
+    
+    map!((v) -> v[1] + rand() * (v[2] - v[1]), x, intervals)
+    
+end
+
+"""
+
     generate_test_problems(datFilename::String, solFilename::String,
         model::Function, modelStr::String, n::Int, np::Int, p::Int;
         x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),
