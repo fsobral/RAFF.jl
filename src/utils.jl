@@ -2,6 +2,32 @@ export set_raff_output_level, set_lm_output_level
 
 """
 
+    check_ftrusted(ftrusted::Union{Float64, Tuple{Float64, Float64}}, np::Int)
+
+Utility function to check `ftrusted` parameter in [`raff`](@ref) and
+[`praff`](@ref). Throws an `ErrorException` if the percentage of
+trusted points is incorrect.
+
+"""
+function check_ftrusted(ftrusted::Union{Float64, Tuple{Float64, Float64}}, np::Int)
+
+    if typeof(ftrusted) == Float64
+
+        (!(0.0 <= ftrusted <= 1.0)) && error("Bad value for `ftrusted`: $(ftrusted).")
+
+        return Int(round(ftrusted * np)), np
+
+    end
+
+    (!(0.0 <= ftrusted[1] <= ftrusted[2] <= 1.0)) &&
+        error("Bad interval for `ftrusted`: $(ftrusted[1]) > $(ftrusted[2]).")
+
+    return Int(round(ftrusted[1] * np)), Int(round(ftrusted[2] * np))
+
+end    
+
+"""
+
     eliminate_local_min!(sols::Vector{RAFFOutput})
 
 Check if the function value of the solution found by smaller values of
