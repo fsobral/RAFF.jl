@@ -1,5 +1,27 @@
 @testset "Util. tests" begin
 
+    @testset "ftrusted" begin
+
+        @test_throws MethodError RAFF.check_ftrusted(1, 15)
+        
+        @test RAFF.check_ftrusted(0.0, 15) == (0, 15)
+
+        @test RAFF.check_ftrusted(0.3, 15) == (4, 15)
+
+        @test RAFF.check_ftrusted(1.0, 15) == (15, 15)
+
+        @test_throws ErrorException RAFF.check_ftrusted(-1.0, 15)
+
+        @test RAFF.check_ftrusted((0.1, 0.4) , 15) == (2, 6)
+
+        @test_throws ErrorException RAFF.check_ftrusted((0.4, 0.1) , 15)
+
+        @test_throws ErrorException RAFF.check_ftrusted((0.1, 1.1) , 15)
+
+        @test_throws ErrorException RAFF.check_ftrusted((-0.4, 0.1) , 15)
+        
+    end
+    
     @testset "Sort function" begin
 
         ind = Vector{Int}(undef, 3)

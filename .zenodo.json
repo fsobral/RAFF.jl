@@ -1,0 +1,27 @@
+{
+    "description": "<p>`RAFF.jl` is a Julia package for the adjustment of a function to a dataset coming from some experiment. This package is an alternative to classical adjustment techniques such as linear and nonlinear regression. The goal of this package is to find robust adjustments free from the influence of possible outliers (discrepant points of the adjustment).</p>",
+    "license": "other-open", 
+    "upload_type": "software", 
+    "creators": [
+        {
+            "orcid": "0000-0001-9718-6486", 
+            "affiliation": "State University of Maring\u00e1", 
+            "name": "Emerson V. Castelani"
+        }, 
+        {
+            "affiliation": "State University of Maring\u00e1", 
+            "name": "Ronaldo Lopes"
+        }, 
+        {
+            "orcid": "0000-0002-7790-6703", 
+            "affiliation": "State University of Maring\u00e1", 
+            "name": "Wesley V. I. Shirabayashi"
+        }, 
+        {
+            "orcid": "0000-0003-4963-0946", 
+            "affiliation": "State University of Maring\u00e1", 
+            "name": "F. N. C. Sobral"
+        }
+    ],
+    "access_right": "open"
+}

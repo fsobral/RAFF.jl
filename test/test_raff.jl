@@ -168,6 +168,21 @@
         @test rout.f ≈ 0.0 atol=1.0e-5
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+
+        rout = raff(model, data, 2; ftrusted=(21 - 5)/21)
+
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+
+        rout = raff(model, data, 2; ftrusted=(18/21, 18/21))
+
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+        
+        @test raff(model, data, 2; ftrusted=(0.5, 1.1)) == RAFFOutput()
+        @test raff(model, data, 2; ftrusted=-0.1) == RAFFOutput()
         
     end
 

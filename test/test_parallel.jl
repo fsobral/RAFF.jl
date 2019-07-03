@@ -392,7 +392,61 @@
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
         @test rout.f <= fgood
+
+    end
+
+    @testset "Test parameters" begin
+
+        data = [-1.0   3.2974425414002564;
+                -0.75  2.9099828292364025;
+                -0.5    2.568050833375483;
+                -0.25  2.2662969061336526;
+                 0.0                  2.0;
+                 0.25   1.764993805169191;
+                 0.5   1.5576015661428098;
+                 0.75  1.5745785575819442; #noise
+                 1.0   1.2130613194252668;
+                 1.25  1.0705228570379806;
+                 1.5   0.9447331054820294;
+                 1.75  0.8337240393570168;
+                 2.0   0.7357588823428847;
+                 2.25  0.6493049347166995;
+                 2.5   0.5730095937203802;
+                 2.75  0.5056791916094929;
+                 3.0  0.44626032029685964;
+                 3.25  0.5938233504083881; #noise 
+                 3.5   0.3475478869008902;
+                 3.75 0.30670993368985694;
+                 4.0   0.5706705664732254; #noise
+                ]
+
+        answer = [2.0, -0.5]
+        
+        rout = praff(model, gmodel!, data, 2; noutliers=0)
+        
+        @test rout.p == 21
+        
+        rout = praff(model, data, 2; noutliers=5)
+        
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+
+        rout = praff(model, data, 2; ftrusted=(21 - 5)/21)
+
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+
+        rout = praff(model, data, 2; ftrusted=(18/21, 18/21))
+
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ answer atol=1.0e-5
+        @test rout.p == 18
+        
+        @test praff(model, data, 2; ftrusted=(0.5, 1.1)) == RAFFOutput()
+        @test praff(model, data, 2; ftrusted=-0.1) == RAFFOutput()
         
     end
-    
+
 end

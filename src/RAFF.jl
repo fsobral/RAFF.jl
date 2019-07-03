@@ -377,21 +377,51 @@ The optional arguments are
     generating random points in the multistart strategy
   - `ε`: gradient stopping criteria to `lmlovo`
   - `noutliers`: integer describing the maximum expected number of
-    outliers. The default is *half*.
+    outliers. The default is *half*. *Deprecated*.
+  - `trusted`: float describing the minimum expected percentage of
+    trusted points. The default is *half* (0.5). Can also be a
+    Tuple of the form `(fmin, fmax)` percentages of trusted points.
 
 Returns a [`RAFFOutput`](@ref) object with the best parameter found.
 
 """
 function raff(model::Function, gmodel!::Function,
-              data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-              SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n),
-              ε::Float64=1.0e-4, noutliers::Int=-1)
+    data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
+    SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64,
+    n), ε::Float64=1.0e-4, noutliers::Int=-1,
+    ftrusted::Union{Float64, Tuple{Float64, Float64}}=0.5)
 
+    np, = size(data)
+    
+    if noutliers != -1
+
+        Base.depwarn("Optional argument `noutliers::Int` is deprecated and will be removed from future releases. Use `ftrusted::Float` or `itrusted::Tuple{Float, Float}` instead.", :raff)
+
+        ftrusted = (noutliers >= 0) ? max(0, np - noutliers) / np : 0.5
+
+    end
+    
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
 
-    plimsup = length(data[:, 1])
-    pliminf = (noutliers >= 0) ? plimsup - noutliers : Int(round(length(data[:, 1]) / 2.0))
+    # Define interval for trusted points
+
+    pliminf, plimsup = try
+
+        check_ftrusted(ftrusted, np)
+
+    catch e
+
+        with_logger(raff_logger) do
+
+            @error("Error in optional parameter `ftrusted`.", e)
+
+        end
+
+        return RAFFOutput()
+
+    end
+    
     lv = plimsup - pliminf + 1
     
     sols = Vector{RAFFOutput}(undef, lv)
@@ -565,7 +595,10 @@ The optional arguments are
   - `initguess`: starting point to be used in the multistart procedure
   - `ε`: stopping tolerance
   - `noutliers`: integer describing the maximum expected number of
-    outliers. The default is *half*.
+    outliers. The default is *half*. *Deprecated*.
+  - `trusted`: float describing the minimum expected percentage of
+    trusted points. The default is *half* (0.5). Can also be a
+    Tuple of the form `(fmin, fmax)` percentages of trusted points.
 
 Returns a [`RAFFOutput`](@ref) object containing the solution.
 
@@ -574,13 +607,40 @@ function praff(model::Function, gmodel!::Function,
                data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
                SEEDMS::Int=123456789, batches::Int=1,
                initguess::Vector{Float64}=zeros(Float64, n),
-               ε::Float64=1.0e-4, noutliers::Int=-1)
+               ε::Float64=1.0e-4, noutliers::Int=-1,
+               ftrusted::Union{Float64, Tuple{Float64, Float64}}=0.5)
 
+    np, = size(data)
+    
+    if noutliers != -1
+
+        Base.depwarn("Optional argument `noutliers::Int` is deprecated and will be removed from future releases. Use `ftrusted::Float` or `itrusted::Tuple{Float, Float}` instead.", :raff)
+
+        ftrusted = (noutliers >= 0) ? max(0, np - noutliers) / np : 0.5
+
+    end
+    
     # Initialize random generator
     seedMS = MersenneTwister(SEEDMS)
-    
-    plimsup = length(data[:, 1])
-    pliminf = (noutliers >= 0) ? plimsup - noutliers : Int(round(length(data[:, 1]) / 2.0))
+
+    # Define interval for trusted points
+
+    pliminf, plimsup = try
+
+        check_ftrusted(ftrusted, np)
+
+    catch e
+
+        with_logger(raff_logger) do
+
+            @error("Error in optional parameter `ftrusted`.", e)
+
+        end
+
+        return RAFFOutput()
+
+    end
+
     lv = plimsup - pliminf + 1
     
     # Create a RemoteChannel to receive solutions
