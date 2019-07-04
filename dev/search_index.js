@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.raff",
     "category": "function",
-    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n     SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n))\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n     [MAXMS::Int=1, SEEDMS::Int=123456789,\n     initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,\n     noutliers::Int=-1])\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, θ)\nwhere x is the multidimensional argument and θ is the n-dimensional vector of parameters\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(g, x, θ)\nwhere x is the multidimensional argument, θ is the n-dimensional vector of parameters and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nε: gradient stopping criteria to lmlovo\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\ntrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
+    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5)\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, θ)\nwhere x is the multidimensional argument and θ is the n-dimensional vector of parameters\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(g, x, θ)\nwhere x is the multidimensional argument, θ is the n-dimensional vector of parameters and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nε: gradient stopping criteria to lmlovo\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
 },
 
 {
@@ -149,7 +149,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.praff",
     "category": "function",
-    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,\n      SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),\n      ε::Float64=1.0e-4, noutliers::Int=-1)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;\n      MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n      initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,\n      noutliers::Int=-1)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nε: stopping tolerance\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\ntrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
+    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nε: stopping tolerance\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
 },
 
 {
@@ -217,11 +217,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.check_ftrusted",
+    "page": "API",
+    "title": "RAFF.check_ftrusted",
+    "category": "function",
+    "text": "check_ftrusted(ftrusted::Union{Float64, Tuple{Float64, Float64}}, np::Int)\n\nUtility function to check ftrusted parameter in raff and praff. Throws an ErrorException if the percentage of trusted points is incorrect.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#Auxiliary-functions-1",
     "page": "API",
     "title": "Auxiliary functions",
     "category": "section",
-    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close"
+    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.check_ftrusted"
 },
 
 {
