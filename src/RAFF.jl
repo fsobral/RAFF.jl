@@ -327,13 +327,14 @@ lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
     lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
 """
-    raff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-         SEEDMS::Int=123456789, initguess::Vector{Float64}=zeros(Float64, n))
 
-    raff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
-         [MAXMS::Int=1, SEEDMS::Int=123456789,
-         initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,
-         noutliers::Int=-1])
+    raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
+
+    raff(model::Function, gmodel!::Function, data::Array{Float64, 2},
+        n::Int; MAXMS::Int=1, SEEDMS::Int=123456789,
+        initguess::Vector{Float64}=zeros(Float64, n),
+        ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,
+        Tuple{Float64, Float64}}=0.5)
 
 Robust Algebric Fitting Function (RAFF) algorithm. This function uses
 a voting system to automatically find the number of trusted data
@@ -375,7 +376,7 @@ The optional arguments are
   - `ε`: gradient stopping criteria to `lmlovo`
   - `noutliers`: integer describing the maximum expected number of
     outliers. The default is *half*. *Deprecated*.
-  - `trusted`: float describing the minimum expected percentage of
+  - `ftrusted`: float describing the minimum expected percentage of
     trusted points. The default is *half* (0.5). Can also be a
     Tuple of the form `(fmin, fmax)` percentages of trusted points.
 
@@ -560,14 +561,14 @@ function raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
 end
 
 """
-    praff(model::Function, data::Array{Float64, 2}, n::Int; MAXMS::Int=1,
-          SEEDMS::Int=123456789, batches::Int=1, initguess=zeros(Float64, n),
-          ε::Float64=1.0e-4, noutliers::Int=-1)
 
-    praff(model::Function, gmodel!::Function, data::Array{Float64, 2}, n::Int;
-          MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,
-          initguess::Vector{Float64}=zeros(Float64, n), ε::Float64=1.0e-4,
-          noutliers::Int=-1)
+    praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
+
+    praff(model::Function, gmodel!::Function, data::Array{Float64, 2},
+        n::Int; MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,
+        initguess::Vector{Float64}=zeros(Float64, n),
+        ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,
+        Tuple{Float64, Float64}}=0.5)
 
 Multicore distributed version of RAFF. See the description of the
 [`raff`](@ref) function for the main (non-optional) arguments. All the
@@ -586,7 +587,7 @@ The optional arguments are
   - `ε`: stopping tolerance
   - `noutliers`: integer describing the maximum expected number of
     outliers. The default is *half*. *Deprecated*.
-  - `trusted`: float describing the minimum expected percentage of
+  - `ftrusted`: float describing the minimum expected percentage of
     trusted points. The default is *half* (0.5). Can also be a
     Tuple of the form `(fmin, fmax)` percentages of trusted points.
 
