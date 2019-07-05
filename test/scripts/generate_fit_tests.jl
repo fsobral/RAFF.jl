@@ -87,15 +87,13 @@ function mainf()
 
             generate_test_problems(ffname, fsname, model, modelStr, n,
                 parsed_args["np"], parsed_args["p"], x_interval,
-                Tuple(parsed_args["cint"]); θSol=θSol, std=200.0,
-                out_times=10.0)
+                Tuple(parsed_args["cint"]); θSol=θSol, std=200.0)
 
         else
             
             generate_test_problems(ffname, fsname, model, modelStr, n,
                 parsed_args["np"], parsed_args["p"];
-                x_interval=x_interval, θSol=θSol, std=200.0,
-                out_times=10.0)
+                x_interval=x_interval, θSol=θSol, std=200.0)
 
         end
  
