@@ -6,11 +6,11 @@ using Printf
 using Logging
 using Base.CoreLogging
 
-function run_lmlovo(p::Int, initguess=nothing)
+function run_lmlovo(p::Int, initguess=nothing; model_str="logistic")
     
     global_logger(ConsoleLogger(stdout, Logging.Error))
 
-    n, model, modelstr = RAFF.model_list["logistic"]
+    n, model, modelstr = RAFF.model_list[model_str]
     
     open("/tmp/output.txt") do fp
         
