@@ -105,15 +105,11 @@ Saves the results in `filename`.
 """
 function run_calc_ratio(filename="/tmp/table.txt")
 
-    for (model_str, sol) in [
-        ("linear", [1.0, -7.0]),
-        ("cubic", [0.3, -2, 0.3, 1.0]),
-        ("expon", [5000.0, 4000.0, 0.2]),
-        ("logistic", [6000.0, -5000, -0.2, -3.7])
-    ]
+    for (model_str, sol) in [ ("linear", [1.0, -7.0]), ("cubic", [0.3, -2, 0.3, 1.0]),
+                              ("expon", [5000.0, 4000.0, 0.2]),
+                              ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
 
-        for (np, p) in [(100, 99), (100, 90),
-                        (10, 9), (10, 8) , (100, 99), (100, 90), (1000, 999)]
+        for (np, p) in [(10, 9), (10, 8) , (100, 99), (100, 90), (1000, 999)]
 
             for maxms in [1, 10, 100, 1000]
 
