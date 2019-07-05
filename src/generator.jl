@@ -366,6 +366,8 @@ function generate_noisy_data!(data::AbstractArray{Float64, 2},
     get_unique_random_points!(v, np, np - p)
     
     # Add noise to some random points
+    sgn = sign(rand())
+    
     for k = 1:np
             
         y = model(x[k], θSol) + randn() * std
@@ -374,7 +376,7 @@ function generate_noisy_data!(data::AbstractArray{Float64, 2},
             
         if k in v 
             y = model(x[k], θSol)
-            noise = (1.0 + 2 * rand()) * out_times * std * sign(randn())
+            noise = (1.0 + 2 * rand()) * out_times * std * sgn
         end
             
         data[k, 1] = x[k]
