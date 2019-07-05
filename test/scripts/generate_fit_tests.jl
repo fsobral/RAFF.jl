@@ -38,6 +38,11 @@ function mainf()
         help = "Cluster interval"
         nargs = 2
         arg_type = Float64
+
+        "--i"
+        help = "Generate i-th run."
+        arg_type = Int
+        default = 0
         
     end
 
@@ -71,6 +76,12 @@ function mainf()
 
         ffname = "/tmp/" * fname * ".txt"
         fsname = "/tmp/" * fname * "_sol.txt"
+
+        if parsed_args["i"] != 0
+
+            Random.seed!(179424673 + parsed_args["i"])
+
+        end
 
         if length(parsed_args["cint"]) == 2
 

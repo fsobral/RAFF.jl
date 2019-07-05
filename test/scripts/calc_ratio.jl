@@ -34,8 +34,8 @@ function calc_ratio( model_str::String, np::Int, p::Int,
 
     tmpsol = Vector{Float64}(undef, n)
 
-    Random.seed!(123456789)
-
+    large_number = 179424673
+    
     # Tests
     tot_tim = 0.0
     n_match = zeros(Int, ntests)
@@ -43,7 +43,10 @@ function calc_ratio( model_str::String, np::Int, p::Int,
     n_out = 0
 
     for i = 1:ntests
-    
+
+        # Define seed for this run
+        Random.seed!(large_number + i)
+
         if initguess == nothing
             
             x = zeros(Float64, n)
