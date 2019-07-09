@@ -25,7 +25,7 @@ and `fp` is the output.
 """
 function calc_ratio( model_str::String, np::Int, p::Int,
     sol::Vector{Float64}, ntests::Int=10,
-    initguess=nothing, maxms::Int=1,fp=stdout)
+    initguess=nothing, maxms::Int=1,fp=stdout; cluster=nothing)
     
     # Set Logging
     global_logger(ConsoleLogger(stdout, Logging.Error))
@@ -38,9 +38,13 @@ function calc_ratio( model_str::String, np::Int, p::Int,
     
     # Tests
     tot_tim = 0.0
-    n_match = zeros(Int, ntests)
+    n_match = zeros(Int, np + 1)
     n_exact = 0
     n_out = 0
+    # Number of correct outliers found
+    n_cout = 0
+    # Number of false positives found
+    n_fp = 0
 
     for i = 1:ntests
 
@@ -58,10 +62,19 @@ function calc_ratio( model_str::String, np::Int, p::Int,
 
         tmpsol .= sol
 
-        data, tmpsol, tout = generate_noisy_data(model, n, np, p,
-                                                 tmpsol, (1.0, 30.0))
+        data, tmpsol, tout = if cluster == nothing
+        
+            generate_noisy_data(model, n, np, p, tmpsol, (1.0, 30.0))
 
-        rsol, t, = @timed raff(model, data, n; MAXMS=maxms, initguess=x)
+        else
+
+            generate_clustered_noisy_data(model, n, np, p, tmpsol,
+                (1.0, 30.0), cluster)
+
+        end
+            
+        rsol, t, = @timed praff(model, data[:, 1:end - 1], n;
+                                MAXMS=maxms, initguess=x, ftrusted=0.7)
 
         cnt = 0
 
@@ -73,7 +86,11 @@ function calc_ratio( model_str::String, np::Int, p::Int,
 
         n_out += length(rsol.outliers)
 
-        n_match[i] = cnt
+        n_cout += cnt
+
+        n_fp += length(rsol.outliers) - cnt
+
+        n_match[cnt + 1] += 1
 
         (cnt == np - p) && (length(rsol.outliers) == np - p) && (n_exact += 1)
 
@@ -81,12 +98,11 @@ function calc_ratio( model_str::String, np::Int, p::Int,
 
     end
 
-    @printf(fp, "%10s %5d %5d %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n", model_str, np, p,
-            count(n_match .== np - p) / (1.0 * ntests),
-            n_exact / (1.0 * ntests),
-            n_out / ntests,
-            count(n_match .== 0), count(n_match .== 1),
-            count(n_match .== 2), tot_tim)
+    @printf(fp, "%10s %5d %5d %10.8f %10.8f %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n",
+            model_str, np, p, n_match[np - p + 1] /
+            (1.0 * ntests), n_exact / (1.0 * ntests), n_cout / ntests,
+            n_fp / ntests, n_out / ntests, n_match[1], n_match[2],
+            n_match[3], tot_tim)
 
     return n_match
     
@@ -120,6 +136,38 @@ function run_calc_ratio(filename="/tmp/table.txt")
                 end
 
             end
+
+        end
+
+    end
+
+end
+
+"""
+
+    run_calc_ratio_clustered(filename="/tmp/table.txt")
+
+Perform a sequence of tests for different models for solving problems
+with clustered outliers.
+
+Saves the results in `filename`.
+
+"""
+function run_calc_ratio_clustered(filename="/tmp/table.txt")
+
+    np = 100
+
+    p  = 90
+
+    maxms = 1000
+
+    for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
+                              ("expon", [5000.0, 4000.0, 0.2]),
+                              ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
+
+        open(filename, "a") do fp
+
+            calc_ratio(model_str, np, p, sol, 500, nothing, maxms, fp, cluster=(5.0, 10.0));
 
         end
 
