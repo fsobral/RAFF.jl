@@ -31,7 +31,7 @@ function draw_problem(M; raff_output=nothing, model_str="logistic")
     y = M[:, 2]
     co = M[:, 3]
 
-    true_outliers = findall(co .== 1)
+    true_outliers = findall(co .!= 0.0)
 
     PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
                    marker="o", s=50.0, linewidths=0.2)
