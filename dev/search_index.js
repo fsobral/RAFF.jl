@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Overview",
     "title": "Developed by",
     "category": "section",
-    "text": "This project was developed by the optimization group at Department of Mathematics, State University of Maringá, BrazilFrancisco Sobral (Leader)\nEmerson Vitor Castelani\nRonaldo Lopes\nWesley Shirabayashi"
+    "text": "This project was developed by the optimization group at Department of Mathematics, State University of Maringá, Brazil.Francisco Sobral (Leader)\nEmerson Vitor Castelani\nRonaldo Lopes\nWesley ShirabayashiThe authors of this package were sponsored by Fundação Araucária, project number 002/17 - 47223."
 },
 
 {
@@ -38,6 +38,14 @@ var documenterSearchIndex = {"docs": [
     "title": "References",
     "category": "section",
     "text": "[1] Andreani, R., Dunder, C. & Martínez, J.M. Math Meth Oper Res (2005) 61: 365. https://doi.org/10.1007/s001860400410[2] Andreani, R., Martínez, J.M., Martínez, L. et al. J Glob Optim (2009) 43: 1. https://doi.org/10.1007/s10898-008-9280-3[3] Martínez, J.M. TOP (2012) 20: 75. https://doi.org/10.1007/s11750-010-0169-1"
+},
+
+{
+    "location": "#Citing-this-package-1",
+    "page": "Overview",
+    "title": "Citing this package",
+    "category": "section",
+    "text": "If you would like to cite this package, please useCastelani, E. V., Lopes, R., Shirabayashi, W., & Sobral, F. N. C. (2019). RAFF.jl: Robust Algebraic Fitting Function in Julia. Journal of Open Source Software, 4(39), 1385. https://doi.org/10.21105/joss.01385BibTex"
 },
 
 {
