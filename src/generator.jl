@@ -395,6 +395,11 @@ end
         p::Int, x_interval::Tuple{Float64,Float64},
         cluster_interval::Tuple{Float64, Float64}; kwargs...)
 
+    generate_clustered_noisy_data(model::Function, n::Int,
+        np::Int, p::Int, θSol::Vector{Float64},
+        x_interval::Tuple{Float64,Float64},
+        cluster_interval::Tuple{Float64, Float64}; kwargs...)
+
 Generate a test set with clustered outliers.
 
 The arguments and optional arguments are the same for
@@ -423,6 +428,12 @@ function generate_clustered_noisy_data(model::Function, n::Int,
                x_interval, cluster_interval; kwargs...)
 
 end
+
+generate_clustered_noisy_data(model::Function, n::Int, np::Int,
+    p::Int, θSol::Vector{Float64}, x_interval::Tuple{Float64,Float64},
+    cluster_interval::Tuple{Float64, Float64}; kwargs...) =
+    generate_clustered_noisy_data(model, n, np, p, x_interval,
+    cluster_interval, θSol=θSol; kwargs...)
 
 """
 
