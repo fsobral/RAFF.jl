@@ -121,7 +121,7 @@
         θ = [0.0, 0.0]
 
         # Changes log just for this test
-        rout = with_logger(NullLogger()) do
+        rout = with_logger(Logging.NullLogger()) do
             
             lmlovo(m, θ, A, 2, 4)
 

@@ -242,6 +242,21 @@
             p, x_int, c_int)
 
         @test length(v) == 0
+
+        # Cluster with only one element
+
+        np = 10
+
+        p = 8
+
+        x_int = (1.0, 30.0)
+
+        c_int = (5.0, 10.0)
+
+        data, θSol1, v = generate_clustered_noisy_data(model, n, np,
+            p, x_int, c_int)
+
+        @test length(findall(data[:, 1] .<= 5.0)) == 1
         
     end
 

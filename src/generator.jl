@@ -359,8 +359,9 @@ function generate_noisy_data!(data::AbstractArray{Float64, 2},
     @assert(length(v) >= np - p,
             "Invalid size for vector of outliers.")
     
-    # Generate (xi,yi) where x_interval[1] <= x_i <= x_interval[2] (data)
-    x = LinRange(x_interval[1], x_interval[2], np)
+    # Generate (x_i) where x_interval[1] <= x_i <= x_interval[2] (data)
+    # Fix the problem of large interval with 1 element.
+    x = (np == 1) ? sum(x_interval) / 2.0 : LinRange(x_interval[1], x_interval[2], np)
     
     # Points selected to be outliers
     get_unique_random_points!(v, np, np - p)
