@@ -115,7 +115,7 @@ function run_calc_ratio(filename="/tmp/table.txt")
 
                 open(filename, "a") do fp
 
-                    calc_ratio(model_str, np, p, sol, 5000, nothing, maxms, fp);
+                    calc_ratio(model_str, np, p, sol, 500, nothing, maxms, fp);
 
                 end
 
