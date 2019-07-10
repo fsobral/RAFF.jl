@@ -1,3 +1,5 @@
+__precompile__(false)
+
 """
 
 `RAFF.jl` is a Jula package.
