@@ -257,4 +257,8 @@ repository. The whole description for first time usage or its API is
 available at its
 [documentation](https://fsobral.github.io/RAFF.jl/stable/).
 
+# Acknowledgments
+
+This project was supported by Fundação Araucária under grant 002/17.
+
 # References
