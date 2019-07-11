@@ -131,7 +131,7 @@ function run_calc_ratio(filename="/tmp/table.txt")
 
                 open(filename, "a") do fp
 
-                    calc_ratio(model_str, np, p, sol, 500, nothing, maxms, fp);
+                    calc_ratio(model_str, np, p, sol, 1000, nothing, maxms, fp);
 
                 end
 
@@ -159,7 +159,7 @@ function run_calc_ratio_clustered(filename="/tmp/table.txt")
 
     p  = 90
 
-    maxms = 1000
+    maxms = 100
 
     for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
                               ("expon", [5000.0, 4000.0, 0.2]),
@@ -167,7 +167,7 @@ function run_calc_ratio_clustered(filename="/tmp/table.txt")
 
         open(filename, "a") do fp
 
-            calc_ratio(model_str, np, p, sol, 500, nothing, maxms, fp, cluster=(5.0, 10.0));
+            calc_ratio(model_str, np, p, sol, 1000, nothing, maxms, fp, cluster=(5.0, 10.0));
 
         end
 
