@@ -25,7 +25,8 @@ Optional arguments:
     plot the solution. See [model_list](@ref) for details.
 
 """
-function draw_problem(M; raff_output=nothing, model_str="logistic")
+function draw_problem(M; raff_output=nothing, model_str="logistic",
+                      θsol=nothing)
 
     x = M[:, 1]
     y = M[:, 2]
@@ -63,14 +64,21 @@ function draw_problem(M; raff_output=nothing, model_str="logistic")
 
     end
 
-    # θSol = [1000.0, 5000.0, 0.2, 3.0]
-    # PyPlot.plot(t, modl2.(t), "b--", label="Verdadeiro")
+    # Plot the true solution, if available
+    if θsol != nothing
+        
+        modl2 = (x) -> model(x, θsol)
+
+        PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(1.0/9.0),
+                    linestyle="--")
+
+    end
 
     PyPlot.legend(loc="best")
 
     PyPlot.show()
     
-    PyPlot.savefig("/tmp/figure.png", DPI=100)
+    PyPlot.savefig("/tmp/figure.png", DPI=150)
 
 end
 
