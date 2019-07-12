@@ -117,7 +117,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Examples",
     "category": "section",
-    "text": "In addition to the examples given in the Tutorial, the examples/ directory contains another ways of using RAFF. Currently, we only provide an example on how to load a problem from file, solve it using RAFF and visually check the results.cubic.jl: this example solves a problem using a cubic model, with 4 parameters. The example also illustrates how to use RAFF.model_list utility structure in order to load pre-defined models."
+    "text": "In addition to the examples given in the Tutorial, the examples/ directory contains another ways of using RAFF. Currently, we only provide an example on how to load a problem from file, solve it using RAFF and visually check the results.cubic.jl: this example solves a problem using a cubic model, with 4 parameters. The example also illustrates how to use RAFF.model_list utility structure in order to load pre-defined models.draw_and_detect.jl: this nice example uses GtkReactive.jl to show a graphic application of RAFF.jl to the detection of circles drawn by the user. The user can also see the difference between the LOVO approach and the traditional least squares technique."
 },
 
 {
@@ -233,11 +233,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.interval_rand!",
+    "page": "API",
+    "title": "RAFF.interval_rand!",
+    "category": "function",
+    "text": "interval_rand!(x::Vector{Float64},\n    intervals::Vector{Tuple{Float64, Float64}})\n\nFill a vector x with uniformly distributed random numbers generated in the interval given by intervals. It is assumed that length(x) == length(intervals).\n\nThrows an ErrorException if the dimension of x is smaller the dimension of intervals or if the intervals are invalid.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#Auxiliary-functions-1",
     "page": "API",
     "title": "Auxiliary functions",
     "category": "section",
-    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.check_ftrusted"
+    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.check_ftrusted\nRAFF.interval_rand!"
 },
 
 {
@@ -245,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.generate_test_problems",
     "category": "function",
-    "text": "generate_test_problems(datFilename::String, solFilename::String,\n                     model::Function, modelStr::String, n::Int,\n                     np::Int, p::Int)\n\nGenerate random data files for testing fitting problems.\n\ndatFilename and solFilename are strings with the name of the files for storing the random data and solution, respectively.\nmodel is the model function and modelStr is a string representing this model function, e.g.\n model = (x, θ) -> θ[1] * x[1] + θ[2]\n modelStr = \"(x, θ) -> θ[1] * x[1] + θ[2]\"\nwhere vector θ represents the parameters (to be found) of the model and vector x are the variables of the model.\nn is the number of parameters\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\n\n\n\n\n"
+    "text": "generate_test_problems(datFilename::String, solFilename::String,\n    model::Function, modelStr::String, n::Int, np::Int, p::Int;\n    x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),\n    θSol::Vector{Float64}=10.0 * randn(n), std::Float64=200.0,\n    out_times::Float64=7.0)\n\ngenerate_test_problems(datFilename::String, solFilename::String,\n    model::Function, modelStr::String, n::Int, np::Int, p::Int,\n    cluster_interval::Tuple{Float64, Float64};\n    x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),\n    θSol::Vector{Float64}=10.0 * randn(n), std::Float64=200.0,\n    out_times::Float64=7.0)\n\nGenerate random data files for testing fitting problems.\n\ndatFilename and solFilename are strings with the name of the files for storing the random data and solution, respectively.\nmodel is the model function and modelStr is a string representing this model function, e.g.\n model = (x, θ) -> θ[1] * x[1] + θ[2]\n modelStr = \"(x, θ) -> θ[1] * x[1] + θ[2]\"\nwhere vector θ represents the parameters (to be found) of the model and vector x are the variables of the model.\nn is the number of parameters\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\nIf cluster_interval is provided, then generates outliers only in this interval.\n\nAdditional parameters:\n\nxMin, xMax: interval for generating points in one dimensional tests Deprecated\nx_interval: interval for generating points in one dimensional tests\nθSol: true solution, used for generating perturbed points\nstd: standard deviation\nout_times: deviation for outliers will be out_times * std.\n\n\n\n\n\n"
 },
 
 {
@@ -253,7 +261,23 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.get_unique_random_points",
     "category": "function",
-    "text": "get_unique_random_points(np::Int, npp::Int)\n\nChoose exactly npp unique random points from a set containing np points. This function is similar to rand(vector), but does not allow repetitions.\n\nReturn a vector with the selected points.\n\n\n\n\n\n"
+    "text": "get_unique_random_points(np::Int, npp::Int)\n\nChoose exactly npp unique random points from a set containing np points. This function is similar to rand(vector), but does not allow repetitions.\n\nIf npp < np, returns all the np points. Note that this function is not very memory efficient, since the process of selecting unique elements involves creating several temporary vectors.\n\nReturn a vector with the selected points.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.get_unique_random_points!",
+    "page": "API",
+    "title": "RAFF.get_unique_random_points!",
+    "category": "function",
+    "text": "get_unique_random_points!(v::Vector{Int}, np::Int, npp::Int)\n\nChoose exactly npp unique random points from a set containing np points. This function is similar to rand(vector), but does not allow repetitions.\n\nIf npp < np, returns all the np points. Note that this function is not very memory efficient, since the process of selecting unique elements involves creating several temporary vectors.\n\nReturn the vector v provided as argument filled with the selected points.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.generate_noisy_data!",
+    "page": "API",
+    "title": "RAFF.generate_noisy_data!",
+    "category": "function",
+    "text": "generate_noisy_data!(data::AbstractArray{Float64, 2},\n    v::Vector{Int}, model::Function, n::Int, np::Int, p::Int;\n    x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),\n    θSol::Vector{Float64}=10.0 * randn(Float64, n),\n    std::Float64=200.0, out_times::Float64=7.0)\n\nRandom generate a fitting one-dimensional data problem, storing the data in matrix data and the outliers in vector v.\n\nThis function receives a model(x, θ) function, the number of parameters n, the number of points np to be generated and the number of trusted points p. \n\nIf the n-dimensional vector θSol is provided, then the exact solution will not be random generated. The interval [xMin, xMax] (deprecated) or x_interval for generating the values to evaluate model can also be provided.\n\nIt returns a tuple (data, θSol, outliers) where\n\ndata: (np x 3) array, where each row contains x and model(x, θSol).\nθSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set\n\n\n\n\n\n"
 },
 
 {
@@ -261,7 +285,23 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.generate_noisy_data",
     "category": "function",
-    "text": "generate_noisy_data(model::Function, n::Int, np::Int, p::Int;\n                  xMin::Float64=-10.0, xMax::Float64=10.0,\n                  θSol::Vector{Float64}=10.0 * randn(Float64, n),\n                  std::Float64=200.0, outTimes::Float64=7.0)\n\ngenerate_noisy_data(model::Function, n, np, p, xMin::Float64, xMax::Float64)\n\ngenerate_noisy_data(model::Function, n::Int, np::Int, p::Int,\n                  θSol::Vector{Float64}, xMin::Float64, xMax::Float64)\n\nRandom generate a fitting one-dimensional data problem.\n\nThis function receives a model(x, θ) function, the number of parameters n, the number of points np to be generated and the number of trusted points p. \n\nIf the n-dimensional vector θSol is provided, then the exact solution will not be random generated. The interval [xMin, xMax] for generating the values to evaluate model can also be provided.\n\nIt returns a tuple (data, θSol, outliers) where\n\ndata: (np x 2) array, where each row contains x and model(x, θSol).\nθSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set\n\n\n\n\n\n"
+    "text": "generate_noisy_data(model::Function, n::Int, np::Int, p::Int;\n    x_interval::Tuple{Float64, Float64}=(-10.0, 10.0),\n    θSol::Vector{Float64}=10.0 * randn(Float64, n),\n    std::Float64=200.0, out_times::Float64=7.0)\n\ngenerate_noisy_data(model::Function, n::Int, np::Int, p::Int,\n    x_interval::Tuple{Float64, Float64})\n\ngenerate_noisy_data(model::Function, n::Int, np::Int, p::Int,\n    θSol::Vector{Float64}, x_interval::Tuple{Float64, Float64})\n\nRandom generate a fitting one-dimensional data problem.\n\nThis function receives a model(x, θ) function, the number of parameters n, the number of points np to be generated and the number of trusted points p. \n\nIf the n-dimensional vector θSol is provided, then the exact solution will not be random generated. The interval [xMin, xMax] (deprecated) or x_interval for generating the values to evaluate model can also be provided.\n\nIt returns a tuple (data, θSol, outliers) where\n\ndata: (np x 3) array, where each row contains x and model(x, θSol).\nθSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.generate_clustered_noisy_data!",
+    "page": "API",
+    "title": "RAFF.generate_clustered_noisy_data!",
+    "category": "function",
+    "text": "generate_clustered_noisy_data!(data::Array{Float64, 2},\n    v::Vector{Int}, model::Function, n::Int, np::Int, p::Int,\n    x_interval::Tuple{Float64,Float64},\n    cluster_interval::Tuple{Float64, Float64}; kwargs...)\n\nGenerate a test set with clustered outliers. This version overwrites the content of (np x 3) matrix data and vector v with integer indices to the position of outliers in data.\n\nThe arguments and optional arguments are the same for generate_noisy_data!, with exception of tuple cluster_interval which is the interval to generate the clustered outliers.\n\nIt returns a tuple (data, θSol, outliers) where\n\ndata: (np x 3) array, where each row contains x and model(x, θSol). The same array given as argument\nθSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set. The same vector given as argument.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.generate_clustered_noisy_data",
+    "page": "API",
+    "title": "RAFF.generate_clustered_noisy_data",
+    "category": "function",
+    "text": "generate_clustered_noisy_data(model::Function, n::Int, np::Int,\n    p::Int, x_interval::Tuple{Float64,Float64},\n    cluster_interval::Tuple{Float64, Float64}; kwargs...)\n\ngenerate_clustered_noisy_data(model::Function, n::Int,\n    np::Int, p::Int, θSol::Vector{Float64},\n    x_interval::Tuple{Float64,Float64},\n    cluster_interval::Tuple{Float64, Float64}; kwargs...)\n\nGenerate a test set with clustered outliers.\n\nThe arguments and optional arguments are the same for generate_noisy_data!, with exception of tuple cluster_interval which is the interval to generate the clustered outliers.\n\nIt returns a tuple (data, θSol, outliers) where\n\ndata: (np x 3) array, where each row contains x and model(x, θSol). The same array given as argument\nθSol: n-dimensional vector with the exact solution.\noutliers: the outliers of this data set. The same vector given as argument.\n\n\n\n\n\n"
 },
 
 {
@@ -277,7 +317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Random generation",
     "category": "section",
-    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.generate_noisy_data\nRAFF.model_list"
+    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.get_unique_random_points!\nRAFF.generate_noisy_data!\nRAFF.generate_noisy_data\nRAFF.generate_clustered_noisy_data!\nRAFF.generate_clustered_noisy_data\nRAFF.model_list"
 },
 
 {
@@ -325,7 +365,31 @@ var documenterSearchIndex = {"docs": [
     "page": "Advanced",
     "title": "Script files",
     "category": "section",
-    "text": "During the development and testing of RAFF several scripts and pieces of Julia code have been created. Those files are mostly related to the automated generation of test problems and visualization of the solutions. All those files are located in the test/scripts directory.We explain each file below, so maybe more advanced users can modify and re-use the code to generate their own problems.calc_ratio.jl: this script contains a function that generates several tests for the same model and solve each one with RAFF. Then it prints the ratio of outliers that have successfully been detected but the method.\ndraw.jl: This script draws the solution of a given problem and also its data, which was taken from a file. Examples of such files are located in test/test_problems.\nrun_raff.jl: this script simply loads a problem data from a file, selects a given model and runs RAFF. Examples of such files are located in test/test_problems.\nrun_lmlovo.jl: the same as before, but only for lmlovo function. Used mostly for testing.\ngenerate_fit_tests.jl: script for generating random test problem files, using the pre-defined models given by RAFF.model_list. This function cannot be called inside Julia, since it uses ArgParse package.\ngen_circle.jl: specif script for generating random test problems related to the detection of circles in the plane. It also provides functions to draw the problem and the solution, which differ from the draw.jl script above."
+    "text": "During the development and testing of RAFF several scripts and pieces of Julia code have been created. Those files are mostly related to the automated generation of test problems and visualization of the solutions. All those files are located in the test/scripts directory.We explain each file below, so maybe more advanced users can modify and re-use the code to generate their own problems.calc_ratio.jl: this script contains a function that generates several tests for the same model and solve each one with RAFF. Then it prints the ratio of outliers that have successfully been detected but the method.\ndraw.jl: This script draws the solution of a given problem and also its data, which was taken from a file. Examples of such files are located in test/test_problems.\nrun_raff.jl: this script simply loads a problem data from a file, selects a given model and runs RAFF. Examples of such files are located in test/test_problems.\nrun_lmlovo.jl: the same as before, but only for lmlovo function. Used mostly for testing.\ngenerate_fit_tests.jl: script for generating random test problem files, using the pre-defined models given by RAFF.model_list. This function cannot be called inside Julia, since it uses ArgParse package.\ngen_circle.jl: specific script for generating random test problems related to the detection of circles in the plane. It also provides functions to draw the problem and the solution, which differ from the draw.jl script above.\nrun_performance_tests.jl: script for generating some performance tests, so we can compare different versions of RAFF."
+},
+
+{
+    "location": "randomgeneration/#",
+    "page": "Random generation",
+    "title": "Random generation",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "randomgeneration/#Random-generation-of-problems-1",
+    "page": "Random generation",
+    "title": "Random generation of problems",
+    "category": "section",
+    "text": "RAFF.jl contains several methods for the generation of artificial datasets, in order to simulate noisy data with outliers. See the API for details about the possibilities of random generation of data with outliers."
+},
+
+{
+    "location": "randomgeneration/#Simple-example-the-exponential-function-1",
+    "page": "Random generation",
+    "title": "Simple example - the exponential function",
+    "category": "section",
+    "text": "First, it is necessary to load RAFF.jl and the desired model to generate the problem.using RAFF\n\nn, model, = RAFF.model_list[\"expon\"]If an exact solution is not provided, RAFF.jl will generate a random one, but this can destroy the shape of some models. Therefore, in this example, we will provide a hint for a nice exponential model. In this example, we will generate 20 random points with 2 outliers in the interval 1 30.exact_sol = [5000.0, 4000.0, 0.2]\n\ninterv = (1.0, 30.0)\n\nnp = 20\n\np = 18Before calling the generating function, we fix the random seed, so this example is the same everywhere.using Random\n\nRandom.seed!(12345678)\n\ndata, = generate_noisy_data(model, n, np, p, x_interval=interv, θSol=exact_sol)Now we use the script test/script/draw.jl (see Advanced section) to visualize the data generated. draw.jl uses the PyPlot.jl package, so it is necessary to install it before running this example.julia> include(\"test/scripts/draw.jl\")\n\njulia> draw_problem(data, model_str=\"expon\")If you are interested in running RAFF, just call the raff method. Attention: we have to drop the last column of data, since it contains information regarding the noise added to the outliers.r = raff(model, data[:, 1:end - 1], n, MAXMS=10)If all the steps were successful, after commandjulia> draw_problem(data, model_str=\"expon\", raff_output=r)the following picture should appear(Image: Exponential example)"
 },
 
 ]}
