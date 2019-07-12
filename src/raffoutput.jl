@@ -49,3 +49,15 @@ import Base.==
 ==(a::RAFFOutput, b::RAFFOutput) = ((a.status == b.status) &&
      (a.solution == b.solution) && (a.iter == b.iter) &&
      (a.p == b.p) && (a.f == b.f) && (a.outliers == b.outliers))
+
+import Base.show
+
+function show(io::IO, ro::RAFFOutput)
+	print(io,"** RAFFOutput ** \n")
+	print(io,"Status (.status) = $(ro.status) \n")
+	print(io,"Solution (.solution) = $(ro.solution) \n")
+	print(io,"Number of iterations (.iter) = $(ro.iter) \n")
+	print(io,"Number of trust points (.p) = $(ro.p) \n")
+	print(io,"Objective function value (.f) = $(ro.f) \n")
+	print(io,"Index of outliers (.outliers)= $(ro.outliers)\n")
+end
