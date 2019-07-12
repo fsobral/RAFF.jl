@@ -23,13 +23,18 @@ RAFF.update_best
 RAFF.consume_tqueue
 RAFF.check_and_close
 RAFF.check_ftrusted
+RAFF.interval_rand!
 ```
 
 ## Random generation
 ```@docs
 RAFF.generate_test_problems
 RAFF.get_unique_random_points
+RAFF.get_unique_random_points!
+RAFF.generate_noisy_data!
 RAFF.generate_noisy_data
+RAFF.generate_clustered_noisy_data!
+RAFF.generate_clustered_noisy_data
 RAFF.model_list
 ```
 

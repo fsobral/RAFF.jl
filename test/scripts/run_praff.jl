@@ -1,13 +1,21 @@
-using RAFF
+using Distributed
 using DelimitedFiles
 using Printf
 
-# Set Debug for Logging
-using Logging
-using Base.CoreLogging
+@everywhere using RAFF
 
-function run_raff(maxms=1, initguess=nothing;
-                  model_str="logistic", kwargs...)
+
+# This script runs the parallel version of RAFF
+
+"""
+
+    run_praff()
+
+Load and run the parallel/distributed version of RAFF. It assumes that
+there is a problem file `/tmp/output.txt`.
+
+"""
+function run_praff(maxms=1, initguess=nothing; model_str="logistic", foutliers=0.5)
     
     n, model, modelstr = RAFF.model_list[model_str]
 
@@ -25,7 +33,8 @@ function run_raff(maxms=1, initguess=nothing;
 
     end
 
-    rsol = raff(model, data[:, 1:end - 1], n; kwargs..., MAXMS=maxms, initguess=initguess)
+    rsol = praff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess,
+                 noutliers=Int(round(foutliers * size(data)[1])))
     
     @printf("Solution found:
             fbest = %f

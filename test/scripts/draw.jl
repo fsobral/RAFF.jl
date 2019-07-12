@@ -2,43 +2,96 @@ using DelimitedFiles
 using PyPlot
 using RAFF
 
-datafile = "/tmp/output.txt"
+"""
 
-fp = open(datafile, "r")
+    draw_problem(M; raff_output=nothing, model_str="logistic",
+                 datafile="/tmp/output.txt")
 
-N = parse(Int, readline(fp))
+    draw_problem(datafile::String="/tmp/output.txt"; kwargs...)
 
-M = readdlm(fp)
+Draw the problem data given by a (`m`x`3`) `M` matrix. By default it
+is assumed that the model is given by the logistic model. If no
+arguments are given it is assumed that the data file is given in file
+`/tmp/output.txt`.
 
-close(fp)
+If a [RAFFOutput](@ref) object is provided, then it plots the model
+found and also the outliers (true and false positives).
 
-x = M[:, 1]
-y = M[:, 2]
-c = M[:, 3]
+Optional arguments:
 
-# sol = [699.522, 5476.89, 0.16228, 2.32653]
-sol = [533.077, 5389.48, 0.153425, 2.04606]
+  - `raff_output`: [RAFFOutput](@ref) object with the solution
+    obtained
+  - `model_str`: a string with the name of the model to be used to
+    plot the solution. See [model_list](@ref) for details.
 
-n, model, modelstr = RAFF.model_list["logistic"]
+"""
+function draw_problem(M; raff_output=nothing, model_str="logistic",
+                      θsol=nothing)
 
-modl1 = (x) -> model(x, sol)
-modl2 = (x) -> model(x, θSol)
+    x = M[:, 1]
+    y = M[:, 2]
+    co = M[:, 3]
 
-t = minimum(x):0.01:maximum(x)
-PyPlot.plot(t, modl1.(t), "r", label="Ajustado RAFF")
+    true_outliers = findall(co .!= 0.0)
 
-θSol = [1000.0, 5000.0, 0.2, 3.0]
-PyPlot.plot(t, modl2.(t), "b--", label="Verdadeiro")
+    PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="o", s=50.0, linewidths=0.2)
 
-PyPlot.legend(loc=4)
+    PyPlot.scatter(x[co .!= 0.0], y[co .!= 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="^", s=50.0, linewidths=0.2, label="Outliers")
 
-c[9] = 1.0
+    if raff_output != nothing
+        
+        n, model, modelstr = RAFF.model_list[model_str]
 
-PyPlot.scatter(x, y, c=c, marker="o", s=50.0, linewidths=0.2,
-               cmap=PyPlot.cm."Paired", alpha=0.6)
+        modl1 = (x) -> model(x, raff_output.solution)
 
+        t = minimum(x):0.01:maximum(x)
+        PyPlot.plot(t, modl1.(t), color=PyPlot.cm."Set1"(2.0/9.0))
 
+        # Draw outliers found by RAFF
+        
+        true_positives = intersect(true_outliers, raff_output.outliers)
+        false_positives = setdiff(raff_output.outliers, true_positives)
 
-PyPlot.show()
+        PyPlot.scatter(x[false_positives], y[false_positives],
+                       color=PyPlot.cm."Pastel1"(0.0/9.0), marker="o",
+                       linewidths=0.2, edgecolors="k", s=50.0, label="False positives")
+        
+        PyPlot.scatter(x[true_positives], y[true_positives],
+                       color=PyPlot.cm."Pastel1"(0.0/9.0), marker="^",
+                       s=50.0, linewidths=0.2, edgecolors="k", label="Identified outliers")
 
-PyPlot.savefig("/tmp/figure.png", DPI=100)
+    end
+
+    # Plot the true solution, if available
+    if θsol != nothing
+        
+        modl2 = (x) -> model(x, θsol)
+
+        PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(1.0/9.0),
+                    linestyle="--")
+
+    end
+
+    PyPlot.legend(loc="best")
+
+    PyPlot.show()
+    
+    PyPlot.savefig("/tmp/figure.png", DPI=150)
+
+end
+
+function draw_problem(datafile::String="/tmp/output.txt"; kwargs...)
+
+    fp = open(datafile, "r")
+
+    N = parse(Int, readline(fp))
+
+    M = readdlm(fp)
+
+    close(fp)
+
+    draw_problem(M; kwargs...)
+    
+end

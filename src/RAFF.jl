@@ -1,5 +1,10 @@
 __precompile__(false)
 
+"""
+
+`RAFF.jl` is a Jula package.
+
+"""
 module RAFF
 
 # Dependencies
@@ -452,6 +457,13 @@ function raff(model::Function, gmodel!::Function,
 
         sols[ind] = vbest
 
+        with_logger(raff_logger) do
+                
+            @debug("Best solution for p = $(i).", vbest.solution)
+                
+        end
+        
+
     end
 
     # Remove possible stationary points, i.e., points with lower
@@ -481,7 +493,7 @@ function raff(model::Function, gmodel!::Function,
 
             if sols[i].status == 1 && sols[j].status == 1
 
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
 
                 pos += 1
 
@@ -686,6 +698,7 @@ function praff(model::Function, gmodel!::Function,
         raff_logger)
 
     # Populate the task queue with jobs
+    
     for p = pliminf:batches:plimsup
 
         try
@@ -710,6 +723,7 @@ function praff(model::Function, gmodel!::Function,
 
         end
                 
+
     end
 
     # The task queue can be closed, since all the problems have been
@@ -748,7 +762,7 @@ function praff(model::Function, gmodel!::Function,
             end
             
         end
-        
+
     end
     
     close(bqueue)
