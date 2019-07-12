@@ -1,5 +1,7 @@
 using Documenter, RAFF
 
+push!(LOAD_PATH, "../test/scripts/")
+
 makedocs(
     assets = ["assets/favicon.ico"],
     sitename = "RAFF- Robust Algebraic Fitting Function",
@@ -7,7 +9,8 @@ makedocs(
 	     "Tutorial"=> "tutorial.md",
 	     "Examples" => "examples.md",
              "API" => "api.md",
-             "Advanced" => "advanced.md"],
+             "Advanced" => "advanced.md",
+             "Random generation" => "randomgeneration.md"],
     #html_prettyurls = false
     #format = Documenter.HTML(prettyurls = false),
     modules = [RAFF]
