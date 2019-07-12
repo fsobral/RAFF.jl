@@ -92,6 +92,8 @@ this interval.
 
 Additional parameters:
 
+  - `xMin`, `xMax`: interval for generating points in one dimensional
+    tests *Deprecated*
   - `x_interval`: interval for generating points in one dimensional
     tests
   - `θSol`: true solution, used for generating perturbed points
@@ -285,8 +287,9 @@ This function receives a `model(x, θ)` function, the number of parameters
 trusted points `p`. 
 
 If the `n`-dimensional vector `θSol` is provided, then the exact
-solution will not be random generated. The interval `x_interval` for
-generating the values to evaluate `model` can also be provided.
+solution will not be random generated. The interval `[xMin, xMax]`
+(*deprecated*) or `x_interval` for generating the values to evaluate
+`model` can also be provided.
 
 It returns a tuple `(data, θSol, outliers)` where
 
@@ -309,6 +312,16 @@ function generate_noisy_data(model::Function, n::Int, np::Int,
                                 gn_kwargs...)
     
 end
+
+# Deprecated
+
+@deprecate(generate_noisy_data(model::Function, n, np, p,
+    xMin::Float64, xMax::Float64), generate_noisy_data(model, n, np,
+    p, (xMin, xMax)))
+
+@deprecate(generate_noisy_data(model::Function, n::Int, np::Int,
+    p::Int, θSol::Vector{Float64}, xMin::Float64, xMax::Float64),
+    generate_noisy_data(model, n, np, p, θSol, (xMin, xMax)))
 
 generate_noisy_data(model::Function, n::Int, np::Int, p::Int,
     x_interval::Tuple{Float64, Float64}) = generate_noisy_data(model,
@@ -335,8 +348,9 @@ This function receives a `model(x, θ)` function, the number of parameters
 trusted points `p`. 
 
 If the `n`-dimensional vector `θSol` is provided, then the exact
-solution will not be random generated. The interval `[xMin, xMax]` for
-generating the values to evaluate `model` can also be provided.
+solution will not be random generated. The interval `[xMin, xMax]`
+(*deprecated*) or `x_interval` for generating the values to evaluate
+`model` can also be provided.
 
 It returns a tuple `(data, θSol, outliers)` where
 

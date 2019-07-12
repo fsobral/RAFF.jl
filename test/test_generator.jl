@@ -129,6 +129,20 @@
 
         # Test if the solution provided is maintained and also the interval
 
+        xMin = -10.0
+
+        xMax =  10.0
+        
+        data, θSol1, v = RAFF.generate_noisy_data(model, n, np, p, θSol, xMin, xMax)
+
+        @test all(data[:, 1] .>= xMin)
+
+        @test all(data[:, 1] .<= xMax)
+
+        @test θSol == θSol1
+
+        # Test if the solution provided is maintained and also the interval
+
         x_interval = (-10.0, 10.0)
         
         data, θSol1, v = RAFF.generate_noisy_data(model, n, np, p, θSol, x_interval)
