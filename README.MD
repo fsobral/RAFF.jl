@@ -2,9 +2,9 @@ RAFF - Robust Algebraic Fitting Function
 ========================================
 
 [![Build Status](https://travis-ci.com/fsobral/RAFF.jl.svg?token=AFD4xpyZzz3My5T6Sx1k&branch=master)](https://travis-ci.com/fsobral/RAFF.jl)
+[![codecov](https://codecov.io/gh/fsobral/RAFF.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/fsobral/RAFF.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://fsobral.github.io/RAFF.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://fsobral.github.io/RAFF.jl/dev)
-
 
 [![DOI](https://www.zenodo.org/badge/147533027.svg)](https://www.zenodo.org/badge/latestdoi/147533027)
 [![DOI](http://joss.theoj.org/papers/10.21105/joss.01385/status.svg)](https://doi.org/10.21105/joss.01385)
