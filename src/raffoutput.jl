@@ -59,5 +59,5 @@ function show(io::IO, ro::RAFFOutput)
 	print(io,"Number of iterations (.iter) = $(ro.iter) \n")
 	print(io,"Number of trust points (.p) = $(ro.p) \n")
 	print(io,"Objective function value (.f) = $(ro.f) \n")
-	print(io,"Index of outliers (.outliers)= $(ro.outliers)\n")
+	print(io,"Index of outliers (.outliers) = $(ro.outliers)\n")
 end
