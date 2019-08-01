@@ -199,7 +199,45 @@
         nullPOut = RAFFOutput(0, [], -1, 10, Inf, [])
 
         @test nullPOut == RAFFOutput(10)
+
+        # Test output
+
+        raff_output = RAFFOutput(1, ones(5), 2, 6, - 1.0, ones(Int, 6))
         
+        io = IOBuffer()
+
+        print(io, raff_output)
+
+        s = String(take!(io))
+
+        rx = Regex("\\(\\.status\\) = " * string(raff_output.status))
+        
+        @test match(rx, s) !== nothing
+
+        svec = replace(string(raff_output.solution), r"([\[\]])"=>s"\\\1")
+        
+        rx = Regex("\\(\\.solution\\) = " * svec)
+        
+        @test match(rx, s) !== nothing
+
+        rx = Regex("\\(\\.iter\\) = " * string(raff_output.iter))
+        
+        @test match(rx, s) !== nothing
+
+        rx = Regex("\\(\\.p\\) = " * string(raff_output.p))
+        
+        @test match(rx, s) !== nothing
+
+        rx = Regex("\\(\\.f\\) = " * string(raff_output.f))
+        
+        @test match(rx, s) !== nothing
+
+        svec = replace(string(raff_output.outliers), r"([\[\]])"=>s"\\\1")
+        
+        rx = Regex("\\(\\.outliers\\) = " * svec)
+        
+        @test match(rx, s) !== nothing
+
     end
 
 end
