@@ -381,7 +381,7 @@ function generate_noisy_data!(data::AbstractArray{Float64, 2},
     get_unique_random_points!(v, np, np - p)
     
     # Add noise to some random points
-    sgn = sign(rand())
+    sgn = sign(randn())
     
     for k = 1:np
             
