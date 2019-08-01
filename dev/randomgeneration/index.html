@@ -26,8 +26,8 @@ julia&gt; data, = generate_noisy_data(model, n, np, p, x_interval=interv, θSol=
 julia&gt; draw_problem(data, model_str=&quot;expon&quot;)</code></pre><p>If you are interested in running <code>RAFF</code>, just call the <a href="../api/#RAFF.raff"><code>raff</code></a> method. <strong>Attention</strong>: we have to drop the last column of <code>data</code>, since it contains information regarding the noise added to the outliers.</p><pre><code class="language-julia-repl">julia&gt; r = raff(model, data[:, 1:end - 1], n, MAXMS=10)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [5060.77, 3749.48, 0.183655]
-Number of iterations (.iter) = 75
-Number of trust points (.p) = 18
-Objective function value (.f) = 590535.0668608404
-Index of outliers (.outliers) = [3, 7]</code></pre><p>If all the steps were successful, after command</p><pre><code class="language-none">julia&gt; draw_problem(data, model_str=&quot;expon&quot;, raff_output=r)</code></pre><p>the following picture should appear</p><p><img src="../assets/random_generation_example.png" alt="Exponential example"/></p><footer><hr/><a class="previous" href="../advanced/"><span class="direction">Previous</span><span class="title">Advanced</span></a></footer></article></body></html>
+Solution (.solution) = [5074.83, 6644.72, 0.691345]
+Number of iterations (.iter) = 89
+Number of trust points (.p) = 20
+Objective function value (.f) = 2.0178898358722646e7
+Index of outliers (.outliers) = Int64[]</code></pre><p>If all the steps were successful, after command</p><pre><code class="language-none">julia&gt; draw_problem(data, model_str=&quot;expon&quot;, raff_output=r)</code></pre><p>the following picture should appear</p><p><img src="../assets/random_generation_example.png" alt="Exponential example"/></p><footer><hr/><a class="previous" href="../advanced/"><span class="direction">Previous</span><span class="title">Advanced</span></a></footer></article></body></html>
