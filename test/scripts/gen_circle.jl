@@ -7,6 +7,11 @@ using RAFF
 
 """
 
+    gen_circle(np::Int, p::Int; std::Float64=0.1,
+               θSol::Vector{Float64}=10.0*randn(Float64, 3),
+               outTimes::Float64=5.0,
+               interval::Vector{Float64}=rand(np)*2.0*π)
+
 Generate perturbed points in a circle given by `θSol`. Construct a
 test file for `RAFF`.
 
@@ -18,7 +23,7 @@ function gen_circle(np::Int, p::Int; std::Float64=0.1,
     ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
     f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
 
-    data = Array{Float64, 2}(undef, np, 3) 
+    data = Array{Float64, 2}(undef, np, 4)
 
     # Points selected to be outliers
     v = RAFF.get_unique_random_points(np, np - p)
@@ -27,14 +32,17 @@ function gen_circle(np::Int, p::Int; std::Float64=0.1,
     
         pt = ρ(α, θSol[3] + std * randn())
 
+        data[i, 3:4] = 0.0 #f(pt)
+
         if i in v
 
-            pt = ρ(α, θSol[3] * (1 + outTimes * std * sign(randn())))
+            pt = ρ(α, θSol[3] * (1.0 + 2 * rand()) * outTimes * std * sign(randn()))
 
+            data[i, 4] = 1.0
+            
         end
         
         data[i, 1:2] = pt
-        data[i,   3] = 0.0 #f(pt)
 
     end
 
@@ -63,14 +71,14 @@ function gen_ncircle(np::Int, p::Int; std::Float64=0.1,
     ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
     f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
 
-    data = Array{Float64, 2}(undef, np, 3) 
+    data = Array{Float64, 2}(undef, np, 4)
 
     for (i, α) in enumerate(interval)
     
         pt = ρ(α, θSol[3] + std * randn())
 
-        data[i, 1:2] = pt
-        data[i,   3] = 0.0 #f(pt)
+        data[i, 1:2]  = pt
+        data[i, 3:4] .= 0.0 #f(pt)
 
     end
 
@@ -82,7 +90,8 @@ function gen_ncircle(np::Int, p::Int; std::Float64=0.1,
 
         data[i, 1] = θSol[1] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
         data[i, 2] = θSol[2] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
-        data[i, 3] = 1.0
+        data[i, 3] = 0.0
+        data[i, 4] = 1.0
 
         v[i - p] = i
 
@@ -138,6 +147,73 @@ end
 Draw the points and the solutions obtained. Save the picture in a file.
 
 """
+function draw_circle_sol(M; model_str="circle", raff_output=nothing, other_sols...)
+
+    x  = M[:, 1]
+    y  = M[:, 2]
+    co = M[:, 4]
+
+    t = 0:0.1:2.1 * π
+    
+    ptx = (α, ρ, d) -> ρ * cos(α) + d[1]
+    pty = (α, ρ, d) -> ρ * sin(α) + d[2]    
+
+    # Plot data
+
+    true_outliers = findall(co .!= 0.0)
+
+    PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="o", s=50.0, linewidths=0.2)
+
+    PyPlot.scatter(x[co .!= 0.0], y[co .!= 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="^", s=25.0, linewidths=0.2, label="Outliers")
+
+    if raff_output != nothing
+        
+        n, model, modelstr = RAFF.model_list[model_str]
+
+        fSol = raff_output.solution
+        
+        modl1x = (α) -> ptx(α, fSol[3], fSol[1:2])
+        modl1y = (α) -> pty(α, fSol[3], fSol[1:2])
+
+        PyPlot.plot(modl1x.(t), modl1y.(t), color=PyPlot.cm."Set1"(2.0/9.0))
+
+        # Draw outliers found by RAFF
+        
+        true_positives = intersect(true_outliers, raff_output.outliers)
+        false_positives = setdiff(raff_output.outliers, true_positives)
+
+        if length(false_positives) > 0
+        
+            PyPlot.scatter(x[false_positives], y[false_positives],
+                           color=PyPlot.cm."Pastel1"(0.0/9.0), marker="o",
+                           linewidths=0.2, edgecolors="k", s=50.0, label="False positives")
+
+        end
+
+        if length(true_positives) > 0
+        
+            PyPlot.scatter(x[true_positives], y[true_positives],
+                           color=PyPlot.cm."Pastel1"(0.0/9.0), marker="^",
+                           s=50.0, linewidths=0.2, edgecolors="k", label="Identified outliers")
+
+        end
+
+    end
+
+    PyPlot.legend(loc="best")
+
+    PyPlot.axis("scaled")
+
+    PyPlot.xticks([])
+
+    PyPlot.yticks([])
+
+    PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
+    
+end
+
 function draw_circle_sol(tSol, fSol, lsSol)
 
     datafile = "/tmp/output.txt"
