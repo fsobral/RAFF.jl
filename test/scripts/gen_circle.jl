@@ -32,7 +32,7 @@ function gen_circle(np::Int, p::Int; std::Float64=0.1,
     
         pt = ρ(α, θSol[3] + std * randn())
 
-        data[i, 3:4] = 0.0 #f(pt)
+        data[i, 3:4] .= 0.0 #f(pt)
 
         if i in v
 
