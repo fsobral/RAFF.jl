@@ -1,3 +1,32 @@
+# This file runs different solvers and strategies for fitting data
+# subject to noise and outliers. The codes were used from known
+# sources and from different languages using Julia's support to Python
+# and C.
+#
+# The following algorithms/strategies are tested
+#
+# - From Scipy: Least Squares, L1, Huber and Cauchy loss functions
+# - From Theia: RANSAC implementations
+
+# In order to run Scipy tests, one should install
+# --------------------------
+#
+# Scipy 1.3.0 and Numpy 1.17.0 in the usual Python3 environment
+#
+#     pip3 install scipy numpy
+#
+# PyCall in Julia
+#
+#     ENV["PYTHON"] = "/usr/bin/python3"
+#     ] add PyCall
+
+# In order to run Theia test, we need to call C++ libraries, so it is
+# necessary to install Theia.
+#
+# - Install Ceres
+# - Add FindCeres.cmake and others
+# - Install a lot of libraries
+
 using DelimitedFiles
 using PyCall
 using PyPlot
