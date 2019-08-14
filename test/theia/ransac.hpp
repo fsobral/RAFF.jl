@@ -7,8 +7,27 @@ struct Point {
 
 // Our "model".
 struct Line {
-  double m; double b;
+  double a; double b;
 };
+
+// Structure to model LS solver for Ceres. This structure is to find
+// linear one-dimensinal models.
+struct LinearResidual {
+  LinearResidual(double x, double y)
+      : x_(x), y_(y) {}
+
+  template <typename T> bool operator()(const T* const a,
+                                        const T* const b,
+                                        T* residual) const {
+    residual[0] = y_ - a[0] * x_ + b[0];
+    return true;
+  }
+
+ private:
+  const double x_;
+  const double y_;
+};
+
 
 // Estimator class.
 class LineEstimator: public theia::Estimator<Point, Line> {

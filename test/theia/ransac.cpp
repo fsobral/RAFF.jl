@@ -1,26 +1,56 @@
 /*
 
-g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat -I/usr/include/suitesparse -I/usr/local/include/theia/libraries/ -I/usr/local/include/theia/libraries/statx -I/usr/local/include/theia/libraries/optimo -I/usr/local/include/theia ransac.cpp -o ransac -ltheia -lglog
+g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat -I/usr/include/suitesparse -I/usr/local/include/theia/libraries/ -I/usr/local/include/theia/libraries/statx -I/usr/local/include/theia/libraries/optimo -I/usr/local/include/theia ransac.cpp -o ransac -ltheia -lglog -lceres
 
  */
 
 #include "ransac.hpp"
+#include "ceres/ceres.h"
 #include <fstream>
 #include <iostream>
 
-double LineEstimator::SampleSize() const { return 2; }
+using ceres::AutoDiffCostFunction;
+using ceres::CostFunction;
+using ceres::Problem;
+using ceres::Solver;
+using ceres::Solve;
+
+double LineEstimator::SampleSize() const { return 5; }
 
 bool LineEstimator::EstimateModel(const std::vector<Point>& data,
                      std::vector<Line>* models) const {
-  Line model;
-  model.m = (data[1].y - data[0].y)/(data[1].x - data[0].x);
-  model.b = data[1].y - model.m*data[1].x;
+
+  Problem problem;
+
+  Line model = {0.0, 0.0};
+
+  // Use ceres to solve LS problems
+  
+  for (int i = 0; i < this->SampleSize(); ++i) {
+    problem.AddResidualBlock(
+        new AutoDiffCostFunction<LinearResidual, 1, 1, 1>(
+            new LinearResidual(data[i].x, data[i].y)),
+        NULL,
+        &model.a, &model.b);
+  }
+
+  Solver::Options options;
+  options.max_num_iterations = 25;
+  options.linear_solver_type = ceres::DENSE_QR;
+  options.minimizer_progress_to_stdout = true;
+
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+
+  // Add the results to Theia
+  
   models->push_back(model);
+  
   return true;
 }
 
 double LineEstimator::Error(const Point& point, const Line& line) const {
-  return point.y - (line.m*point.x + line.b);
+  return point.y - (line.a*point.x + line.b);
 }
 
 void run_ransac(void) {
@@ -50,7 +80,7 @@ void run_ransac(void) {
   
   // Specify RANSAC parameters.
   double error_threshold = 0.3;
-  int min_num_inliers = 10;
+  int min_num_inliers = 5;
   int max_iters = 1000;
 
   // Estimate the line with RANSAC.
@@ -68,7 +98,7 @@ void run_ransac(void) {
 
   theia::RansacSummary summary;
   ransac_estimator.Estimate(input_data, &best_line, &summary);
-  LOG(INFO) << "Line m = " << best_line.m << "*x + " << best_line.b;
+  LOG(INFO) << "Line m = " << best_line.a << "*x + " << best_line.b;
 
 }
 
