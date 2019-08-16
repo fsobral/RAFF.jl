@@ -1,6 +1,6 @@
 /*
 
-g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat -I/usr/include/suitesparse -I/usr/local/include/theia/libraries/ -I/usr/local/include/theia/libraries/statx -I/usr/local/include/theia/libraries/optimo -I/usr/local/include/theia ransac.cpp -o ransac -ltheia -lglog -lceres
+g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat -I/usr/include/suitesparse -I/usr/local/include/theia/libraries/ -I/usr/local/include/theia/libraries/statx -I/usr/local/include/theia/libraries/optimo -I/usr/local/include/theia -L/usr/local/lib ransac.cpp -o ransac -ltheia -lglog -lceres
 
  */
 
@@ -18,6 +18,11 @@ using ceres::Solve;
 using ceres::SoftLOneLoss;
 
 /* Implementation of the line estimator. */
+
+std::ostream & operator<<(std::ostream & Str, Line const & v) { 
+  Str << std::setw(25) << v.a << "," << std::setw(25) << v.b;
+  return Str;
+}
 
 double LineEstimator::SampleSize() const { return 5; }
 
@@ -65,8 +70,8 @@ double LineEstimator::Error(const Point& point, const Line& line) const {
   return point.y - (line.a * point.x + line.b);
 }
 
-//template <typename T>
-void run_ransac(int argc, char** argv) {
+template <class T, class M>
+void run_ransac() {
   // Generate your input data using your desired method.
   // We put pseudo-code here for simplicity.
   std::vector<Point> input_data;
@@ -90,10 +95,9 @@ void run_ransac(int argc, char** argv) {
   }
 
   file.close();
-  
-  // Estimate the line with RANSAC.
-  LineEstimator line_estimator;
-  Line best_line;
+
+  T estimator;
+  M best_model;
 
   // Set the ransac parameters.
   theia::RansacParameters params;
@@ -103,33 +107,33 @@ void run_ransac(int argc, char** argv) {
 
   // Create Ransac object, specifying the number of points to sample to
   // generate a model estimation.
-  theia::Ransac<LineEstimator> ransac_estimator(params, line_estimator);
+  theia::Ransac<T> ransac_estimator(params, estimator);
   // Initialize must always be called!
   ransac_estimator.Initialize();
 
   theia::RansacSummary summary;
-  ransac_estimator.Estimate(input_data, &best_line, &summary);
+  ransac_estimator.Estimate(input_data, &best_model, &summary);
 
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << "RANSAC:" << std::setw(25) << best_line.a << "," << std::setw(25) << best_line.b << std::endl;
+  std::cout << "RANSAC:" << best_model << std::endl;
 
   // Create Prosac object
-  theia::Prosac<LineEstimator> prosac_estimator(params, line_estimator);
+  theia::Prosac<T> prosac_estimator(params, estimator);
   // Initialize must always be called!
   prosac_estimator.Initialize();
 
-  prosac_estimator.Estimate(input_data, &best_line, &summary);
+  prosac_estimator.Estimate(input_data, &best_model, &summary);
 
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << "PROSAC:" << std::setw(25) << best_line.a << "," << std::setw(25) << best_line.b << std::endl;
+  std::cout << "PROSAC:" << best_model << std::endl;
   
 }
 
 int main(int argc, char** argv) {
 
-  run_ransac(argc, argv);
+  run_ransac<LineEstimator, Line>();
 
   return 0;
 
