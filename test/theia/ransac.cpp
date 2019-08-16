@@ -70,6 +70,61 @@ double LineEstimator::Error(const Point& point, const Line& line) const {
   return point.y - (line.a * point.x + line.b);
 }
 
+/* Implementation of the exponential estimator. */
+
+std::ostream & operator<<(std::ostream & Str, Exponential const & v) { 
+  Str << std::setw(25) << v.a << "," << std::setw(25) << v.b << "," << std::setw(25) << v.c;
+  return Str;
+}
+
+double ExponentialEstimator::SampleSize() const { return 5; }
+
+bool ExponentialEstimator::EstimateModel(const std::vector<Point>& data,
+                     std::vector<Exponential>* models) const {
+
+  Problem problem;
+
+  Exponential model;
+
+  double p[] = {0.0, 0.0, 0.0};
+
+  // Use ceres to solve LS problems
+  
+  for (int i = 0; i < this->SampleSize(); ++i) {
+
+    problem.AddResidualBlock(
+        new AutoDiffCostFunction<ExponentialResidual, 1, 3>(
+            new ExponentialResidual(data[i].x, data[i].y)),
+        new SoftLOneLoss(0.5),
+        p);
+
+  }
+
+  Solver::Options options;
+  options.max_num_iterations = 25;
+  options.linear_solver_type = ceres::DENSE_QR;
+  options.minimizer_progress_to_stdout = false;
+
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+
+  // Add the results to Theia
+
+  model.a = p[0];
+  model.b = p[1];
+  model.c = p[2];
+
+  models->push_back(model);
+  
+  return true;
+}
+
+double ExponentialEstimator::Error(const Point& point, const Exponential& p) const {
+  return point.y - (p.a + p.b * std::exp(- p.c * point.x));
+}
+
+/* Caller */
+
 template <class T, class M>
 void run_ransac() {
   // Generate your input data using your desired method.
@@ -134,6 +189,7 @@ void run_ransac() {
 int main(int argc, char** argv) {
 
   run_ransac<LineEstimator, Line>();
+  run_ransac<ExponentialEstimator, Exponential>();
 
   return 0;
 
