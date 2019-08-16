@@ -18,7 +18,7 @@ We are using Theia v0.8.
 
   - Install necessary libraries:
 
-        sudo aptitude install libopenimageio-dev libjpeg-dev libgl1-mesa-dev freeglut3-dev
+        sudo aptitude install libopenimageio-dev libjpeg-dev libgl1-mesa-dev freeglut3-dev libflann-dev
         
   - Apply the fix suggested in [this pull request](https://github.com/sweeneychris/TheiaSfM/pull/227) in source file.
   
