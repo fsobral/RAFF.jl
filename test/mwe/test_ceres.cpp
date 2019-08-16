@@ -30,7 +30,7 @@
 
 // How to compile
 //
-// g++ -std=c++11 -L/user/local/lib test_ceres.cc -I/usr/include/eigen3 -I/usr/local/include -o test_ceres -lceres -glog
+// g++ -std=c++11 -L/user/local/lib test_ceres.cpp -I/usr/include/eigen3 -I/usr/local/include -o test_ceres -lceres -lglog
 
 
 #include "ceres/ceres.h"
