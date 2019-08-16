@@ -19,7 +19,7 @@ struct LinearResidual {
   template <typename T> bool operator()(const T* const a,
                                         const T* const b,
                                         T* residual) const {
-    residual[0] = y_ - a[0] * x_ + b[0];
+    residual[0] = y_ - (a[0] * x_ + b[0]);
     return true;
   }
 
