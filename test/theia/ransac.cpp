@@ -9,6 +9,7 @@ g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <string>
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
@@ -42,7 +43,7 @@ bool LineEstimator::EstimateModel(const std::vector<Point>& data,
 
     problem.AddResidualBlock(
         new AutoDiffCostFunction<LinearResidual, 1, 1, 1>(
-            new LinearResidual(data[i].x, data[i].y)),
+            new LinearResidual(data[i].x[0], data[i].y)),
         new SoftLOneLoss(0.5),
         &a, &b);
 
@@ -67,10 +68,12 @@ bool LineEstimator::EstimateModel(const std::vector<Point>& data,
 }
 
 double LineEstimator::Error(const Point& point, const Line& line) const {
-  return point.y - (line.a * point.x + line.b);
+  return point.y - (line.a * point.x[0] + line.b);
 }
 
+/* ******************************************** */
 /* Implementation of the exponential estimator. */
+/* ******************************************** */
 
 std::ostream & operator<<(std::ostream & Str, Exponential const & v) { 
   Str << std::setw(25) << v.a << "," << std::setw(25) << v.b << "," << std::setw(25) << v.c;
@@ -94,7 +97,7 @@ bool ExponentialEstimator::EstimateModel(const std::vector<Point>& data,
 
     problem.AddResidualBlock(
         new AutoDiffCostFunction<ExponentialResidual, 1, 3>(
-            new ExponentialResidual(data[i].x, data[i].y)),
+            new ExponentialResidual(data[i].x[0], data[i].y)),
         new SoftLOneLoss(0.5),
         p);
 
@@ -120,7 +123,66 @@ bool ExponentialEstimator::EstimateModel(const std::vector<Point>& data,
 }
 
 double ExponentialEstimator::Error(const Point& point, const Exponential& p) const {
-  return point.y - (p.a + p.b * std::exp(- p.c * point.x));
+  return point.y - (p.a + p.b * std::exp(- p.c * point.x[0]));
+}
+
+/* *************************************** */
+/* Implementation of the circle estimator. */
+/* *************************************** */
+
+std::ostream & operator<<(std::ostream & Str, Circle const & v) { 
+  Str << std::setw(25) << v.x << "," << std::setw(25) << v.y << "," << std::setw(25) << v.r;
+  return Str;
+}
+
+double CircleEstimator::SampleSize() const { return 5; }
+
+bool CircleEstimator::EstimateModel(const std::vector<Point>& data,
+                     std::vector<Circle>* models) const {
+
+  Problem problem;
+
+  Circle model;
+
+  double p[] = {0.0, 0.0, 1.0};
+
+  // Use ceres to solve LS problems
+  
+  for (int i = 0; i < this->SampleSize(); ++i) {
+
+    problem.AddResidualBlock(
+        new AutoDiffCostFunction<CircleResidual, 1, 3>(
+          new CircleResidual(data[i].x[0], data[i].x[1], data[i].y)),
+        new SoftLOneLoss(0.5),
+        p);
+
+  }
+
+  Solver::Options options;
+  options.max_num_iterations = 25;
+  options.linear_solver_type = ceres::DENSE_QR;
+  options.minimizer_progress_to_stdout = false;
+
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+
+  // Add the results to Theia
+
+  //std::cout << p[1] << ' ' << p[2] << std::endl;
+  
+  model.x = p[0];
+  model.y = p[1];
+  model.r = p[2];
+
+  models->push_back(model);
+  
+  return true;
+}
+
+CircleEstimator::CircleEstimator(int ssize_) {ssize = ssize_;}
+
+double CircleEstimator::Error(const Point& point, const Circle& p) const {
+  return point.y - (std::pow(point.x[0] - p.x, 2) + std::pow(point.x[1] - p.y, 2) - p.r * p.r);
 }
 
 /* Caller */
@@ -131,21 +193,27 @@ void run_ransac() {
   // We put pseudo-code here for simplicity.
   std::vector<Point> input_data;
 
-  double x, y, z;
+  double y, z;
+  int N;
   
   // Add data
   std::ifstream file("/tmp/output.txt");
 
-  // Discard first line of file
-  file >> x;
+  // Get dimension of x
+  file >> N;
   
-  while (file >> x >> y >> z) {
+  while (file) {
 
+    std::vector<double> x(N, 0.0);
+
+    if (N == 1) { file >> x[0] >> y >> z; }
+    else if (N == 2) { file >> x[0] >> x[1] >> y >> z; }
+      
     Point point = {x, y};
     
     input_data.push_back(point);
     
-    //std::cout << x << ' ' << y << std::endl;
+    //std::cout << x[0] << ' ' << y << std::endl;
 
   }
 
@@ -171,7 +239,7 @@ void run_ransac() {
 
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << "RANSAC:" << best_model << std::endl;
+  std::cout << std::setw(10) << "RANSAC:" << best_model << std::endl;
 
   // Create Prosac object
   theia::Prosac<T> prosac_estimator(params, estimator);
@@ -182,15 +250,49 @@ void run_ransac() {
 
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << "PROSAC:" << best_model << std::endl;
+  std::cout << std::setw(10) << "PROSAC:" << best_model << std::endl;
   
+  // Create LMed object
+  theia::LMed<T> lmed_estimator(params, estimator);
+  // Initialize must always be called!
+  lmed_estimator.Initialize();
+
+  lmed_estimator.Estimate(input_data, &best_model, &summary);
+
+  std::cout.setf(std::ios::scientific);
+  std::cout << std::setprecision(15);
+  std::cout << std::setw(10) << "LMED:" << best_model << std::endl;
+
+  // // Create Ceres object
+
+  // Problem problem;
+
+  // T c_estimator(input_data.size());
+
+  // std::vector<M> output;
+  
+  // c_estimator.EstimateModel(input_data, output);
+
+  // std::cout.setf(std::ios::scientific);
+  // std::cout << std::setprecision(15);
+  // std::cout << std::setw(10) << "L1:" << output[0] << std::endl;
+
 }
 
 int main(int argc, char** argv) {
 
-  run_ransac<LineEstimator, Line>();
-  run_ransac<ExponentialEstimator, Exponential>();
+  if (argc == 1) run_ransac<LineEstimator, Line>();
+  else {
 
+    std::string s(argv[1]);
+    
+    if (s == "linear") run_ransac<LineEstimator, Line>();
+    else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>();
+    else if (s == "circle") run_ransac<CircleEstimator, Circle>();
+    else std::cout << "Unknown model." << std::endl;
+
+  }
+  
   return 0;
 
 }

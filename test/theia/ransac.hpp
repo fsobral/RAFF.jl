@@ -3,7 +3,7 @@
 
 // Our "data".
 struct Point {
-  double x; double y;
+  std::vector<double> x; double y;
 };
 
 // Our "model".
@@ -94,5 +94,60 @@ public:
   double Error(const Point& point, const Exponential& line) const override;
 
 };
+
+//////////////////
+// Circle model //
+//////////////////
+
+// Our "model".
+struct Circle {
+  double x; double y; double r;
+};
+
+// Structure to model LS solver for Ceres. This structure is to find
+// linear one-dimensinal models.
+struct CircleResidual {
+  CircleResidual(double x, double y, double z)
+    : x_(x), y_(y), z_(z) {}
+
+  template <typename T> bool operator()(const T* const p,
+                                        T* residual) const {
+    residual[0] = z_ - (pow(x_ - p[0], 2) + pow(y_ - p[1], 2) - p[2] * p[2]);
+    return true;
+  }
+
+ private:
+  const double x_;
+  const double y_;
+  const double z_;
+};
+
+// Estimator class.
+class CircleEstimator: public theia::Estimator<Point, Circle> {
+
+public:
+
+  CircleEstimator() {};
+  
+  CircleEstimator(int ssize_);
+
+  ~CircleEstimator(){};
+  
+  // Number of points needed to estimate a line.
+  double SampleSize() const override;
+
+  // Estimate a line from two points.
+  bool EstimateModel(const std::vector<Point>& data,
+                     std::vector<Circle>* models) const override;
+
+  // Calculate the error as the y distance of the point to the line.
+  double Error(const Point& point, const Circle& line) const override;
+
+  private:
+
+  int ssize;
+
+};
+
 
 void run_ransac(void);
