@@ -10,6 +10,7 @@ g++ -std=c++11 -I/usr/include/eigen3 -I/usr/local/include/theia/libraries/vlfeat
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <ctime>
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
@@ -195,6 +196,8 @@ void run_ransac() {
 
   double y, z;
   int N;
+
+  std::clock_t tini, tend;
   
   // Add data
   std::ifstream file("/tmp/output.txt");
@@ -230,6 +233,9 @@ void run_ransac() {
 
   // Create Ransac object, specifying the number of points to sample to
   // generate a model estimation.
+
+  tini = std::clock();
+  
   theia::Ransac<T> ransac_estimator(params, estimator);
   // Initialize must always be called!
   ransac_estimator.Initialize();
@@ -237,31 +243,55 @@ void run_ransac() {
   theia::RansacSummary summary;
   ransac_estimator.Estimate(input_data, &best_model, &summary);
 
+  tend = std::clock();
+  
+  std::cout.unsetf(std::ios::fixed);
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "RANSAC:" << best_model << std::endl;
+  std::cout << std::setw(10) << "RANSAC:" << best_model << " & ";
+  std::cout.unsetf(std::ios::scientific);
+  std::cout.setf(std::ios::fixed);  
+  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
 
   // Create Prosac object
+
+  tini = std::clock();
+  
   theia::Prosac<T> prosac_estimator(params, estimator);
   // Initialize must always be called!
   prosac_estimator.Initialize();
 
   prosac_estimator.Estimate(input_data, &best_model, &summary);
 
+  tend = std::clock();
+
+  std::cout.unsetf(std::ios::fixed);
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "PROSAC:" << best_model << std::endl;
+  std::cout << std::setw(10) << "PROSAC:" << best_model << " & ";
+  std::cout.unsetf(std::ios::scientific);
+  std::cout.setf(std::ios::fixed);
+  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
   
   // Create LMed object
+
+  tini = std::clock();
+  
   theia::LMed<T> lmed_estimator(params, estimator);
   // Initialize must always be called!
   lmed_estimator.Initialize();
 
   lmed_estimator.Estimate(input_data, &best_model, &summary);
 
+  tend = std::clock();
+
+  std::cout.unsetf(std::ios::fixed);
   std::cout.setf(std::ios::scientific);
   std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "LMED:" << best_model << std::endl;
+  std::cout << std::setw(10) << "LMED:" << best_model << " & ";
+  std::cout.unsetf(std::ios::scientific);
+  std::cout.setf(std::ios::fixed);
+  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
 
   // // Create Ceres object
 
