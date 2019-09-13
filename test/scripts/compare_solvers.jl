@@ -31,7 +31,9 @@ using DelimitedFiles
 using PyCall
 using PyPlot
 using RAFF
+using Printf
 
+# Load libraries for drawing solutions
 include("draw.jl")
 include("gen_circle.jl")
 
@@ -56,6 +58,7 @@ function compare_fitting(;model_str="linear", kwargs...)
         
     end
 
+    # Create objective function for Python calls
     f = let
 
         x = copy(data[:, 1])
@@ -84,7 +87,7 @@ function compare_fitting(;model_str="linear", kwargs...)
 
         sol, tm, = @timed optimize.least_squares(f, initguess, loss=loss)
 
-        println("$(loss) -> $(tm)")
+        @printf("%10s & %5.4f\n \\\\", loss, tm)
 
         modl2 = (x) -> modl(x, sol["x"])
 
@@ -99,7 +102,8 @@ function compare_fitting(;model_str="linear", kwargs...)
 
     rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
 
-    println("RAFF -> $(tm)")
+    @printf("%10s & %5.4f\n \\\\", "RAFF.jl", tm)
+
     println(rsol)
 
     modl2 = (x) -> modl(x, rsol.solution)
@@ -111,6 +115,8 @@ function compare_fitting(;model_str="linear", kwargs...)
 
     PyPlot.show()
 
+    PyPlot.savefig("/tmp/scipy.png", DPI=150)
+    
 end
 
 function compare_circle_fitting(;kwargs...)
