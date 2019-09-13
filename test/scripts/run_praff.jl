@@ -9,13 +9,13 @@ using Printf
 
 """
 
-    run_praff()
+    run_praff(maxms=1, initguess=nothing; model_str="logistic", kwargs...)
 
 Load and run the parallel/distributed version of RAFF. It assumes that
 there is a problem file `/tmp/output.txt`.
 
 """
-function run_praff(maxms=1, initguess=nothing; model_str="logistic", foutliers=0.5)
+function run_praff(maxms=1, initguess=nothing; model_str="logistic", kwargs...)
     
     n, model, modelstr = RAFF.model_list[model_str]
 
@@ -33,8 +33,7 @@ function run_praff(maxms=1, initguess=nothing; model_str="logistic", foutliers=0
 
     end
 
-    rsol = praff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess,
-                 noutliers=Int(round(foutliers * size(data)[1])))
+    rsol = praff(model, data[:, 1:end - 1], n; MAXMS=maxms, initguess=initguess, kwargs...)
     
     @printf("Solution found:
             fbest = %f
