@@ -4,6 +4,7 @@ using PyPlot
 using Printf
 using DelimitedFiles
 using RAFF
+using FileIO, Images, ImageView
 
 """
 
@@ -273,4 +274,46 @@ function draw_circle_sol(tSol, fSol, lsSol)
 
     PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
 
+end
+
+"""
+
+    draw_img_sol(imgfile, sol; thck::Int=2)
+
+Draw the image and the solution found, using JuliaImage
+packages. `imagefile` is the path to the image and `sol` is a
+3-dimensional vector with the solution.
+
+Extra parameter `thck` defines the thickness of the circle.
+
+"""
+function draw_img_sol(imgfile, sol; thck::Int=2)
+
+    img = load(imgfile)
+
+    h, w = size(img)
+    
+    t = [0:0.01:2.1 * π;]
+    
+    ptx = (α, ρ, d) -> ρ * cos(α) + d[1]
+    pty = (α, ρ, d) -> ρ * sin(α) + d[2]
+
+    # Solution
+    
+    pptx = (α) -> ptx(α, sol[3], sol[1:2])
+    ppty = (α) -> pty(α, sol[3], sol[1:2])
+
+    for α in t
+
+        i = Int(round(pptx(α)))
+        j = Int(round(ppty(α)))
+
+        !((1 <= i <= h) && (1 <= j <= w)) && continue
+        
+        img[max(1, i - thck):min(i + thck, h), max(1, j - thck):min(j + thck, w)] .= RGB(1.0, 0.0, 0.0)
+
+    end
+    
+    ImageView.imshow(img)
+    
 end
