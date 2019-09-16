@@ -38,6 +38,60 @@ using Random
 include("draw.jl")
 include("gen_circle.jl")
 
+function run_comparative_fitting()
+
+    large_number = 179424673
+
+    for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
+                              ("expon", [5000.0, 4000.0, 0.2]),
+                              ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
+
+        for (np, p) in [(10, 9), (10, 8), (100, 99), (100, 90)]
+
+            n, model, = RAFF.model_list[model_str]
+
+            # Define seed for this run
+            Random.seed!(large_number + 300)
+
+            data, = generate_noisy_data(model, n, np, p, sol, (1.0, 30.0))
+
+            cla()
+            
+            compare_fitting(1, data; model_str=model_str, MAXMS=100)
+
+            readline()
+    
+        end
+
+    end
+    
+end
+
+"""
+
+    ls_measure(modl, n, data)
+
+Compute the "Least Square" measure, used to compare different
+algorithm.
+
+"""
+
+function ls_measure(modl, n, data)
+
+    sr = 0.0
+
+    np, = size(data)
+        
+    for i = 1:np
+
+        (data[i, n + 2] == 0.0) && (sr += (modl(@view(data[i, 1:n])) - data[i, n + 1])^2)
+
+    end
+
+    return sr
+
+end
+
 """
 
     compare_fitting(;model_str="linear", kwargs...)
@@ -45,22 +99,31 @@ include("gen_circle.jl")
 Run several tests from Scipy.optimize library for fitting data.
 
 """
-function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
+function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, kwargs...)
     
     n, modl, = RAFF.model_list[model_str]
 
     optimize = pyimport("scipy.optimize")
 
-    open("/tmp/output.txt") do fp
+    if (N == Nothing) || (data == Nothing)
+
+        open("/tmp/output.txt") do fp
         
-        global N = parse(Int, readline(fp))
+            N = parse(Int, readline(fp))
         
-        global data = readdlm(fp)
+            data = readdlm(fp)
         
+        end
+
     end
 
     # SEEDMS is an argument for RAFF, the seed for multi-start strategy
     SEEDMS = 123456789
+
+    # PyPlot configuration
+    PyPlot.rc("font", family="Arial")
+
+    PyPlot.rc("font", size=10)
     
     # Create objective function for Python calls
     f = let
@@ -80,6 +143,10 @@ function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
 
     t = minimum(data[:, 1]):0.01:maximum(data[:, 1])
 
+    tmpv = @view(data[:, 3])
+    
+    @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", model_str, length(tmpv), count(tmpv .== 0.0))
+    
     # Run all fitting tests from Scipy
     
     for (i, (loss, line)) in enumerate(zip(
@@ -107,7 +174,15 @@ function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
             
         end
 
-        @printf("%10s & %8.4f & ", loss, tm)
+        # This is a tentative of comparing different algorithms.  We
+        # compute the sum of the squared differences only for
+        # NON-outliers.
+        
+        modl2 = (x) -> modl(x, sbest["x"])
+
+        fmeas = ls_measure(modl2, N, data)
+                           
+        @printf("  & %10s & %10.3e & %8.4f & %6d & ", loss, fmeas, tm, sbest["nfev"])
         
         for j = 1:n
 
@@ -116,8 +191,6 @@ function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
         end
 
         @printf(" \\\\\n")
-
-        modl2 = (x) -> modl(x, sbest["x"])
 
         PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(i/9.0),
                     linestyle=line, label=loss)
@@ -131,8 +204,12 @@ function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
     rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess,
                            SEEDMS=SEEDMS, MAXMS=MAXMS)
 
-    @printf("%10s & %8.4f & ", "RAFF.jl", tm)
+    modl2 = (x) -> modl(x, rsol.solution)
 
+    fmeas = ls_measure(modl2, N, data)
+                           
+    @printf("  & %10s & %10.3e & %8.4f & %6d & ", "RAFF.jl", fmeas, tm, 0)
+        
     for j = 1:n
 
         @printf("\$%15.5f\$, ", rsol.solution[j])
@@ -141,14 +218,14 @@ function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
 
     @printf(" \\\\\n")
 
-    modl2 = (x) -> modl(x, rsol.solution)
-
     PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(2.0/9.0),
                 linestyle="-", label="RAFF")
 
     PyPlot.legend(loc="best")
 
     PyPlot.show()
+
+    PyPlot.savefig("/tmp/comp_scipy.eps", DPI=600, bbox_inches="tight")
 
     PyPlot.savefig("/tmp/scipy.png", DPI=150)
     
