@@ -32,6 +32,7 @@ using PyCall
 using PyPlot
 using RAFF
 using Printf
+using Random
 
 # Load libraries for drawing solutions
 include("draw.jl")
@@ -44,7 +45,7 @@ include("gen_circle.jl")
 Run several tests from Scipy.optimize library for fitting data.
 
 """
-function compare_fitting(;model_str="linear", kwargs...)
+function compare_fitting(;model_str="linear", MAXMS=1, kwargs...)
     
     n, modl, = RAFF.model_list[model_str]
 
@@ -58,6 +59,9 @@ function compare_fitting(;model_str="linear", kwargs...)
         
     end
 
+    # SEEDMS is an argument for RAFF, the seed for multi-start strategy
+    SEEDMS = 123456789
+    
     # Create objective function for Python calls
     f = let
 
@@ -83,13 +87,37 @@ function compare_fitting(;model_str="linear", kwargs...)
         ["--", "-.", ":", "-", "--"]
     ))
     
-        initguess = zeros(Float64, n)
+        seedMS = MersenneTwister(SEEDMS)
 
-        sol, tm, = @timed optimize.least_squares(f, initguess, loss=loss)
+        fbest = Inf
+        sbest = Nothing
+        
+        tm = @elapsed for i = 1:MAXMS
 
-        @printf("%10s & %5.4f\n \\\\", loss, tm)
+            initguess = randn(seedMS, Float64, n)
 
-        modl2 = (x) -> modl(x, sol["x"])
+            sol = optimize.least_squares(f, initguess, loss=loss)
+
+            if sol["cost"] < fbest
+
+                fbest = sol["cost"]
+                sbest = sol
+
+            end
+            
+        end
+
+        @printf("%10s & %8.4f & ", loss, tm)
+        
+        for j = 1:n
+
+            @printf("\$%15.5f\$, ", sbest["x"][j])
+
+        end
+
+        @printf(" \\\\\n")
+
+        modl2 = (x) -> modl(x, sbest["x"])
 
         PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(i/9.0),
                     linestyle=line, label=loss)
@@ -100,11 +128,18 @@ function compare_fitting(;model_str="linear", kwargs...)
     
     initguess = zeros(Float64, n)
 
-    rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
+    rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess,
+                           SEEDMS=SEEDMS, MAXMS=MAXMS)
 
-    @printf("%10s & %5.4f\n \\\\", "RAFF.jl", tm)
+    @printf("%10s & %8.4f & ", "RAFF.jl", tm)
 
-    println(rsol)
+    for j = 1:n
+
+        @printf("\$%15.5f\$, ", rsol.solution[j])
+
+    end
+
+    @printf(" \\\\\n")
 
     modl2 = (x) -> modl(x, rsol.solution)
 
