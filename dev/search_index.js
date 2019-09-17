@@ -185,6 +185,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.voting_strategy",
+    "page": "API",
+    "title": "RAFF.voting_strategy",
+    "category": "function",
+    "text": "voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,\n                plimsup::Int)\n\nUtility function to compute the matrix representing the voting system used by RAFF.\n\nIt first applies a filtering strategy, to eliminate obvious local minima, then it calculates a magic threshold and constructs the distance matrix. The vector sols contains the solutions s_p, for p = pliminf, ... plimsup.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#RAFF.eliminate_local_min!",
     "page": "API",
     "title": "RAFF.eliminate_local_min!",
@@ -245,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Auxiliary functions",
     "category": "section",
-    "text": "RAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.check_ftrusted\nRAFF.interval_rand!"
+    "text": "RAFF.voting_strategy\nRAFF.eliminate_local_min!\nRAFF.sort_fun!\nRAFF.update_best\nRAFF.consume_tqueue\nRAFF.check_and_close\nRAFF.check_ftrusted\nRAFF.interval_rand!"
 },
 
 {
@@ -325,7 +333,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "RAFF.RAFFOutput",
     "category": "type",
-    "text": "This type defines the output file for the RAFF algorithm.\n\nRAFFOutput(status::Int, solution::Vector{Float64}, iter::Int,\n           p::Int, f::Float64, outliers::Vector{Int})\n\nwhere\n\nstatus: is 1 if converged and 0 if not\nsolution: vector with the parameters of the model\niter: number of iterations up to convergence\np: number of trusted points\nf: the residual value\noutliers: the possible outliers detected by the method, for the given p\n\nRAFFOutput()\n\nCreates a null version of output, equivalent to RAFFOutput(0, [], -1, 0, Inf, [])\n\nRAFFOuput(p::Int)\n\nCreates a null version of output for the given p.\n\n\n\n\n\n"
+    "text": "This type defines the output file for the RAFF algorithm.\n\nRAFFOutput(status::Int, solution::Vector{Float64}, iter::Int,\n           p::Int, f::Float64, nf::Int, nj::Int, outliers::Vector{Int})\n\nwhere\n\nstatus: is 1 if converged and 0 if not\nsolution: vector with the parameters of the model\niter: number of iterations up to convergence\np: number of trusted points\nf: the residual value\nnf: number of function evaluations\nnj: number of Jacobian evaluations\noutliers: the possible outliers detected by the method, for the given p\nRAFFOutput()\n\nCreates a null version of output, equivalent to RAFFOutput(0, [], -1, 0, Inf, -1, -1, [])\n\nRAFFOuput(p::Int)\nRAFFOuput(sol::Vector{Float64}, p::Int)\n\nCreates a null version of output for the given p and a null version with the given solution, respectively.\n\n\n\n\n\n"
 },
 
 {
