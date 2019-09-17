@@ -202,14 +202,14 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
     
     initguess = zeros(Float64, n)
 
-    rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess,
-                           SEEDMS=SEEDMS, MAXMS=MAXMS)
+    rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess,
+                            SEEDMS=SEEDMS, MAXMS=MAXMS)
 
     modl2 = (x) -> modl(x, rsol.solution)
 
     fmeas = ls_measure(modl2, N, data)
                            
-    @printf("  & %10s & %10.3e & %8.4f & %6d & ", "RAFF.jl", fmeas, tm, 0)
+    @printf("  & %10s & %10.3e & %8.4f & %6d & ", "RAFF.jl", fmeas, tm, rsol.nf)
         
     for j = 1:n
 
