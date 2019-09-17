@@ -43,6 +43,8 @@
         @test rout.status == 1
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+        @test rout.nf >= rout.iter
+        @test rout.nj >= rout.iter
         
         θ = [0.0, 0.0]
 
@@ -70,6 +72,8 @@
         @test rout.f == 0
         @test rout.outliers == [1:size(data)[1];]
         @test rout.solution == θ
+        @test rout.nf == 0
+        @test rout.nj == 0
 
         # lmlovo with function and gradient
 
@@ -99,6 +103,8 @@
         @test rout.f == 0
         @test rout.outliers == [1:size(data)[1];]
         @test rout.solution == θ
+        @test rout.nf == 0
+        @test rout.nj == 0
 
     end
 
@@ -190,19 +196,22 @@
     
     @testset "RAFFOutput tests" begin
 
-        nullOut = RAFFOutput(0, [], -1, 0, Inf, [])
+        nullOut = RAFFOutput(0, [], -1, 0, Inf, -1, -1, [])
         
         @test RAFFOutput() == nullOut
 
         @test RAFFOutput(0) == nullOut
 
-        nullPOut = RAFFOutput(0, [], -1, 10, Inf, [])
+        # Check if deprecated version is creating `nf` and `nj`
+        @test RAFFOutput(0, [], -1, 0, Inf, []) == nullOut
+
+        nullPOut = RAFFOutput(0, [], -1, 10, Inf, -1, -1, [])
 
         @test nullPOut == RAFFOutput(10)
 
         # Test output
 
-        raff_output = RAFFOutput(1, ones(5), 2, 6, - 1.0, ones(Int, 6))
+        raff_output = RAFFOutput(1, ones(5), 2, 6, - 1.0, 10, 20, ones(Int, 6))
         
         io = IOBuffer()
 
@@ -230,6 +239,14 @@
 
         rx = Regex("\\(\\.f\\) = " * string(raff_output.f))
         
+        @test match(rx, s) !== nothing
+
+        rx = Regex("\\(\\.nf\\) = " * string(raff_output.nf))
+
+        @test match(rx, s) !== nothing
+
+        rx = Regex("\\(\\.nj\\) = " * string(raff_output.nj))
+
         @test match(rx, s) !== nothing
 
         svec = replace(string(raff_output.outliers), r"([\[\]])"=>s"\\\1")

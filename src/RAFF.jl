@@ -97,8 +97,13 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
     end
 
-    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, [1:npun;])
+    # Counters for calls to F and its Jacobian
+    nf = 0
+
+    nj = 0
     
+    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, nf, nj, [1:npun;])
+
     # Main function - the LOVO function
     LovoFun = let
 
@@ -112,6 +117,8 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
         
         # Return a ordered set index and lovo value
         (θ) -> begin
+
+            nf += 1
             
             @views for i = 1:npun_
                 F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
@@ -132,8 +139,10 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     # This function returns the residue and Jacobian of residue
     ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64},
             rJ::Array{Float64, 2}) = begin
+
+       nj += 1
                 
-        for (k, i) in enumerate(ind)
+       for (k, i) in enumerate(ind)
             
             x = data[i, 1:(end - 1)]
             
@@ -301,7 +310,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
     end
     
-    return RAFFOutput(status, θ, safecount, p, best_val_lovo, outliers)
+    return RAFFOutput(status, θ, safecount, p, best_val_lovo, nf, nj, outliers)
 
 end
 
@@ -431,7 +440,7 @@ function raff(model::Function, gmodel!::Function,
 
     for i = pliminf:plimsup
 
-        vbest = RAFFOutput(0, initguess, -1, i, Inf, [])
+        vbest = RAFFOutput(initguess, i)
         
         ind = i - pliminf + 1
         

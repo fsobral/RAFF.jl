@@ -115,7 +115,7 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
         for k in p
 
-            wbest = RAFFOutput(0, [], -1, k, Inf, [])
+            wbest = RAFFOutput(k)
         
             # Multi-start strategy
             for j = 1:MAXMS
