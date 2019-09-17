@@ -97,8 +97,13 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
     end
 
-    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, [1:npun;])
+    # Counters for calls to F and its Jacobian
+    nf = 0
+
+    nj = 0
     
+    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, nf, nj, [1:npun;])
+
     # Main function - the LOVO function
     LovoFun = let
 
@@ -112,6 +117,8 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
         
         # Return a ordered set index and lovo value
         (θ) -> begin
+
+            nf += 1
             
             @views for i = 1:npun_
                 F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
@@ -132,8 +139,10 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     # This function returns the residue and Jacobian of residue
     ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64},
             rJ::Array{Float64, 2}) = begin
+
+       nj += 1
                 
-        for (k, i) in enumerate(ind)
+       for (k, i) in enumerate(ind)
             
             x = data[i, 1:(end - 1)]
             
@@ -301,7 +310,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
     end
     
-    return RAFFOutput(status, θ, safecount, p, best_val_lovo, outliers)
+    return RAFFOutput(status, θ, safecount, p, best_val_lovo, nf, nj, outliers)
 
 end
 
@@ -431,7 +440,7 @@ function raff(model::Function, gmodel!::Function,
 
     for i = pliminf:plimsup
 
-        vbest = RAFFOutput(0, initguess, -1, i, Inf, [])
+        vbest = RAFFOutput(initguess, i)
         
         ind = i - pliminf + 1
         
@@ -466,90 +475,35 @@ function raff(model::Function, gmodel!::Function,
 
     end
 
-    # Remove possible stationary points, i.e., points with lower
-    # values for 'p' and higher 'f'.
+    # Count the total number of iterations, and function and Jacobian
+    # evaluations.
 
-    with_logger(raff_logger) do
-        
-        eliminate_local_min!(model, data, sols)
+    nf = 0
+    nj = 0
+    ni = 0
 
-    end
+    for s in sols
 
-    # Voting strategy
-    
-    dvector = zeros(Int(lv * (lv - 1) / 2))
-    dmatrix = zeros(lv, lv)
-    pos = 0
-    n_conv = 0
-
-    for j = 1:lv
-
-        # Count how many have successfully converged
-        (sols[j].status == 1) && (n_conv += 1)
-        
-        for i = j + 1:lv
-
-            dmatrix[i, j] = Inf
-
-            if sols[i].status == 1 && sols[j].status == 1
-
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
-
-                pos += 1
-
-                dvector[pos] = dmatrix[i, j]
-
-            end
-
-        end
+        nf += s.nf
+        nj += s.nj
+        ni += s.iter
 
     end
 
-    threshold = Inf
+    # Apply the filter and the voting strategy to all the solutions
+    # found
 
-    if pos > 0
-        
-        dvv = @view dvector[1:pos]
-        
-        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
+    votsis = with_logger(raff_logger) do
 
-    elseif n_conv == 0
-
-        with_logger(raff_logger) do
-            
-            @warn("No convergence for any 'p'. Returning largest.")
-
-        end
+        voting_strategy(model, data, sols, pliminf, plimsup)
 
     end
-    
-    votsis = zeros(lv)
-    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
 
-    # Actual votation
-    
-    for j = 1:lv
-        # Count +1 if converged
-        (sols[j].status == 1) && (votsis[j] += 1)
-        # Check other distances
-        for i = j + 1:lv
-            if dmatrix[i, j] <=  threshold
-                votsis[j] += 1
-                votsis[i] += 1
-            end
-        end
-    end
-
-    with_logger(raff_logger) do
-
-        @debug("Voting vector:", votsis)
-        @debug("Distance matrix:", dmatrix)
-
-    end
-    
     mainind = findlast(x->x == maximum(votsis), votsis)
+
+    s = sols[mainind]
     
-    return sols[mainind]
+    return RAFFOutput(s.status, s.solution, ni, s.p, s.f, nf, nj, s.outliers)
     
 end
 
@@ -769,82 +723,35 @@ function praff(model::Function, gmodel!::Function,
 
     close(squeue)
 
-    # Voting strategy
+    # Count the total number of iterations, and function and Jacobian
+    # evaluations.
 
-    dvector = zeros(Int(lv * (lv - 1) / 2))
-    dmatrix = zeros(lv, lv)
-    pos = 0
-    n_conv = 0
+    nf = 0
+    nj = 0
+    ni = 0
 
-    for j = 1:lv
+    for s in sols
 
-        # Count how many have successfully converged
-        (sols[j].status == 1) && (n_conv += 1)
-
-        for i = j + 1:lv
-
-            dmatrix[i, j] = Inf
-
-            if sols[i].status == 1 && sols[j].status == 1
-
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
-
-                pos += 1
-
-                dvector[pos] = dmatrix[i, j]
-
-            end
-
-        end
+        nf += s.nf
+        nj += s.nj
+        ni += s.iter
 
     end
 
-    threshold = Inf
+    # Apply the filter and the voting strategy to all the solutions
+    # found
 
-    if pos > 0
+    votsis = with_logger(raff_logger) do
 
-        dvv = @view dvector[1:pos]
-
-        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
-
-    elseif n_conv == 0
-
-        with_logger(raff_logger) do
-            
-            @warn("No convergence for any 'p'. Returning largest.")
-
-        end
+        voting_strategy(model, data, sols, pliminf, plimsup)
 
     end
-    
-    votsis = zeros(lv)
 
-    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
-
-    # Actual votation
-    
-    for j = 1:lv
-        # Count +1 if converged
-        (sols[j].status == 1) && (votsis[j] += 1)
-        # Check other distances
-        for i = j + 1:lv
-            if dmatrix[i, j] <=  threshold
-                votsis[j] += 1
-                votsis[i] += 1
-            end
-        end
-    end
-
-    with_logger(raff_logger) do
-
-        @debug("Voting vector:", votsis)
-        @debug("Distance matrix:", dmatrix)
-
-    end
-    
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    return sols[mainind]
+    s = sols[mainind]
+
+    return RAFFOutput(s.status, s.solution, ni, s.p, s.f, nf, nj, s.outliers)
 
 end
 

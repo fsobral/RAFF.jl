@@ -115,8 +115,12 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
 
         for k in p
 
-            wbest = RAFFOutput(0, [], -1, k, Inf, [])
-        
+            wbest = RAFFOutput(k)
+
+            nf = 0
+            nj = 0
+            ni = 0
+
             # Multi-start strategy
             for j = 1:MAXMS
 
@@ -126,6 +130,10 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
                 
                 # Call function and store results
                 rout = lmlovo(model, gmodel!, θ, data, n, k)
+
+                nf += rout.nf
+                nj += rout.nj
+                ni += rout.iter
 
                 (rout.status == 1) && (rout.f < wbest.f) && (wbest = rout)
 
@@ -160,6 +168,9 @@ function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,
             @debug("Finished. p = $(k) and f = $(wbest.f).")
 
             try
+
+                wbest = RAFFOutput(wbest.status, wbest.solution, ni, wbest.p, wbest.f, nf, nj,
+                                   wbest.outliers)
 
                 put!(squeue, wbest)
 
