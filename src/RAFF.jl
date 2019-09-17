@@ -475,6 +475,21 @@ function raff(model::Function, gmodel!::Function,
 
     end
 
+    # Count the total number of iterations, and function and Jacobian
+    # evaluations.
+
+    nf = 0
+    nj = 0
+    ni = 0
+
+    for s in sols
+
+        nf += s.nf
+        nj += s.nj
+        ni += s.iter
+
+    end
+
     # Remove possible stationary points, i.e., points with lower
     # values for 'p' and higher 'f'.
 
@@ -557,8 +572,10 @@ function raff(model::Function, gmodel!::Function,
     end
     
     mainind = findlast(x->x == maximum(votsis), votsis)
+
+    s = sols[mainind]
     
-    return sols[mainind]
+    return RAFFOutput(s.status, s.solution, ni, s.p, s.f, nf, nj, s.outliers)
     
 end
 
@@ -778,6 +795,21 @@ function praff(model::Function, gmodel!::Function,
 
     close(squeue)
 
+    # Count the total number of iterations, and function and Jacobian
+    # evaluations.
+
+    nf = 0
+    nj = 0
+    ni = 0
+
+    for s in sols
+
+        nf += s.nf
+        nj += s.nj
+        ni += s.iter
+
+    end
+
     # Voting strategy
 
     dvector = zeros(Int(lv * (lv - 1) / 2))
@@ -853,7 +885,9 @@ function praff(model::Function, gmodel!::Function,
     
     mainind = findlast(x->x == maximum(votsis), votsis)
     
-    return sols[mainind]
+    s = sols[mainind]
+
+    return RAFFOutput(s.status, s.solution, ni, s.p, s.f, nf, nj, s.outliers)
 
 end
 

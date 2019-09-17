@@ -57,10 +57,13 @@
         θ = [0.0, 0.0]
 
         rout = raff(model, data, 2)
-        
+
         @test rout.f ≈ 0.0 atol=1.0e-5
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+        @test rout.iter >= size(data)[1]
+        @test rout.nf >= 1
+        @test rout.nj >= 1
 
         @test_throws AssertionError lmlovo(model, θ, data, 0, 1)
         @test_throws AssertionError lmlovo(model, θ, data, 2, -1)
@@ -92,6 +95,9 @@
         @test rout.f ≈ 0.0 atol=1.0e-5
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+        @test rout.iter >= size(data)[1]
+        @test rout.nf >= 1
+        @test rout.nj >= 1
 
         @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 0, 1)
         @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 2, -1)

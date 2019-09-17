@@ -377,13 +377,19 @@
         
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+        @test rout.iter >= size(data)[1]
+        @test rout.nf >= 1
+        @test rout.nj >= 1
         
         rout = praff(model, gmodel!, data, 2)
 
-        fgood = rout.f
+        rgood = rout
         
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
+        @test rout.iter >= size(data)[1]
+        @test rout.nf >= 1
+        @test rout.nj >= 1
 
         # Multistart test
 
@@ -391,7 +397,10 @@
         
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
-        @test rout.f <= fgood
+        @test rout.f <= rgood.f
+        @test rout.iter >= 1.1 * rgood.iter
+        @test rout.nf >= 1.1 * rgood.nf
+        @test rout.nj >= 1.1 * rgood.nj
 
     end
 
