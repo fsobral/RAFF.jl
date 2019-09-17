@@ -50,17 +50,16 @@ function run_comparative_fitting()
 
             n, model, = RAFF.model_list[model_str]
 
-            # Define seed for this run
+            # Define seed for this run. The same seed for all instances.
             Random.seed!(large_number + 300)
 
-            data, = generate_noisy_data(model, n, np, p, sol, (1.0, 30.0))
+            data, = generate_noisy_data(model, n, np, p, sol, (1.0, 30.0), std=200.0)
 
             cla()
             
-            compare_fitting(1, data; model_str=model_str, MAXMS=100)
+            compare_fitting(1, data; model_str=model_str, MAXMS=200,
+                            outimage="/tmp/$(model_str)_$(n)_$(np).eps")
 
-            readline()
-    
         end
 
     end
@@ -99,7 +98,8 @@ end
 Run several tests from Scipy.optimize library for fitting data.
 
 """
-function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, kwargs...)
+function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
+                         kwargs...)
     
     n, modl, = RAFF.model_list[model_str]
 
@@ -121,7 +121,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, kw
     SEEDMS = 123456789
 
     # PyPlot configuration
-    PyPlot.rc("font", family="Arial")
+    PyPlot.rc("font", family="Helvetica")
 
     PyPlot.rc("font", size=10)
     
@@ -147,11 +147,12 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, kw
     
     @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", model_str, length(tmpv), count(tmpv .== 0.0))
     
-    # Run all fitting tests from Scipy
+    # Run all fitting tests from Scipy. Not using 'arctan', due to its
+    # terrible results.
     
     for (i, (loss, line)) in enumerate(zip(
-        ["linear", "soft_l1", "huber", "cauchy", "arctan"],
-        ["--", "-.", ":", "-", "--"]
+        ["linear", "soft_l1", "huber", "cauchy"],
+        ["--", "-.", ":", "-"]
     ))
     
         seedMS = MersenneTwister(SEEDMS)
