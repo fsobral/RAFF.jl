@@ -490,87 +490,15 @@ function raff(model::Function, gmodel!::Function,
 
     end
 
-    # Remove possible stationary points, i.e., points with lower
-    # values for 'p' and higher 'f'.
+    # Apply the filter and the voting strategy to all the solutions
+    # found
 
-    with_logger(raff_logger) do
-        
-        eliminate_local_min!(model, data, sols)
+    votsis = with_logger(raff_logger) do
 
-    end
-
-    # Voting strategy
-    
-    dvector = zeros(Int(lv * (lv - 1) / 2))
-    dmatrix = zeros(lv, lv)
-    pos = 0
-    n_conv = 0
-
-    for j = 1:lv
-
-        # Count how many have successfully converged
-        (sols[j].status == 1) && (n_conv += 1)
-        
-        for i = j + 1:lv
-
-            dmatrix[i, j] = Inf
-
-            if sols[i].status == 1 && sols[j].status == 1
-
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
-
-                pos += 1
-
-                dvector[pos] = dmatrix[i, j]
-
-            end
-
-        end
+        voting_strategy(model, data, sols, pliminf, plimsup)
 
     end
 
-    threshold = Inf
-
-    if pos > 0
-        
-        dvv = @view dvector[1:pos]
-        
-        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
-
-    elseif n_conv == 0
-
-        with_logger(raff_logger) do
-            
-            @warn("No convergence for any 'p'. Returning largest.")
-
-        end
-
-    end
-    
-    votsis = zeros(lv)
-    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
-
-    # Actual votation
-    
-    for j = 1:lv
-        # Count +1 if converged
-        (sols[j].status == 1) && (votsis[j] += 1)
-        # Check other distances
-        for i = j + 1:lv
-            if dmatrix[i, j] <=  threshold
-                votsis[j] += 1
-                votsis[i] += 1
-            end
-        end
-    end
-
-    with_logger(raff_logger) do
-
-        @debug("Voting vector:", votsis)
-        @debug("Distance matrix:", dmatrix)
-
-    end
-    
     mainind = findlast(x->x == maximum(votsis), votsis)
 
     s = sols[mainind]
@@ -810,79 +738,15 @@ function praff(model::Function, gmodel!::Function,
 
     end
 
-    # Voting strategy
+    # Apply the filter and the voting strategy to all the solutions
+    # found
 
-    dvector = zeros(Int(lv * (lv - 1) / 2))
-    dmatrix = zeros(lv, lv)
-    pos = 0
-    n_conv = 0
+    votsis = with_logger(raff_logger) do
 
-    for j = 1:lv
-
-        # Count how many have successfully converged
-        (sols[j].status == 1) && (n_conv += 1)
-
-        for i = j + 1:lv
-
-            dmatrix[i, j] = Inf
-
-            if sols[i].status == 1 && sols[j].status == 1
-
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
-
-                pos += 1
-
-                dvector[pos] = dmatrix[i, j]
-
-            end
-
-        end
+        voting_strategy(model, data, sols, pliminf, plimsup)
 
     end
 
-    threshold = Inf
-
-    if pos > 0
-
-        dvv = @view dvector[1:pos]
-
-        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
-
-    elseif n_conv == 0
-
-        with_logger(raff_logger) do
-            
-            @warn("No convergence for any 'p'. Returning largest.")
-
-        end
-
-    end
-    
-    votsis = zeros(lv)
-
-    with_logger(raff_logger) do;  @debug("Threshold: $(threshold)"); end
-
-    # Actual votation
-    
-    for j = 1:lv
-        # Count +1 if converged
-        (sols[j].status == 1) && (votsis[j] += 1)
-        # Check other distances
-        for i = j + 1:lv
-            if dmatrix[i, j] <=  threshold
-                votsis[j] += 1
-                votsis[i] += 1
-            end
-        end
-    end
-
-    with_logger(raff_logger) do
-
-        @debug("Voting vector:", votsis)
-        @debug("Distance matrix:", dmatrix)
-
-    end
-    
     mainind = findlast(x->x == maximum(votsis), votsis)
     
     s = sols[mainind]

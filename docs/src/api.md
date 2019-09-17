@@ -17,6 +17,7 @@ set_lm_output_level
 
 ## Auxiliary functions
 ```@docs
+RAFF.voting_strategy
 RAFF.eliminate_local_min!
 RAFF.sort_fun!
 RAFF.update_best
