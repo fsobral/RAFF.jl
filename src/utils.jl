@@ -14,7 +14,6 @@ distance matrix. The vector `sols` contains the solutions `s_p`, for
 `p = pliminf, ... plimsup`.
 
 """
-
 function voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,
                          plimsup::Int)
 
