@@ -2,6 +2,100 @@ export set_raff_output_level, set_lm_output_level
 
 """
 
+    voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,
+                    plimsup::Int)
+
+Utility function to compute the matrix representing the voting system
+used by RAFF.
+
+It first applies a filtering strategy, to eliminate obvious local
+minima, then it calculates a *magic threshold* and constructs the
+distance matrix. The vector `sols` contains the solutions `s_p`, for
+`p = pliminf, ... plimsup`.
+
+"""
+
+function voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,
+                         plimsup::Int)
+
+    # Remove possible stationary points, i.e., points with lower
+    # values for 'p' and higher 'f'.
+
+    eliminate_local_min!(model, data, sols)
+
+    # Voting strategy
+
+    lv = plimsup - pliminf + 1
+
+    dvector = zeros(Int(lv * (lv - 1) / 2))
+    dmatrix = zeros(lv, lv)
+    pos = 0
+    n_conv = 0
+
+    for j = 1:lv
+
+        # Count how many have successfully converged
+        (sols[j].status == 1) && (n_conv += 1)
+        
+        for i = j + 1:lv
+
+            dmatrix[i, j] = Inf
+
+            if sols[i].status == 1 && sols[j].status == 1
+
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
+
+                pos += 1
+
+                dvector[pos] = dmatrix[i, j]
+
+            end
+
+        end
+
+    end
+
+    threshold = Inf
+
+    if pos > 0
+
+        dvv = @view dvector[1:pos]
+
+        threshold = minimum(dvv) + mean(dvv) / (1.0 + sqrt(plimsup))
+
+    elseif n_conv == 0
+
+        @warn("No convergence for any 'p'. Returning largest.")
+
+    end
+
+    votsis = zeros(lv)
+
+    @debug("Threshold: $(threshold)");
+
+    # Actual votation
+
+    for j = 1:lv
+        # Count +1 if converged
+        (sols[j].status == 1) && (votsis[j] += 1)
+        # Check other distances
+        for i = j + 1:lv
+            if dmatrix[i, j] <=  threshold
+                votsis[j] += 1
+                votsis[i] += 1
+            end
+        end
+    end
+
+    @debug("Voting vector:", votsis)
+    @debug("Distance matrix:", dmatrix)
+
+    return votsis
+
+end
+
+"""
+
     check_ftrusted(ftrusted::Union{Float64, Tuple{Float64, Float64}}, np::Int)
 
 Utility function to check `ftrusted` parameter in [`raff`](@ref) and
