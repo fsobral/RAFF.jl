@@ -1,7 +1,7 @@
 name = "RAFF"
 uuid = "4aa82a78-ed18-41f9-aee6-9d73ba3a0b42"
 author = ["EV Castelani <evcastelani@uem.br>", "R Lopes <rlopes2@uem.br>", "WVI Shirabayashi <wvishirabayashi@uem.br>", "FNC Sobral <fncsobral@uem.br>"]
-version = "0.6.3"
+version = "0.6.4"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
