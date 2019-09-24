@@ -98,7 +98,7 @@ function calc_ratio( model_str::String, np::Int, p::Int,
 
     end
 
-    @printf(fp, "%10s %5d %5d %10.8f %10.8f %10.8f %10.8f %10.2f %5d %5d %5d %8.4f\n",
+    @printf(fp, "%10s %5d %5d %10.3f %10.3f %10.3f %10.3f %10.2f %5d %5d %5d %10.3f\n",
             model_str, np, p, n_match[np - p + 1] /
             (1.0 * ntests), n_exact / (1.0 * ntests), n_cout / ntests,
             n_fp / ntests, n_out / ntests, n_match[1], n_match[2],
