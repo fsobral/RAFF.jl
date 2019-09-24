@@ -42,7 +42,7 @@ function voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{
 
             if sols[i].status == 1 && sols[j].status == 1
 
-                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution, Inf)
+                dmatrix[i, j] = norm(sols[i].solution - sols[j].solution)
 
                 pos += 1
 
