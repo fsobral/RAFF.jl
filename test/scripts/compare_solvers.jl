@@ -20,12 +20,9 @@
 #     ENV["PYTHON"] = "/usr/bin/python3"
 #     ] add PyCall
 
-# In order to run Theia test, we need to call C++ libraries, so it is
-# necessary to install Theia.
-#
-# - Install Ceres
-# - Add FindCeres.cmake and others
-# - Install a lot of libraries
+# In order to run Theia test, we have developed a C++ program that
+# runs RANSAC together with CERES solver from Google. The code and
+# more details are available in `../theia` directory.
 
 using DelimitedFiles
 using PyCall
@@ -42,6 +39,9 @@ function run_comparative_fitting()
 
     large_number = 179424673
 
+    # First call. Just compilation.
+    compare_fitting(1, [1.0 1.0 0.0; 2.0 2.0 0.0])
+
     for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
                               ("expon", [5000.0, 4000.0, 0.2]),
                               ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
@@ -53,12 +53,12 @@ function run_comparative_fitting()
             # Define seed for this run. The same seed for all instances.
             Random.seed!(large_number + 300)
 
-            data, = generate_noisy_data(model, n, np, p, sol, (1.0, 30.0), std=200.0)
+            data, = generate_noisy_data(model, n, np, p; θSol=sol, x_interval=(1.0, 30.0), std=100.0)
 
             cla()
             
             compare_fitting(1, data; model_str=model_str, MAXMS=200,
-                            outimage="/tmp/$(model_str)_$(n)_$(np).eps")
+                            outimage="/tmp/$(model_str)_$(np)_$(p).png")
 
         end
 
@@ -159,12 +159,15 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
 
         fbest = Inf
         sbest = Nothing
+        nfev  = 0
         
         tm = @elapsed for i = 1:MAXMS
 
             initguess = randn(seedMS, Float64, n)
 
             sol = optimize.least_squares(f, initguess, loss=loss)
+
+            nfev += sol["nfev"]
 
             if sol["cost"] < fbest
 
@@ -183,7 +186,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
 
         fmeas = ls_measure(modl2, N, data)
                            
-        @printf("  & %10s & %10.3e & %8.4f & %6d & ", loss, fmeas, tm, sbest["nfev"])
+        @printf("  & %10s & %10.3e & %8.4f & %8d & ", loss, fmeas, tm, nfev)
         
         for j = 1:n
 
@@ -198,6 +201,39 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
 
     end
 
+    # Run Theia
+
+    fname = "/tmp/" * Random.randstring(10) * ".txt"
+
+    run(pipeline(`../theia/ransac $(model_str) 2000 -ft 0.4 -mle`, fname))
+
+    theia = DelimitedFiles.readdlm(fname)
+
+    tt = minimum(data[:, 1]):1:maximum(data[:, 1])
+
+    tm, = size(theia)
+
+    for i = 1:tm
+
+        modl2 = (x) -> modl(x, theia[i, end - n + 1:end])
+
+        fmeas = ls_measure(modl2, N, data)
+
+        @printf("  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
+
+        for j = 1:n
+
+            @printf("\$%15.5f\$, ", theia[i, end - n + j])
+
+        end
+
+        @printf(" \\\\\n")
+
+        PyPlot.plot(tt, modl2.(tt), color=PyPlot.cm."Set1"((5 + i)/9.0),
+                    linestyle="-", marker=i, label=theia[i, 1])
+
+    end
+
     # Run RAFF
     
     initguess = zeros(Float64, n)
@@ -209,7 +245,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
 
     fmeas = ls_measure(modl2, N, data)
                            
-    @printf("  & %10s & %10.3e & %8.4f & %6d & ", "RAFF.jl", fmeas, tm, rsol.nf)
+    @printf("  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
         
     for j = 1:n
 
@@ -226,7 +262,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
 
     PyPlot.show()
 
-    PyPlot.savefig("/tmp/comp_scipy.eps", DPI=600, bbox_inches="tight")
+    PyPlot.savefig(outimage, DPI=600, bbox_inches="tight")
 
     PyPlot.savefig("/tmp/scipy.png", DPI=150)
     
