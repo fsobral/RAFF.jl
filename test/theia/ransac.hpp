@@ -34,7 +34,9 @@ class LineEstimator: public theia::Estimator<Point, Line> {
 
 public:
 
-   LineEstimator(){};
+  LineEstimator(){};
+
+  LineEstimator(int ssize_);
 
   ~LineEstimator(){};
   
@@ -47,6 +49,10 @@ public:
 
   // Calculate the error as the y distance of the point to the line.
   double Error(const Point& point, const Line& line) const override;
+
+  private:
+
+  int ssize;
 
 };
 
@@ -79,7 +85,9 @@ class ExponentialEstimator: public theia::Estimator<Point, Exponential> {
 
 public:
 
-   ExponentialEstimator(){};
+  ExponentialEstimator(){};
+
+  ExponentialEstimator(int ssize_);
 
   ~ExponentialEstimator(){};
   
@@ -92,6 +100,10 @@ public:
 
   // Calculate the error as the y distance of the point to the line.
   double Error(const Point& point, const Exponential& line) const override;
+
+  private:
+
+  int ssize;
 
 };
 

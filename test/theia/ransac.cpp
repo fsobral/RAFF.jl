@@ -22,11 +22,13 @@ using ceres::SoftLOneLoss;
 /* Implementation of the line estimator. */
 
 std::ostream & operator<<(std::ostream & Str, Line const & v) { 
-  Str << std::setw(25) << v.a << "," << std::setw(25) << v.b;
+  Str << std::setw(25) << v.a << " " << std::setw(25) << v.b;
   return Str;
 }
 
-double LineEstimator::SampleSize() const { return 5; }
+LineEstimator::LineEstimator(int ssize_) {ssize = ssize_;}
+
+double LineEstimator::SampleSize() const { return ssize; }
 
 bool LineEstimator::EstimateModel(const std::vector<Point>& data,
                      std::vector<Line>* models) const {
@@ -77,11 +79,13 @@ double LineEstimator::Error(const Point& point, const Line& line) const {
 /* ******************************************** */
 
 std::ostream & operator<<(std::ostream & Str, Exponential const & v) { 
-  Str << std::setw(25) << v.a << "," << std::setw(25) << v.b << "," << std::setw(25) << v.c;
+  Str << std::setw(25) << v.a << " " << std::setw(25) << v.b << " " << std::setw(25) << v.c;
   return Str;
 }
 
-double ExponentialEstimator::SampleSize() const { return 5; }
+ExponentialEstimator::ExponentialEstimator(int ssize_) {ssize = ssize_;}
+
+double ExponentialEstimator::SampleSize() const { return ssize; }
 
 bool ExponentialEstimator::EstimateModel(const std::vector<Point>& data,
                      std::vector<Exponential>* models) const {
@@ -132,11 +136,11 @@ double ExponentialEstimator::Error(const Point& point, const Exponential& p) con
 /* *************************************** */
 
 std::ostream & operator<<(std::ostream & Str, Circle const & v) { 
-  Str << std::setw(25) << v.x << "," << std::setw(25) << v.y << "," << std::setw(25) << v.r;
+  Str << std::setw(25) << v.x << " " << std::setw(25) << v.y << " " << std::setw(25) << v.r;
   return Str;
 }
 
-double CircleEstimator::SampleSize() const { return 5; }
+double CircleEstimator::SampleSize() const { return ssize; }
 
 bool CircleEstimator::EstimateModel(const std::vector<Point>& data,
                      std::vector<Circle>* models) const {
@@ -186,13 +190,40 @@ double CircleEstimator::Error(const Point& point, const Circle& p) const {
   return point.y - (std::pow(point.x[0] - p.x, 2) + std::pow(point.x[1] - p.y, 2) - p.r * p.r);
 }
 
+/*
+  Compute the quality measure.
+*/
+
+template <class T, class M>
+double ls_measure(T estimator, M solution, std::vector<Point> input_data,
+		  std::vector<bool> outliers){
+
+  double sr = 0.0;
+  double err;
+
+  for (int i = 0; i < outliers.size(); i++) {
+
+    if (!outliers[i]) {
+
+      err = estimator.Error(input_data[i], solution);
+
+      sr += err * err;
+
+    }
+
+  }
+
+  return sr;
+  
+}
+
 /* Caller */
 
 template <class T, class M>
-void run_ransac() {
-  // Generate your input data using your desired method.
-  // We put pseudo-code here for simplicity.
+void run_ransac(double error_thres, double min_inlier_ratio, double use_mle, double ftrusted) {
+
   std::vector<Point> input_data;
+  std::vector<bool> outliers;
 
   double y, z;
   int N;
@@ -215,6 +246,8 @@ void run_ransac() {
     Point point = {x, y};
     
     input_data.push_back(point);
+
+    outliers.push_back((z < 1.0));
     
     //std::cout << x[0] << ' ' << y << std::endl;
 
@@ -222,14 +255,14 @@ void run_ransac() {
 
   file.close();
 
-  T estimator;
+  T estimator(std::max(2, (int) (ftrusted * input_data.size())));
   M best_model;
 
   // Set the ransac parameters.
   theia::RansacParameters params;
-  params.error_thresh = 0.1;
-  params.use_mle = true;
-  params.min_inlier_ratio = 0.5;
+  params.error_thresh = error_thres;
+  params.use_mle = use_mle;
+  params.min_inlier_ratio = min_inlier_ratio;
 
   // Create Ransac object, specifying the number of points to sample to
   // generate a model estimation.
@@ -245,33 +278,36 @@ void run_ransac() {
 
   tend = std::clock();
   
-  std::cout.unsetf(std::ios::fixed);
-  std::cout.setf(std::ios::scientific);
-  std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "RANSAC:" << best_model << " & ";
-  std::cout.unsetf(std::ios::scientific);
-  std::cout.setf(std::ios::fixed);  
-  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
-
-  // Create Prosac object
-
-  tini = std::clock();
-  
-  theia::Prosac<T> prosac_estimator(params, estimator);
-  // Initialize must always be called!
-  prosac_estimator.Initialize();
-
-  prosac_estimator.Estimate(input_data, &best_model, &summary);
-
-  tend = std::clock();
-
-  std::cout.unsetf(std::ios::fixed);
-  std::cout.setf(std::ios::scientific);
-  std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "PROSAC:" << best_model << " & ";
   std::cout.unsetf(std::ios::scientific);
   std::cout.setf(std::ios::fixed);
-  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
+  std::cout << std::setw(10) << "RANSAC";
+  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
+  std::cout.unsetf(std::ios::fixed);
+  std::cout.setf(std::ios::scientific);
+  std::cout << std::setw(20) << std::setprecision(15);
+  std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
+  std::cout << best_model << std::endl;
+
+  // // Create Prosac object
+  // // This estimator assumes that the data is sorted by quality.
+
+  // tini = std::clock();
+  
+  // theia::Prosac<T> prosac_estimator(params, estimator);
+  // // Initialize must always be called!
+  // prosac_estimator.Initialize();
+
+  // prosac_estimator.Estimate(input_data, &best_model, &summary);
+
+  // tend = std::clock();
+
+  // std::cout.unsetf(std::ios::fixed);
+  // std::cout.setf(std::ios::scientific);
+  // std::cout << std::setprecision(15);
+  // std::cout << std::setw(10) << "PROSAC:" << best_model << " & ";
+  // std::cout.unsetf(std::ios::scientific);
+  // std::cout.setf(std::ios::fixed);
+  // std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
   
   // Create LMed object
 
@@ -285,44 +321,61 @@ void run_ransac() {
 
   tend = std::clock();
 
-  std::cout.unsetf(std::ios::fixed);
-  std::cout.setf(std::ios::scientific);
-  std::cout << std::setprecision(15);
-  std::cout << std::setw(10) << "LMED:" << best_model << " & ";
   std::cout.unsetf(std::ios::scientific);
   std::cout.setf(std::ios::fixed);
-  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << std::endl;
-
-  // // Create Ceres object
-
-  // Problem problem;
-
-  // T c_estimator(input_data.size());
-
-  // std::vector<M> output;
-  
-  // c_estimator.EstimateModel(input_data, output);
-
-  // std::cout.setf(std::ios::scientific);
-  // std::cout << std::setprecision(15);
-  // std::cout << std::setw(10) << "L1:" << output[0] << std::endl;
+  std::cout << std::setw(10) << "LMED";
+  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
+  std::cout.unsetf(std::ios::fixed);
+  std::cout.setf(std::ios::scientific);
+  std::cout << std::setw(20) << std::setprecision(15);
+  std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
+  std::cout << best_model << std::endl;
 
 }
 
 int main(int argc, char** argv) {
 
-  if (argc == 1) run_ransac<LineEstimator, Line>();
-  else {
+  double error_thres;
+  double min_inlier_ratio = 0.0;
+  bool use_mle = false;
+  double ftrusted = 0.5;
 
-    std::string s(argv[1]);
-    
-    if (s == "linear") run_ransac<LineEstimator, Line>();
-    else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>();
-    else if (s == "circle") run_ransac<CircleEstimator, Circle>();
-    else std::cout << "Unknown model." << std::endl;
+  if (argc < 3) {
+
+    std::cout << "Call: " << argv[0] << " model model err_thres [-mir mir] [-mle] [-ft ft]" << std::endl;
+
+    return 1;
+
+  }
+
+  std::string s = std::string(argv[1]);
+  error_thres = std::stod(argv[2]);
+  
+  int i = 3;
+
+  while (i < argc)  {
+
+    std::string tmp = std::string(argv[i]);
+
+    if (tmp == "-mir") min_inlier_ratio = std::stod(argv[++i]);
+    else if (tmp == "-mle") use_mle = true;
+    else if (tmp == "-ft") ftrusted = std::stod(argv[++i]);
+    else {
+
+      std::cout << "Call: " << argv[0] << " err_thres [-mir mir] [-mle]" << std::endl;
+      return 1;
+
+    }
+
+    i += 1;
 
   }
   
+  if (s == "linear") run_ransac<LineEstimator, Line>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "circle") run_ransac<CircleEstimator, Circle>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else std::cout << "Unknown model." << std::endl;
+
   return 0;
 
 }
