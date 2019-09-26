@@ -95,3 +95,55 @@ function draw_problem(datafile::String="/tmp/output.txt"; kwargs...)
     draw_problem(M; kwargs...)
     
 end
+
+function draw_comparison(M::Array{Float64, 2}, model_str, algorithms...)
+
+    x = M[:, 1]
+    y = M[:, 2]
+    co = M[:, 3]
+
+    true_outliers = findall(co .!= 0.0)
+
+    PyPlot.scatter(x[co .== 0.0], y[co .== 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="o", s=50.0, linewidths=0.2)
+
+    PyPlot.scatter(x[co .!= 0.0], y[co .!= 0.0], color=PyPlot.cm."Pastel1"(2.0/9.0),
+                   marker="^", s=50.0, linewidths=0.2, label="Outliers")
+
+
+    t = minimum(x):0.01:maximum(x)
+
+    n, model, modelstr = RAFF.model_list[model_str]
+
+    for (i, alg) in enumerate(algorithms)
+
+        name, line, sol = alg
+        
+        modl1 = (x) -> model(x, sol)
+
+        PyPlot.plot(t, modl1.(t), color=PyPlot.cm."Set1"(i/9.0),
+                    linestyle=line, label=name)
+
+        PyPlot.legend(loc="best")
+
+        PyPlot.show()
+
+        # PyPlot.savefig(outimage, DPI=600, bbox_inches="tight")
+
+    end
+
+end
+
+function draw_comparison(model_str::String, algorithms...)
+
+    fp = open("/tmp/output.txt", "r")
+
+    N = parse(Int, readline(fp))
+
+    M = readdlm(fp)
+
+    close(fp)
+
+    draw_comparison(M, model_str, algorithms...)
+    
+end
