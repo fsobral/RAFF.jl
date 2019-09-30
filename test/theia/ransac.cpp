@@ -19,7 +19,9 @@ using ceres::Solver;
 using ceres::Solve;
 using ceres::SoftLOneLoss;
 
+/* ************************************* */
 /* Implementation of the line estimator. */
+/* ************************************* */
 
 std::ostream & operator<<(std::ostream & Str, Line const & v) { 
   Str << std::setw(25) << v.a << " " << std::setw(25) << v.b;
@@ -72,6 +74,66 @@ bool LineEstimator::EstimateModel(const std::vector<Point>& data,
 
 double LineEstimator::Error(const Point& point, const Line& line) const {
   return point.y - (line.a * point.x[0] + line.b);
+}
+
+/* ************************************** */
+/* Implementation of the cubic estimator. */
+/* ************************************** */
+
+std::ostream & operator<<(std::ostream & Str, Cubic const & v) { 
+  Str << std::setw(25) << v.a << " " << std::setw(25) << v.b << " " <<
+    std::setw(25) << v.c << " " << std::setw(25) << v.d;
+  return Str;
+}
+
+CubicEstimator::CubicEstimator(int ssize_) {ssize = ssize_;}
+
+double CubicEstimator::SampleSize() const { return ssize; }
+
+bool CubicEstimator::EstimateModel(const std::vector<Point>& data,
+                     std::vector<Cubic>* models) const {
+
+  Problem problem;
+
+  Cubic model;
+
+  double p[] = {0.0, 0.0, 0.0, 0.0};
+
+  // Use ceres to solve LS problems
+  
+  for (int i = 0; i < this->SampleSize(); ++i) {
+
+    problem.AddResidualBlock(
+        new AutoDiffCostFunction<CubicResidual, 1, 4>(
+            new CubicResidual(data[i].x[0], data[i].y)),
+        new SoftLOneLoss(0.5),
+        p);
+
+  }
+
+  Solver::Options options;
+  options.max_num_iterations = 25;
+  options.linear_solver_type = ceres::DENSE_QR;
+  options.minimizer_progress_to_stdout = false;
+
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+
+  // Add the results to Theia
+
+  model.a = p[0];
+  model.b = p[1];
+  model.c = p[2];
+  model.d = p[3];
+
+  models->push_back(model);
+  
+  return true;
+}
+
+double CubicEstimator::Error(const Point& point, const Cubic& p) const {
+  double px = point.x[0];
+  return point.y - (p.a * std::pow(px, 3) + p.b * std::pow(px, 2) + p.c * px + p.d);
 }
 
 /* ******************************************** */
@@ -129,6 +191,65 @@ bool ExponentialEstimator::EstimateModel(const std::vector<Point>& data,
 
 double ExponentialEstimator::Error(const Point& point, const Exponential& p) const {
   return point.y - (p.a + p.b * std::exp(- p.c * point.x[0]));
+}
+
+/* ***************************************** */
+/* Implementation of the logistic estimator. */
+/* ***************************************** */
+
+std::ostream & operator<<(std::ostream & Str, Logistic const & v) { 
+  Str << std::setw(25) << v.a << " " << std::setw(25) << v.b << " " <<
+    std::setw(25) << v.c << " " << std::setw(25) << v.d;
+  return Str;
+}
+
+LogisticEstimator::LogisticEstimator(int ssize_) {ssize = ssize_;}
+
+double LogisticEstimator::SampleSize() const { return ssize; }
+
+bool LogisticEstimator::EstimateModel(const std::vector<Point>& data,
+                     std::vector<Logistic>* models) const {
+
+  Problem problem;
+
+  Logistic model;
+
+  double p[] = {0.0, 0.0, 0.0, 0.0};
+
+  // Use ceres to solve LS problems
+  
+  for (int i = 0; i < this->SampleSize(); ++i) {
+
+    problem.AddResidualBlock(
+        new AutoDiffCostFunction<LogisticResidual, 1, 4>(
+            new LogisticResidual(data[i].x[0], data[i].y)),
+        new SoftLOneLoss(0.5),
+        p);
+
+  }
+
+  Solver::Options options;
+  options.max_num_iterations = 25;
+  options.linear_solver_type = ceres::DENSE_QR;
+  options.minimizer_progress_to_stdout = false;
+
+  Solver::Summary summary;
+  Solve(options, &problem, &summary);
+
+  // Add the results to Theia
+
+  model.a = p[0];
+  model.b = p[1];
+  model.c = p[2];
+  model.d = p[3];
+
+  models->push_back(model);
+  
+  return true;
+}
+
+double LogisticEstimator::Error(const Point& point, const Logistic& p) const {
+  return point.y - (p.a + p.b / (1.0 + std::exp(- p.c * point.x[0] + p.d)));
 }
 
 /* *************************************** */
@@ -342,7 +463,7 @@ int main(int argc, char** argv) {
 
   if (argc < 3) {
 
-    std::cout << "Call: " << argv[0] << " model model err_thres [-mir mir] [-mle] [-ft ft]" << std::endl;
+    std::cout << "Call: " << argv[0] << " model err_thres [-mir mir] [-mle] [-ft ft]" << std::endl;
 
     return 1;
 
@@ -372,7 +493,9 @@ int main(int argc, char** argv) {
   }
   
   if (s == "linear") run_ransac<LineEstimator, Line>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "cubic") run_ransac<CubicEstimator, Cubic>(error_thres, min_inlier_ratio, use_mle, ftrusted);
   else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "logistic") run_ransac<LogisticEstimator, Logistic>(error_thres, min_inlier_ratio, use_mle, ftrusted);
   else if (s == "circle") run_ransac<CircleEstimator, Circle>(error_thres, min_inlier_ratio, use_mle, ftrusted);
   else std::cout << "Unknown model." << std::endl;
 
