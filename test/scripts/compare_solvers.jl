@@ -98,24 +98,26 @@ end
 Run several tests from Scipy.optimize library for fitting data.
 
 """
-function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
+function compare_fitting(;kwargs...)
+
+    open("/tmp/output.txt") do fp
+        
+        N = parse(Int, readline(fp))
+        
+        data = readdlm(fp)
+        
+    end
+
+    compare_fitting(N, data; kwargs...)
+
+end
+
+function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
                          kwargs...)
-    
+
     n, modl, = RAFF.model_list[model_str]
 
     optimize = pyimport("scipy.optimize")
-
-    if (N == Nothing) || (data == Nothing)
-
-        open("/tmp/output.txt") do fp
-        
-            N = parse(Int, readline(fp))
-        
-            data = readdlm(fp)
-        
-        end
-
-    end
 
     # SEEDMS is an argument for RAFF, the seed for multi-start strategy
     SEEDMS = 123456789
@@ -124,7 +126,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
     PyPlot.rc("font", family="Helvetica")
 
     PyPlot.rc("font", size=10)
-    
+
     # Create objective function for Python calls
     f = let
 
@@ -144,12 +146,12 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
     t = minimum(data[:, 1]):0.01:maximum(data[:, 1])
 
     tmpv = @view(data[:, 3])
-    
+
     @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", model_str, length(tmpv), count(tmpv .== 0.0))
-    
+
     # Run all fitting tests from Scipy. Not using 'arctan', due to its
     # terrible results.
-    
+
     for (i, (loss, line)) in enumerate(zip(
         ["linear", "soft_l1", "huber", "cauchy"],
         ["--", "-.", ":", "-"]
@@ -160,7 +162,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
         fbest = Inf
         sbest = Nothing
         nfev  = 0
-        
+
         tm = @elapsed for i = 1:MAXMS
 
             initguess = randn(seedMS, Float64, n)
@@ -175,7 +177,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
                 sbest = sol
 
             end
-            
+
         end
 
         # This is a tentative of comparing different algorithms.  We
@@ -185,7 +187,7 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
         modl2 = (x) -> modl(x, sbest["x"])
 
         fmeas = ls_measure(modl2, N, data)
-                           
+
         @printf("  & %10s & %10.3e & %8.4f & %8d & ", loss, fmeas, tm, nfev)
         
         for j = 1:n
@@ -244,9 +246,9 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
     modl2 = (x) -> modl(x, rsol.solution)
 
     fmeas = ls_measure(modl2, N, data)
-                           
+
     @printf("  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
-        
+
     for j = 1:n
 
         @printf("\$%15.5f\$, ", rsol.solution[j])
@@ -268,7 +270,8 @@ function compare_fitting(N=Nothing, data=Nothing;model_str="linear", MAXMS=1, ou
     
 end
 
-function compare_circle_fitting(;kwargs...)
+function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
+                                kwargs...)
     
     n, modl, = RAFF.model_list["circle"]
 
@@ -281,6 +284,14 @@ function compare_circle_fitting(;kwargs...)
         global data = readdlm(fp)
         
     end
+
+    # SEEDMS is an argument for RAFF, the seed for multi-start strategy
+    SEEDMS = 123456789
+
+    # PyPlot configuration
+    PyPlot.rc("font", family="Helvetica")
+
+    PyPlot.rc("font", size=10)
 
     f = let
 
@@ -300,26 +311,102 @@ function compare_circle_fitting(;kwargs...)
     ptx = (α, ρ, d) -> ρ * cos(α) + d[1]
     pty = (α, ρ, d) -> ρ * sin(α) + d[2]    
 
-    # Run all fitting tests from Scipy
+    tmpv = @view(data[:, 3])
+
+    @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", "circle", length(tmpv), count(tmpv .== 0.0))
+
+    # Run all fitting tests from Scipy. Not using 'arctan', due to its
+    # terrible results.
     
     for (i, (loss, line)) in enumerate(zip(
-        ["linear", "soft_l1", "huber", "cauchy", "arctan"],
-        ["--", "-.", ":", "-", "--"]
+        ["linear", "soft_l1", "huber", "cauchy"],
+        ["--", "-.", ":", "-"]
     ))
     
         initguess = ones(Float64, n)
 
-        sol, tm, = @timed optimize.least_squares(f, initguess, loss=loss)
+        seedMS = MersenneTwister(SEEDMS)
 
-        println("$(loss) -> $(tm)")
-
-        fSol = sol["x"]
+        fbest = Inf
+        sbest = Nothing
+        nfev  = 0
         
-        modl1x = (α) -> ptx(α, fSol[3], fSol[1:2])
-        modl1y = (α) -> pty(α, fSol[3], fSol[1:2])
+        tm = @elapsed for i = 1:MAXMS
+
+            initguess = randn(seedMS, Float64, n)
+
+            sol = optimize.least_squares(f, initguess, loss=loss)
+
+            nfev += sol["nfev"]
+
+            if sol["cost"] < fbest
+
+                fbest = sol["cost"]
+                sbest = sol
+
+            end
+
+        end
+
+        # This is a tentative of comparing different algorithms.  We
+        # compute the sum of the squared differences only for
+        # NON-outliers.
+
+        modl2 = (x) -> modl(x, sbest["x"])
+
+        fmeas = ls_measure(modl2, N, data)
+
+        @printf("  & %10s & %10.3e & %8.4f & %8d & ", loss, fmeas, tm, nfev)
+
+        for j = 1:n
+
+            @printf("\$%15.5f\$, ", sbest["x"][j])
+
+        end
+
+        @printf(" \\\\\n")
+
+        modl1x = (α) -> ptx(α, sbest["x"][3], sbest["x"][1:2])
+        modl1y = (α) -> pty(α, sbest["x"][3], sbest["x"][1:2])
 
         PyPlot.plot(modl1x.(t), modl1y.(t), color=PyPlot.cm."Set1"(i/9.0),
                     linestyle=line, label=loss)
+
+    end
+
+    # Run Theia
+
+    fname = "/tmp/" * Random.randstring(10) * ".txt"
+
+    run(pipeline(`../theia/ransac circle 2000 -ft 0.1 -mle`, fname))
+
+    theia = DelimitedFiles.readdlm(fname)
+
+    tt = 0:0.2:2.1 * π
+
+    tm, = size(theia)
+
+    for i = 1:tm
+
+        modl2 = (x) -> modl(x, theia[i, end - n + 1:end])
+
+        fmeas = ls_measure(modl2, N, data)
+
+        @printf("  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
+
+        for j = 1:n
+
+            @printf("\$%15.5f\$, ", theia[i, end - n + j])
+
+        end
+
+        @printf(" \\\\\n")
+
+        modl1x = (α) -> ptx(α, theia[i, end], theia[i, end - 2:end - 1])
+        modl1y = (α) -> pty(α, theia[i, end], theia[i, end - 2:end - 1])
+
+        PyPlot.plot(modl1x.(tt), modl1y.(tt), color=PyPlot.cm."Set1"((5 + i)/9.0),
+                    linestyle="-", marker=i, label=theia[i, 1])
 
     end
 
@@ -329,11 +416,22 @@ function compare_circle_fitting(;kwargs...)
 
     rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
 
-    println("RAFF -> $(tm)")
-    println(rsol)
-    
     fSol = rsol.solution
         
+    modl2 = (x) -> modl(x, rsol.solution)
+
+    fmeas = ls_measure(modl2, N, data)
+                           
+    @printf("  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
+        
+    for j = 1:n
+
+        @printf("\$%15.5f\$, ", fSol[j])
+
+    end
+
+    @printf(" \\\\\n")
+    
     modl1x = (α) -> ptx(α, fSol[3], fSol[1:2])
     modl1y = (α) -> pty(α, fSol[3], fSol[1:2])
 
@@ -344,4 +442,8 @@ function compare_circle_fitting(;kwargs...)
 
     PyPlot.show()
 
+    PyPlot.savefig(outimage, DPI=600, bbox_inches="tight")
+
+    PyPlot.savefig("/tmp/scipy.png", DPI=150)
+    
 end
