@@ -341,7 +341,8 @@ double ls_measure(T estimator, M solution, std::vector<Point> input_data,
 /* Caller */
 
 template <class T, class M>
-void run_ransac(double error_thres, double min_inlier_ratio, double use_mle, double ftrusted) {
+void run_ransac(std::string filename, double error_thres, double min_inlier_ratio,
+		double use_mle, double ftrusted) {
 
   std::vector<Point> input_data;
   std::vector<bool> outliers;
@@ -352,7 +353,7 @@ void run_ransac(double error_thres, double min_inlier_ratio, double use_mle, dou
   std::clock_t tini, tend;
   
   // Add data
-  std::ifstream file("/tmp/output.txt");
+  std::ifstream file(filename);
 
   // Get dimension of x
   file >> N;
@@ -458,12 +459,13 @@ int main(int argc, char** argv) {
 
   double error_thres;
   double min_inlier_ratio = 0.0;
-  bool use_mle = false;
+  bool use_mle = true;
   double ftrusted = 0.5;
+  std::string filename = std::string("/tmp/output.txt");
 
   if (argc < 3) {
 
-    std::cout << "Call: " << argv[0] << " model err_thres [-mir mir] [-mle] [-ft ft]" << std::endl;
+    std::cout << "Call: " << argv[0] << " model err_thres [-mir mir] [-nomle] [-ft ft] -f filename" << std::endl;
 
     return 1;
 
@@ -479,8 +481,9 @@ int main(int argc, char** argv) {
     std::string tmp = std::string(argv[i]);
 
     if (tmp == "-mir") min_inlier_ratio = std::stod(argv[++i]);
-    else if (tmp == "-mle") use_mle = true;
+    else if (tmp == "-nomle") use_mle = false;
     else if (tmp == "-ft") ftrusted = std::stod(argv[++i]);
+    else if (tmp == "-f") filename = std::string(argv[++i]);
     else {
 
       std::cout << "Call: " << argv[0] << " err_thres [-mir mir] [-mle]" << std::endl;
@@ -492,11 +495,11 @@ int main(int argc, char** argv) {
 
   }
   
-  if (s == "linear") run_ransac<LineEstimator, Line>(error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "cubic") run_ransac<CubicEstimator, Cubic>(error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "logistic") run_ransac<LogisticEstimator, Logistic>(error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "circle") run_ransac<CircleEstimator, Circle>(error_thres, min_inlier_ratio, use_mle, ftrusted);
+  if (s == "linear") run_ransac<LineEstimator, Line>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "cubic") run_ransac<CubicEstimator, Cubic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "logistic") run_ransac<LogisticEstimator, Logistic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
+  else if (s == "circle") run_ransac<CircleEstimator, Circle>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
   else std::cout << "Unknown model." << std::endl;
 
   return 0;
