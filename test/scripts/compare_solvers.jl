@@ -30,6 +30,7 @@ using PyPlot
 using RAFF
 using Printf
 using Random
+using Base.GC
 
 # Load libraries for drawing solutions
 include("draw.jl")
@@ -48,17 +49,43 @@ function run_comparative_fitting()
 
         for (np, p) in [(10, 9), (10, 8), (100, 99), (100, 90)]
 
-            n, model, = RAFF.model_list[model_str]
+            n, model, mstr = RAFF.model_list[model_str]
 
             # Define seed for this run. The same seed for all instances.
             Random.seed!(large_number + 300)
 
-            data, = generate_noisy_data(model, n, np, p; θSol=sol, x_interval=(1.0, 30.0), std=100.0)
+            generate_test_problems("/tmp/output.txt", "/tmp/sol.txt", model, mstr, n, np, p;
+                                   θSol=sol, x_interval=(1.0, 30.0), std=100.0)
 
             cla()
             
-            compare_fitting(1, data; model_str=model_str, MAXMS=200,
+            compare_fitting(model_str=model_str, MAXMS=100,
                             outimage="/tmp/$(model_str)_$(np)_$(p).png")
+
+        end
+
+    end
+
+    # Run cluster tests
+
+    for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
+                              ("expon", [5000.0, 4000.0, 0.2]),
+                              ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
+
+        for (np, p) in [(10, 9), (10, 8), (100, 99), (100, 90)]
+
+            n, model, mstr = RAFF.model_list[model_str]
+
+            # Define seed for this run. The same seed for all instances.
+            Random.seed!(large_number + 300)
+
+            generate_test_problems("/tmp/output.txt", "/tmp/sol.txt", model, mstr, n, np, p,
+                                   (1.0, 30.0), (5.0, 10.0); θSol=sol, std=100.0)
+
+            cla()
+            
+            compare_fitting(model_str=model_str, MAXMS=100,
+                            outimage="/tmp/$(model_str)_$(np)_$(p)_cluster.png")
 
         end
 
@@ -98,22 +125,35 @@ end
 Run several tests from Scipy.optimize library for fitting data.
 
 """
-function compare_fitting(;kwargs...)
+function compare_fitting(N, data; kwargs...)
 
-    open("/tmp/output.txt") do fp
+    open("/tmp/output.txt", "w") do fp
+
+        @printf(fp, "%d\n", N)
+
+        l, c = size(data)
         
-        N = parse(Int, readline(fp))
-        
-        data = readdlm(fp)
+        for i = 1:l
+
+            for j = 1:c
+
+                @printf(fp, "%f ", data[i, j])
+
+            end
+
+            @printf(fp, "\n")
+
+        end
         
     end
 
-    compare_fitting(N, data; kwargs...)
+    compare_fitting(kwargs...)
 
 end
 
-function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
-                         kwargs...)
+
+function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
+                         theia_str_args="2000 -ft 0.4", kwargs...)
 
     n, modl, = RAFF.model_list[model_str]
 
@@ -126,6 +166,19 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
     PyPlot.rc("font", family="Helvetica")
 
     PyPlot.rc("font", size=10)
+
+    # Open file
+    data = Array{Float64, 2}(undef, 0, 0)
+    
+    N = 1
+    
+    open(filename) do fp
+        
+        N = parse(Int, readline(fp))
+        
+        data = readdlm(fp)
+        
+    end
 
     # Create objective function for Python calls
     f = let
@@ -147,7 +200,12 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
 
     tmpv = @view(data[:, 3])
 
-    @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", model_str, length(tmpv), count(tmpv .== 0.0))
+    open("table.txt", "a") do fp
+
+        @printf(fp, "\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n",
+                model_str, length(tmpv), count(tmpv .== 0.0))
+
+    end
 
     # Run all fitting tests from Scipy. Not using 'arctan', due to its
     # terrible results.
@@ -163,6 +221,9 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
         sbest = Nothing
         nfev  = 0
 
+        # Eliminate effects of garbage collector
+        GC.gc()
+        
         tm = @elapsed for i = 1:MAXMS
 
             initguess = randn(seedMS, Float64, n)
@@ -188,15 +249,19 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
 
         fmeas = ls_measure(modl2, N, data)
 
-        @printf("  & %10s & %10.3e & %8.4f & %8d & ", loss, fmeas, tm, nfev)
-        
-        for j = 1:n
+        open("table.txt", "a") do fp
 
-            @printf("\$%15.5f\$, ", sbest["x"][j])
+            @printf(fp, "  & %10s & %10.3e & %8.4f & %8d & ", loss, fmeas, tm, nfev)
+
+            for j = 1:n
+
+                @printf(fp, "\$%15.5f\$, ", sbest["x"][j])
+
+            end
+
+            @printf(fp, " \\\\\n")
 
         end
-
-        @printf(" \\\\\n")
 
         PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(i/9.0),
                     linestyle=line, label=loss)
@@ -207,7 +272,7 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
 
     fname = "/tmp/" * Random.randstring(10) * ".txt"
 
-    run(pipeline(`../theia/ransac $(model_str) 2000 -ft 0.4 -mle`, fname))
+    run(pipeline(`../theia/ransac $(model_str) $(theia_str_args) -f $filename`, fname))
 
     theia = DelimitedFiles.readdlm(fname)
 
@@ -221,18 +286,22 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
 
         fmeas = ls_measure(modl2, N, data)
 
-        @printf("  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
+        open("table.txt", "a") do fp
 
-        for j = 1:n
+            @printf(fp, "  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
 
-            @printf("\$%15.5f\$, ", theia[i, end - n + j])
+            for j = 1:n
+
+                @printf(fp, "\$%15.5f\$, ", theia[i, end - n + j])
+
+            end
+
+            @printf(fp, " \\\\\n")
 
         end
 
-        @printf(" \\\\\n")
-
         PyPlot.plot(tt, modl2.(tt), color=PyPlot.cm."Set1"((5 + i)/9.0),
-                    linestyle="-", marker=i, label=theia[i, 1])
+                    linestyle="-", marker=3 + i, label=theia[i, 1])
 
     end
 
@@ -240,6 +309,9 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
     
     initguess = zeros(Float64, n)
 
+    # Eliminate effects of garbage collector
+    GC.gc()
+        
     rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess,
                             SEEDMS=SEEDMS, MAXMS=MAXMS)
 
@@ -247,15 +319,19 @@ function compare_fitting(N, data;model_str="linear", MAXMS=1, outimage="/tmp/sci
 
     fmeas = ls_measure(modl2, N, data)
 
-    @printf("  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
+    open("table.txt", "a") do fp
 
-    for j = 1:n
+        @printf(fp, "  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
 
-        @printf("\$%15.5f\$, ", rsol.solution[j])
+        for j = 1:n
+
+            @printf(fp, "\$%15.5f\$, ", rsol.solution[j])
+
+        end
+
+        @printf(fp, " \\\\\n")
 
     end
-
-    @printf(" \\\\\n")
 
     PyPlot.plot(t, modl2.(t), color=PyPlot.cm."Set1"(2.0/9.0),
                 linestyle="-", label="RAFF")
