@@ -72,7 +72,7 @@ function run_comparative_fitting()
                               ("expon", [5000.0, 4000.0, 0.2]),
                               ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
 
-        for (np, p) in [(10, 9), (10, 8), (100, 99), (100, 90)]
+        for (np, p) in [(10, 8), (100, 90)]
 
             n, model, mstr = RAFF.model_list[model_str]
 
