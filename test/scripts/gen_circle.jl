@@ -18,8 +18,8 @@ test file for `RAFF`.
 
 """
 function gen_circle(np::Int, p::Int; std::Float64=0.1,
-                    θSol::Vector{Float64}=10.0*randn(Float64, 3),
-                    outTimes::Float64=5.0, interval::Vector{Float64}=rand(np)*2.0*π)
+                    θSol::Vector{Float64}=1.0*randn(Float64, 3),
+                    outTimes::Float64=3.0, interval::Vector{Float64}=rand(np)*2.0*π)
 
     ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
     f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
@@ -35,10 +35,17 @@ function gen_circle(np::Int, p::Int; std::Float64=0.1,
 
         data[i, 3:4] .= 0.0 #f(pt)
 
+        # Follow the noise idea of J. Yu, H. Zheng, S. R. Kulkarni,
+        # and H. V. Poor, "Two-Stage Outlier Elimination for Robust
+        # Curve and Surface Fitting," EURASIP J. Adv. Signal Process.,
+        # vol. 2010, no. 1, p. 154891, Dec. 2010.
         if i in v
 
-            pt = ρ(α, θSol[3] * (1.0 + 2 * rand()) * outTimes * std * sign(randn()))
+            # pt = ρ(α, θSol[3] * (1.0 + 2 * rand()) * outTimes * std * sign(randn()))
 
+            pt[1] += outTimes * std * randn()
+            pt[2] += outTimes * std * randn()
+            
             data[i, 4] = 1.0
             
         end
