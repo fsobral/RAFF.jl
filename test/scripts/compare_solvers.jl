@@ -387,7 +387,7 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
     ptx = (α, ρ, d) -> ρ * cos(α) + d[1]
     pty = (α, ρ, d) -> ρ * sin(α) + d[2]    
 
-    tmpv = @view(data[:, 3])
+    tmpv = @view(data[:, 4])
 
     @printf("\\multirow{5}{*}{\$(%10s, %4d, %4d)\$} \n", "circle", length(tmpv), count(tmpv .== 0.0))
 
@@ -454,7 +454,9 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
 
     fname = "/tmp/" * Random.randstring(10) * ".txt"
 
-    run(pipeline(`../theia/ransac circle 2000 -ft 0.1 -mle`, fname))
+    multistart = 10
+    
+    run(pipeline(`../theia/ransac circle 10 -ft 0.1 -max 2000 -ms $(multistart)`, fname))
 
     theia = DelimitedFiles.readdlm(fname)
 
@@ -462,27 +464,33 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
 
     tm, = size(theia)
 
-    for i = 1:tm
+    for i = 1:Int(tm / multistart)
 
-        modl2 = (x) -> modl(x, theia[i, end - n + 1:end])
+        b, bpos = findmin(@view(theia[(i - 1) * multistart + 1:i * multistart, 4]))
+
+        total_time = sum(@view(theia[(i - 1) * multistart + 1:i * multistart, 2]))
+
+        tvec = @view theia[(i - 1) * multistart + bpos, :]
+        
+        modl2 = (x) -> modl(x, tvec[end - n + 1:end])
 
         fmeas = ls_measure(modl2, N, data)
 
-        @printf("  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
+        @printf("  & %10s & %10.3e & %8.4f & %8d & ", tvec[1], fmeas, total_time, 0)
 
         for j = 1:n
 
-            @printf("\$%15.5f\$, ", theia[i, end - n + j])
+            @printf("\$%15.5f\$, ", tvec[end - n + j])
 
         end
 
         @printf(" \\\\\n")
 
-        modl1x = (α) -> ptx(α, theia[i, end], theia[i, end - 2:end - 1])
-        modl1y = (α) -> pty(α, theia[i, end], theia[i, end - 2:end - 1])
+        modl1x = (α) -> ptx(α, tvec[end], tvec[end - 2:end - 1])
+        modl1y = (α) -> pty(α, tvec[end], tvec[end - 2:end - 1])
 
         PyPlot.plot(modl1x.(tt), modl1y.(tt), color=PyPlot.cm."Set1"((5 + i)/9.0),
-                    linestyle="-", marker=i, label=theia[i, 1])
+                    linestyle="-", marker=i, label=tvec[1])
 
     end
 
@@ -490,7 +498,7 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
     
     initguess = ones(Float64, n)
 
-    rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
+    rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
 
     fSol = rsol.solution
         
@@ -514,7 +522,8 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
     PyPlot.plot(modl1x.(t), modl1y.(t), color=PyPlot.cm."Set1"(2.0/9.0),
                 linestyle="-", label="RAFF")
 
-    PyPlot.legend(loc="best")
+    PyPlot.legend(bbox_to_anchor=(0., 1.01, 1., .111), loc="lower left",
+           ncol=3, mode="expand", borderaxespad=0., numpoints=1)
 
     PyPlot.show()
 
