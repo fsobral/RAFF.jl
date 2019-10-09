@@ -322,13 +322,13 @@ double ls_measure(T estimator, M solution, std::vector<Point> input_data,
   double sr = 0.0;
   double err;
 
-  for (int i = 0; i < outliers.size(); i++) {
+  for (int i = 0; i < input_data.size(); i++) {
 
     if (!outliers[i]) {
 
       err = estimator.Error(input_data[i], solution);
 
-      sr += err * err;
+      sr = sr + err * err;
 
     }
 
@@ -342,7 +342,7 @@ double ls_measure(T estimator, M solution, std::vector<Point> input_data,
 
 template <class T, class M>
 void run_ransac(std::string filename, double error_thres, double min_inlier_ratio,
-		double use_mle, double ftrusted) {
+		double use_mle, double ftrusted, int max_iter, int multistart) {
 
   std::vector<Point> input_data;
   std::vector<bool> outliers;
@@ -362,16 +362,26 @@ void run_ransac(std::string filename, double error_thres, double min_inlier_rati
 
     std::vector<double> x(N, 0.0);
 
-    if (N == 1) { file >> x[0] >> y >> z; }
-    else if (N == 2) { file >> x[0] >> x[1] >> y >> z; }
+    if (N == 1) {
+
+      file >> x[0] >> y >> z;
+      if (x[0] == 0.0 && y == 0.0 && z == 0.0) break;
+
+    }
+    else if (N == 2) {
+
+      file >> x[0] >> x[1] >> y >> z;
+      if (x[0] == 0.0 && x[1] == 0.0 && y == 0.0 && z == 0.0) break;
+
+    }
       
     Point point = {x, y};
     
     input_data.push_back(point);
 
-    outliers.push_back((z < 1.0));
+    outliers.push_back((z != 0.0));
     
-    //std::cout << x[0] << ' ' << y << std::endl;
+    // std::cout << x[0] << ' ' << y << std::endl;
 
   }
 
@@ -385,31 +395,38 @@ void run_ransac(std::string filename, double error_thres, double min_inlier_rati
   params.error_thresh = error_thres;
   params.use_mle = use_mle;
   params.min_inlier_ratio = min_inlier_ratio;
+  params.max_iterations = max_iter;
+
+  theia::RansacSummary summary;
 
   // Create Ransac object, specifying the number of points to sample to
   // generate a model estimation.
 
-  tini = std::clock();
+  for (int i = 0; i < multistart; i++) {
   
-  theia::Ransac<T> ransac_estimator(params, estimator);
-  // Initialize must always be called!
-  ransac_estimator.Initialize();
-
-  theia::RansacSummary summary;
-  ransac_estimator.Estimate(input_data, &best_model, &summary);
-
-  tend = std::clock();
+    tini = std::clock();
   
-  std::cout.unsetf(std::ios::scientific);
-  std::cout.setf(std::ios::fixed);
-  std::cout << std::setw(10) << "RANSAC";
-  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
-  std::cout.unsetf(std::ios::fixed);
-  std::cout.setf(std::ios::scientific);
-  std::cout << std::setw(20) << std::setprecision(15);
-  std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
-  std::cout << best_model << std::endl;
+    theia::Ransac<T> ransac_estimator(params, estimator);
+    // Initialize must always be called!
+    ransac_estimator.Initialize();
 
+    ransac_estimator.Estimate(input_data, &best_model, &summary);
+
+    tend = std::clock();
+  
+    std::cout.unsetf(std::ios::scientific);
+    std::cout.setf(std::ios::fixed);
+    std::cout << std::setw(10) << "RANSAC";
+    std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
+    std::cout << std::setw(10) << summary.num_iterations << " ";
+    std::cout.unsetf(std::ios::fixed);
+    std::cout.setf(std::ios::scientific);
+    std::cout << std::setw(20) << std::setprecision(15);
+    std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
+    std::cout << best_model << std::endl;
+
+  }
+  
   // // Create Prosac object
   // // This estimator assumes that the data is sorted by quality.
 
@@ -433,26 +450,31 @@ void run_ransac(std::string filename, double error_thres, double min_inlier_rati
   
   // Create LMed object
 
-  tini = std::clock();
+  for (int i = 0; i < multistart; i++) {
+
+    tini = std::clock();
   
-  theia::LMed<T> lmed_estimator(params, estimator);
-  // Initialize must always be called!
-  lmed_estimator.Initialize();
+    theia::LMed<T> lmed_estimator(params, estimator);
+    // Initialize must always be called!
+    lmed_estimator.Initialize();
 
-  lmed_estimator.Estimate(input_data, &best_model, &summary);
+    lmed_estimator.Estimate(input_data, &best_model, &summary);
 
-  tend = std::clock();
+    tend = std::clock();
 
-  std::cout.unsetf(std::ios::scientific);
-  std::cout.setf(std::ios::fixed);
-  std::cout << std::setw(10) << "LMED";
-  std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
-  std::cout.unsetf(std::ios::fixed);
-  std::cout.setf(std::ios::scientific);
-  std::cout << std::setw(20) << std::setprecision(15);
-  std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
-  std::cout << best_model << std::endl;
+    std::cout.unsetf(std::ios::scientific);
+    std::cout.setf(std::ios::fixed);
+    std::cout << std::setw(10) << "LMED";
+    std::cout << std::setw(10) << std::setprecision(5) << (tend - tini) / (1.0 * CLOCKS_PER_SEC) << " ";
+    std::cout << std::setw(10) << summary.num_iterations << " ";
+    std::cout.unsetf(std::ios::fixed);
+    std::cout.setf(std::ios::scientific);
+    std::cout << std::setw(20) << std::setprecision(15);
+    std::cout << ls_measure(estimator, best_model, input_data, outliers) << " ";
+    std::cout << best_model << std::endl;
 
+  }
+  
 }
 
 int main(int argc, char** argv) {
@@ -461,11 +483,13 @@ int main(int argc, char** argv) {
   double min_inlier_ratio = 0.0;
   bool use_mle = true;
   double ftrusted = 0.5;
+  int max_iter = 1000;
+  int ms = 1;
   std::string filename = std::string("/tmp/output.txt");
 
   if (argc < 3) {
 
-    std::cout << "Call: " << argv[0] << " model err_thres [-mir mir] [-nomle] [-ft ft] -f filename" << std::endl;
+    std::cout << "Call: " << argv[0] << " model err_thres [-mir mir] [-nomle] [-ft ft] [-f filename] [-max max_iter] [-ms multstarts]" << std::endl;
 
     return 1;
 
@@ -484,6 +508,8 @@ int main(int argc, char** argv) {
     else if (tmp == "-nomle") use_mle = false;
     else if (tmp == "-ft") ftrusted = std::stod(argv[++i]);
     else if (tmp == "-f") filename = std::string(argv[++i]);
+    else if (tmp == "-max") max_iter = std::stoi(argv[++i]);
+    else if (tmp == "-ms") ms = std::stoi(argv[++i]);
     else {
 
       std::cout << "Call: " << argv[0] << " err_thres [-mir mir] [-mle]" << std::endl;
@@ -495,11 +521,11 @@ int main(int argc, char** argv) {
 
   }
   
-  if (s == "linear") run_ransac<LineEstimator, Line>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "cubic") run_ransac<CubicEstimator, Cubic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "logistic") run_ransac<LogisticEstimator, Logistic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
-  else if (s == "circle") run_ransac<CircleEstimator, Circle>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted);
+  if (s == "linear") run_ransac<LineEstimator, Line>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted, max_iter, ms);
+  else if (s == "cubic") run_ransac<CubicEstimator, Cubic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted, max_iter, ms);
+  else if (s == "expon") run_ransac<ExponentialEstimator, Exponential>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted, max_iter, ms);
+  else if (s == "logistic") run_ransac<LogisticEstimator, Logistic>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted, max_iter, ms);
+  else if (s == "circle") run_ransac<CircleEstimator, Circle>(filename, error_thres, min_inlier_ratio, use_mle, ftrusted, max_iter, ms);
   else std::cout << "Unknown model." << std::endl;
 
   return 0;
