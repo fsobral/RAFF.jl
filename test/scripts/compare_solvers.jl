@@ -36,6 +36,14 @@ using Base.GC
 include("draw.jl")
 include("gen_circle.jl")
 
+"""
+
+    run_comparative_fitting()
+
+Run all the regular tests with one-dimensional problems and all the
+solvers.
+
+"""
 function run_comparative_fitting()
 
     large_number = 179424673
@@ -59,7 +67,7 @@ function run_comparative_fitting()
 
             cla()
             
-            compare_fitting(model_str=model_str, MAXMS=100,
+            compare_fitting(model_str=model_str, MAXMS=100, theia_ms=10,
                             outimage="/tmp/$(model_str)_$(np)_$(p).png")
 
         end
@@ -84,7 +92,7 @@ function run_comparative_fitting()
 
             cla()
             
-            compare_fitting(model_str=model_str, MAXMS=100,
+            compare_fitting(model_str=model_str, MAXMS=100, theia_ms=10,
                             outimage="/tmp/$(model_str)_$(np)_$(p)_cluster.png")
 
         end
@@ -98,7 +106,9 @@ end
     ls_measure(modl, n, data)
 
 Compute the "Least Square" measure, used to compare different
-algorithm.
+algorithms. By definition is the square root of the sum of the squared
+difference between the value predicted by the model and the actual
+value only for *non-outliers*.
 
 """
 
@@ -114,7 +124,7 @@ function ls_measure(modl, n, data)
 
     end
 
-    return sr
+    return sqrt(sr)
 
 end
 
@@ -153,7 +163,7 @@ end
 
 
 function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1, outimage="/tmp/scipy.png",
-                         theia_str_args="2000 -ft 0.4", kwargs...)
+                         theia_str_args="2000 -ft 0.1", theia_ms=10, kwargs...)
 
     n, modl, = RAFF.model_list[model_str]
 
@@ -272,7 +282,7 @@ function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1
 
     fname = "/tmp/" * Random.randstring(10) * ".txt"
 
-    run(pipeline(`../theia/ransac $(model_str) $(theia_str_args) -f $filename`, fname))
+    run(pipeline(`../theia/ransac $(model_str) $(theia_str_args) -ms $(theia_ms) -f $filename`, fname))
 
     theia = DelimitedFiles.readdlm(fname)
 
@@ -280,19 +290,25 @@ function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1
 
     tm, = size(theia)
 
-    for i = 1:tm
+    for i = 1:Int(tm / theia_ms)
 
-        modl2 = (x) -> modl(x, theia[i, end - n + 1:end])
+        b, bpos = findmin(@view(theia[(i - 1) * theia_ms + 1:i * theia_ms, 4]))
+
+        total_time = sum(@view(theia[(i - 1) * theia_ms + 1:i * theia_ms, 2]))
+
+        tvec = @view theia[(i - 1) * theia_ms + bpos, :]
+        
+        modl2 = (x) -> modl(x, tvec[end - n + 1:end])
 
         fmeas = ls_measure(modl2, N, data)
 
         open("table.txt", "a") do fp
 
-            @printf(fp, "  & %10s & %10.3e & %8.4f & %8d & ", theia[i, 1], fmeas, theia[i, 2], 0)
+            @printf(fp, "  & %10s & %10.3e & %8.4f & %8d & ", tvec[1], fmeas, total_time, 0)
 
             for j = 1:n
 
-                @printf(fp, "\$%15.5f\$, ", theia[i, end - n + j])
+                @printf(fp, "\$%15.5f\$, ", tvec[end - n + j])
 
             end
 
@@ -301,7 +317,7 @@ function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1
         end
 
         PyPlot.plot(tt, modl2.(tt), color=PyPlot.cm."Set1"((5 + i)/9.0),
-                    linestyle="-", marker=3 + i, label=theia[i, 1])
+                    linestyle="-", marker=3 + i, label=tvec[1])
 
     end
 
@@ -346,20 +362,12 @@ function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1
     
 end
 
-function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
-                                kwargs...)
+function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/tmp/scipy.png",
+                                theia_str_args="10 -ft 0.1", kwargs...)
     
     n, modl, = RAFF.model_list["circle"]
 
     optimize = pyimport("scipy.optimize")
-
-    open("/tmp/output.txt") do fp
-        
-        global N = parse(Int, readline(fp))
-        
-        global data = readdlm(fp)
-        
-    end
 
     # SEEDMS is an argument for RAFF, the seed for multi-start strategy
     SEEDMS = 123456789
@@ -368,6 +376,19 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
     PyPlot.rc("font", family="Helvetica")
 
     PyPlot.rc("font", size=10)
+
+    # Open file
+    data = Array{Float64, 2}(undef, 0, 0)
+
+    N = 1
+
+    open(filename) do fp
+
+        N = parse(Int, readline(fp))
+
+        data = readdlm(fp)
+
+    end
 
     f = let
 
@@ -409,7 +430,7 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
         
         tm = @elapsed for i = 1:MAXMS
 
-            initguess = randn(seedMS, Float64, n)
+            initguess = 1.0 .+ randn(seedMS, Float64, n)
 
             sol = optimize.least_squares(f, initguess, loss=loss)
 
@@ -454,9 +475,9 @@ function compare_circle_fitting(;MAXMS=1, outimage="/tmp/scipy.png",
 
     fname = "/tmp/" * Random.randstring(10) * ".txt"
 
-    multistart = 10
+    multistart = MAXMS
     
-    run(pipeline(`../theia/ransac circle 10 -ft 0.1 -max 2000 -ms $(multistart)`, fname))
+    run(pipeline(`../theia/ransac circle $(theia_str_args) -ms $(MAXMS)`, fname))
 
     theia = DelimitedFiles.readdlm(fname)
 
