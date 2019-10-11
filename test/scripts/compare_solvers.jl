@@ -363,7 +363,7 @@ function compare_fitting(filename="/tmp/output.txt"; model_str="linear", MAXMS=1
 end
 
 function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/tmp/scipy.png",
-                                theia_str_args="10 -ft 0.1", kwargs...)
+                                theia_str_args="10 -ft 0.1", theia_ms=10, kwargs...)
     
     n, modl, = RAFF.model_list["circle"]
 
@@ -475,9 +475,7 @@ function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/t
 
     fname = "/tmp/" * Random.randstring(10) * ".txt"
 
-    multistart = MAXMS
-    
-    run(pipeline(`../theia/ransac circle $(theia_str_args) -ms $(MAXMS)`, fname))
+    run(pipeline(`../theia/ransac circle $(theia_str_args) -ms $(theia_ms)`, fname))
 
     theia = DelimitedFiles.readdlm(fname)
 
@@ -485,13 +483,13 @@ function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/t
 
     tm, = size(theia)
 
-    for i = 1:Int(tm / multistart)
+    for i = 1:Int(tm / theia_ms)
 
-        b, bpos = findmin(@view(theia[(i - 1) * multistart + 1:i * multistart, 4]))
+        b, bpos = findmin(@view(theia[(i - 1) * theia_ms + 1:i * theia_ms, 4]))
 
-        total_time = sum(@view(theia[(i - 1) * multistart + 1:i * multistart, 2]))
+        total_time = sum(@view(theia[(i - 1) * theia_ms + 1:i * theia_ms, 2]))
 
-        tvec = @view theia[(i - 1) * multistart + bpos, :]
+        tvec = @view theia[(i - 1) * theia_ms + bpos, :]
         
         modl2 = (x) -> modl(x, tvec[end - n + 1:end])
 
@@ -551,5 +549,64 @@ function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/t
     PyPlot.savefig(outimage, DPI=600, bbox_inches="tight")
 
     PyPlot.savefig("/tmp/scipy.png", DPI=150)
+    
+end
+
+"""
+
+    run_circle_comparative_fitting()
+
+Run all the regular tests with one-dimensional problems and all the
+solvers.
+
+"""
+function run_circle_comparative_fitting()
+
+    large_number = 179424673
+
+    # First call. Just compilation.
+    data, v = gen_circle(10, 10, θSol=[1.0, 1.0, 1.0])
+    
+    compare_circle_fitting(MAXMS=1, theia_ms=1)
+
+    np = 100
+
+    n, model, mstr = RAFF.model_list["circle"]
+    
+    # for f = 0.1:0.1:0.9
+        
+    #     # Define seed for this run. The same seed for all instances.
+    #     Random.seed!(large_number + 300)
+
+    #     p = Int(round(f * np))
+        
+    #     data, v = gen_circle(np, p, θSol=[- 10.0, 30.0, 2.0],
+    #                          std=0.1, outTimes=20.0)
+
+    #     cla()
+            
+    #     compare_circle_fitting(MAXMS=100, theia_ms=10,
+    #                            outimage="/tmp/circle_$(np)_$(p).png")
+
+    # end
+
+    np = 300
+    
+    for f = 0.1:0.1:0.9
+        
+        # Define seed for this run. The same seed for all instances.
+        Random.seed!(large_number + 300)
+
+        p = Int(round(f * np))
+        
+        data, v = gen_ncircle(np, p, θSol=[- 10.0, 30.0, 2.0],
+                              std=0.1)
+
+        cla()
+            
+        compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
+                               outimage="/tmp/circle_$(np)_$(p).png")
+
+    end
     
 end

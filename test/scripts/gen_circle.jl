@@ -74,7 +74,7 @@ end
 
 function gen_ncircle(np::Int, p::Int; std::Float64=0.1,
                     θSol::Vector{Float64}=10.0*randn(Float64, 3),
-                    outTimes::Float64=5.0, interval::Vector{Float64}=rand(p)*2.0*π)
+                    interval::Vector{Float64}=rand(p)*2.0*π)
 
     ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
     f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
