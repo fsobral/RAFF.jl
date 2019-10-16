@@ -517,7 +517,8 @@ function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/t
     
     initguess = ones(Float64, n)
 
-    rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., initguess=initguess)
+    rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., MAXMS=MAXMS,
+                            initguess=initguess, SEEDMS=SEEDMS)
 
     fSol = rsol.solution
         
@@ -552,6 +553,49 @@ function compare_circle_fitting(filename="/tmp/output.txt";MAXMS=1, outimage="/t
     
 end
 
+function run_only_praff_circle(filename="/tmp/output.txt"; MAXMS=1, kwargs...)
+
+    n, modl, = RAFF.model_list["circle"]
+
+    # SEEDMS is an argument for RAFF, the seed for multi-start strategy
+    SEEDMS = 123456789
+
+    # Open file
+    data = Array{Float64, 2}(undef, 0, 0)
+
+    N = 1
+
+    open(filename) do fp
+
+        N = parse(Int, readline(fp))
+
+        data = readdlm(fp)
+
+    end
+
+    initguess = ones(Float64, n)
+
+    rsol, tm = @timed praff(modl, data[:, 1:end - 1], n; kwargs..., MAXMS=MAXMS,
+                            initguess=initguess, SEEDMS=SEEDMS)
+
+    fSol = rsol.solution
+
+    modl2 = (x) -> modl(x, rsol.solution)
+
+    fmeas = ls_measure(modl2, N, data)
+
+    @printf("  & %10s & %10.3e & %8.4f & %8d & ", "RAFF.jl", fmeas, tm, rsol.nf)
+
+    for j = 1:n
+
+        @printf("\$%15.5f\$, ", fSol[j])
+
+    end
+
+    @printf(" \\\\\n")
+
+end
+
 """
 
     run_circle_comparative_fitting()
@@ -573,22 +617,25 @@ function run_circle_comparative_fitting()
 
     n, model, mstr = RAFF.model_list["circle"]
     
-    # for f = 0.1:0.1:0.9
+    for f = 0.1:0.1:0.9
         
-    #     # Define seed for this run. The same seed for all instances.
-    #     Random.seed!(large_number + 300)
+        # Define seed for this run. The same seed for all instances.
+        Random.seed!(large_number + 300)
 
-    #     p = Int(round(f * np))
+        p = Int(round(f * np))
         
-    #     data, v = gen_circle(np, p, θSol=[- 10.0, 30.0, 2.0],
-    #                          std=0.1, outTimes=20.0)
+        data, v = gen_circle(np, p, θSol=[- 10.0, 30.0, 2.0],
+                             std=0.1, outTimes=20.0)
 
-    #     cla()
+        cla()
             
-    #     compare_circle_fitting(MAXMS=100, theia_ms=10,
-    #                            outimage="/tmp/circle_$(np)_$(p).png")
+        # compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
+        #                        outimage="/tmp/circle_$(np)_$(p).png")
 
-    # end
+        run_only_praff_circle(MAXMS=100,
+                              ftrusted=(max(0.0, f - 0.3), min(1.0, f + 0.3)))
+
+    end
 
     np = 300
     
@@ -604,8 +651,11 @@ function run_circle_comparative_fitting()
 
         cla()
             
-        compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
-                               outimage="/tmp/circle_$(np)_$(p).png")
+        # compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
+        #                        outimage="/tmp/ncircle_$(np)_$(p).png")
+
+        run_only_praff_circle(MAXMS=100,
+                              ftrusted=(max(0.0, f - 0.3), min(1.0, f + 0.3)))
 
     end
     
