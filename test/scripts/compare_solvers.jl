@@ -629,8 +629,8 @@ function run_circle_comparative_fitting()
 
         cla()
             
-        # compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
-        #                        outimage="/tmp/circle_$(np)_$(p).png")
+        compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
+                               outimage="/tmp/circle_$(np)_$(p).png")
 
         run_only_praff_circle(MAXMS=100,
                               ftrusted=(max(0.0, f - 0.3), min(1.0, f + 0.3)))
@@ -651,8 +651,8 @@ function run_circle_comparative_fitting()
 
         cla()
             
-        # compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
-        #                        outimage="/tmp/ncircle_$(np)_$(p).png")
+        compare_circle_fitting(MAXMS=100, theia_ms=10, ftrusted=min(f, 0.5),
+                               outimage="/tmp/ncircle_$(np)_$(p).png")
 
         run_only_praff_circle(MAXMS=100,
                               ftrusted=(max(0.0, f - 0.3), min(1.0, f + 0.3)))
