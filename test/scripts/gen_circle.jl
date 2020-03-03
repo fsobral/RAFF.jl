@@ -146,7 +146,7 @@ function draw_circle(data, outliers)
 
     PyPlot.yticks([])
 
-    PyPlot.savefig("/tmp/circle.png", dpi=72)
+    PyPlot.savefig("/tmp/circle.png", dpi=150, bbox_inches="tight")
 
 end
 
