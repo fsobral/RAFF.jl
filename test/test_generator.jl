@@ -325,7 +325,7 @@
         
     end
 
-    @testset "Model list" for (type, (n, model, model_str)) in RAFF.model_list
+    @testset "Model list $(type)" for (type, (n, model, model_str)) in RAFF.model_list
 
         # TODO: Maybe we need to get the dimension of the model?
         x = (type == "circle" || type == "ellipse") ? rand(2) : rand()
