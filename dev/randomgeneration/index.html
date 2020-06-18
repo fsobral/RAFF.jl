@@ -26,10 +26,10 @@ julia&gt; data, = generate_noisy_data(model, n, np, p, x_interval=interv, θSol=
 julia&gt; draw_problem(data, model_str=&quot;expon&quot;)</code></pre><p>If you are interested in running <code>RAFF</code>, just call the <a href="../api/#RAFF.raff"><code>raff</code></a> method. <strong>Attention</strong>: we have to drop the last column of <code>data</code>, since it contains information regarding the noise added to the outliers.</p><pre><code class="language-julia-repl">julia&gt; r = raff(model, data[:, 1:end - 1], n, MAXMS=10)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [5074.83, 6644.72, 0.691345]
-Number of iterations (.iter) = 747
-Number of trust points (.p) = 20
-Objective function value (.f) = 2.0178898358722646e7
-Number of function evaluations (.nf) = 747
-Number of Jacobian evaluations (.nj) = 396
-Index of outliers (.outliers) = Int64[]</code></pre><p>If all the steps were successful, after command</p><pre><code class="language-none">julia&gt; draw_problem(data, model_str=&quot;expon&quot;, raff_output=r)</code></pre><p>the following picture should appear</p><p><img src="../assets/random_generation_example.png" alt="Exponential example"/></p><footer><hr/><a class="previous" href="../advanced/"><span class="direction">Previous</span><span class="title">Advanced</span></a></footer></article></body></html>
+Solution (.solution) = [5480.81, 3.44793e-10, 12.6344]
+Number of iterations (.iter) = 838
+Number of trust points (.p) = 17
+Objective function value (.f) = 6.430191130391427e6
+Number of function evaluations (.nf) = 838
+Number of Jacobian evaluations (.nj) = 433
+Index of outliers (.outliers) = [1, 3, 7]</code></pre><p>If all the steps were successful, after command</p><pre><code class="language-none">julia&gt; draw_problem(data, model_str=&quot;expon&quot;, raff_output=r)</code></pre><p>the following picture should appear</p><p><img src="../assets/random_generation_example.png" alt="Exponential example"/></p><footer><hr/><a class="previous" href="../advanced/"><span class="direction">Previous</span><span class="title">Advanced</span></a></footer></article></body></html>
