@@ -1,6 +1,7 @@
 export generate_test_problems, generate_noisy_data!,
     generate_noisy_data, generate_clustered_noisy_data,
-    generate_clustered_noisy_data!, generate_circle
+    generate_clustered_noisy_data!, generate_circle,
+    generate_ncircle
 
 """
 
@@ -217,7 +218,6 @@ function generate_circle(dat_filename::String, np::Int, p::Int;
         error("Size of interval different from given value of np")
 
     ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
-    f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
 
     data = Array{Float64, 2}(undef, np, 4)
 
@@ -228,15 +228,13 @@ function generate_circle(dat_filename::String, np::Int, p::Int;
 
         pt = ρ(α, θSol[3] + std * randn())
 
-        data[i, 3:4] .= 0.0 #f(pt)
+        data[i, 3:4] .= 0.0
 
         # Follow the noise idea of J. Yu, H. Zheng, S. R. Kulkarni,
         # and H. V. Poor, "Two-Stage Outlier Elimination for Robust
         # Curve and Surface Fitting," EURASIP J. Adv. Signal Process.,
         # vol. 2010, no. 1, p. 154891, Dec. 2010.
         if i in v
-
-            # pt = ρ(α, θSol[3] * (1.0 + 2 * rand()) * outTimes * std * sign(randn()))
 
             pt[1] += outTimes * std * randn()
             pt[2] += outTimes * std * randn()
@@ -251,6 +249,85 @@ function generate_circle(dat_filename::String, np::Int, p::Int;
 
     open(dat_filename, "w") do fp
     
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+
+        for k = 1:np
+
+            @printf(fp, "%20.15f %20.15f %20.15f %1d\n",
+                    data[k, 1], data[k, 2], data[k, 3], Int(k in v))
+
+        end
+
+    end
+
+    return data, v
+
+end
+
+"""
+
+    generate_ncircle(dat_filename::String,np::Int, p::Int;
+      std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),
+      interval=(rand()*2.0*π for i = 1:np))
+
+Generate perturbed points and uniform noise in a square containing the
+circle given by `θSol` and save data to `dat_filename` in RAFF
+format. Return the np x 4 matrix with data (the 4th column is 0 if the
+point is "correct") and a `np - p` integer vector containing the
+points selected to be outliers.
+
+  - `dat_filename` is a String with the name of the file to store
+    generated data.
+  - `np` is the number of points to be generated.
+  - `p` is the number of *trusted points* to be used in the LOVO
+    approach.
+
+Additional configuration parameters are
+
+  - `std`: standard deviation.
+  - `θSol`: true solution, used for generating perturbed points.
+  - `interval`: any iterable object containing `np` numbers between 0
+    and 2π.
+
+"""
+function generate_ncircle(dat_filename::String, np::Int, p::Int;
+    std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),
+    interval=(rand()*2.0*π for i = 1:np))
+
+    (length(interval) != np) &&
+        error("Size of interval different from given value of np")
+
+    ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+
+    data = Array{Float64, 2}(undef, np, 4)
+
+    for (i, α) in enumerate(interval)
+
+        pt = ρ(α, θSol[3] + std * randn())
+
+        data[i, 1:2]  = pt
+        data[i, 3:4] .= 0.0
+
+    end
+
+    # Just random noise
+
+    v = Vector{Int}(undef, np - p)
+
+    for i = p + 1:np
+
+        data[i, 1] = θSol[1] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
+        data[i, 2] = θSol[2] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
+        data[i, 3] = 0.0
+        data[i, 4] = 1.0
+
+        v[i - p] = i
+
+    end
+
+    open(dat_filename, "w") do fp
+
         # Dimension of the domain of the function to fit
         @printf(fp, "%d\n", 2)
 

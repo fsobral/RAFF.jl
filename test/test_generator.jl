@@ -377,4 +377,60 @@
 
     end
 
+    @testset "Circle uniform generator" begin
+
+        data, v = generate_ncircle("circle_remove1.dat", 2, 1)
+
+        @test(size(data) == (2, 4))
+        @test(length(v) == 1)
+
+        open("circle_remove1.dat", "r") do fp
+
+            @test(parse(Int, readline(fp)) == 2)
+
+            dataf = DelimitedFiles.readdlm(fp)
+
+            @test(dataf ≈ data, atol=1.0e-14)
+            @test(dataf[v[1], 4] > 0)
+
+        end
+
+        rm("./circle_remove1.dat")
+
+        # Test bad interval
+
+        @test_throws(ErrorException,
+                     generate_circle("circle_remove2.dat", 5, 2;
+                                     interval=[0.0, π]))
+        @test_throws(SystemError, open("circle_remove2.dat"))
+
+        # Test uniform distribution
+
+        np = 100
+        p  = 10
+        θSol = [7.0, 7.0, 5.0]
+        
+        data, v = generate_circle("circle_remove3.dat", np, p;
+                                  θSol=θSol)
+
+        @test(size(data) == (100, 4))
+        @test(length(v) == np - p)
+
+        open("circle_remove3.dat") do fp
+
+            @test(parse(Int, readline(fp)) == 2)
+
+            dataf = DelimitedFiles.readdlm(fp)
+            @test(dataf ≈ data, atol=1.0e-14)
+            @test(all(dataf[v, 4] .> 0))
+
+            @test(all(θSol[1] - 2 * θSol[3] .<= dataf[v, 1] .<= θSol[1] + 2 * θSol[3]))
+            @test(all(θSol[2] - 2 * θSol[3] .<= dataf[v, 1] .<= θSol[2] + 2 * θSol[3]))
+
+        end
+
+        rm("circle_remove3.dat")
+
+    end
+
 end
