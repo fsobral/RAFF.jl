@@ -338,4 +338,43 @@
         
     end
 
+    @testset "Circle generator" begin
+
+        data, v = generate_circle("circle_remove1.dat", 2, 1)
+
+        @test(size(data) == (2, 4))
+        @test(length(v) == 1)
+
+        open("circle_remove1.dat", "r") do fp
+
+            @test(parse(Int, readline(fp)) == 2)
+
+            dataf = DelimitedFiles.readdlm(fp)
+
+            @test(dataf ≈ data, atol=1.0e-15)
+            @test(dataf[v[1], 4] == 1)
+
+        end
+
+        rm("./circle_remove1.dat")
+
+        # Test bad interval
+
+        @test_throws(ErrorException,
+                     generate_circle("circle_remove2.dat", 5, 2;
+                                     interval=[0.0, π]))
+        @test_throws(SystemError, open("circle_remove2.dat"))
+
+        # Test good interval
+
+        data, v = generate_circle("circle_remove3.dat", 5, 4;
+                     interval=[0.0, π/4, π / 2, 3 * π / 4, π ])
+
+        @test(size(data) == (5, 4))
+        @test(length(v) == 1)
+
+        rm("circle_remove3.dat")
+
+    end
+
 end

@@ -1,6 +1,6 @@
 export generate_test_problems, generate_noisy_data!,
     generate_noisy_data, generate_clustered_noisy_data,
-    generate_clustered_noisy_data!
+    generate_clustered_noisy_data!, generate_circle
 
 """
 
@@ -180,6 +180,90 @@ function generate_test_problems(datFilename::String,
         println(sol, modelStr) # function expression
 
     end
+
+end
+
+"""
+
+    generate_circle(dat_filename::String, np::Int, p::Int;
+        std::Float64=0.1, θSol::Vector{Float64}=1.0*randn(Float64, 3),
+        outTimes::Float64=3.0, interval=(rand(i)*2.0*π for i = 1:np))
+
+Generate perturbed points in a circle given by `θSol` and save to
+`dat_filename` in RAFF format. Return the np x 4 matrix with data (the
+4th column is 0 if the point is "correct") and a `np - p` integer
+vector containing the points selected to be outliers.
+
+  - `dat_filename` is a String with the name of the file to store
+    generated data.
+  - `np` is the number of points to be generated.
+  - `p` is the number of *trusted points* to be used in the LOVO
+    approach.
+
+Additional configuration parameters are
+
+  - `std`: standard deviation.
+  - `θSol`: true solution, used for generating perturbed points.
+  - `out_times`: deviation for outliers will be `out_times * std`.
+  - `interval`: any iterable object containing `np` numbers between 0
+    and 2π.
+
+"""
+function generate_circle(dat_filename::String, np::Int, p::Int;
+    std::Float64=0.1, θSol::Vector{Float64}=1.0*randn(Float64, 3),
+    outTimes::Float64=3.0, interval=(rand()*2.0*π for i = 1:np))
+
+    (length(interval) != np) &&
+        error("Size of interval different from given value of np")
+
+    ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+    f = (x) -> (x[1] - θSol[1])^2 + (x[2] - θSol[2])^2 - θSol[3]^2
+
+    data = Array{Float64, 2}(undef, np, 4)
+
+    # Points selected to be outliers
+    v = RAFF.get_unique_random_points(np, np - p)
+
+    for (i, α) in enumerate(interval)
+
+        pt = ρ(α, θSol[3] + std * randn())
+
+        data[i, 3:4] .= 0.0 #f(pt)
+
+        # Follow the noise idea of J. Yu, H. Zheng, S. R. Kulkarni,
+        # and H. V. Poor, "Two-Stage Outlier Elimination for Robust
+        # Curve and Surface Fitting," EURASIP J. Adv. Signal Process.,
+        # vol. 2010, no. 1, p. 154891, Dec. 2010.
+        if i in v
+
+            # pt = ρ(α, θSol[3] * (1.0 + 2 * rand()) * outTimes * std * sign(randn()))
+
+            pt[1] += outTimes * std * randn()
+            pt[2] += outTimes * std * randn()
+
+            data[i, 4] = 1.0
+
+        end
+
+        data[i, 1:2] = pt
+
+    end
+
+    open(dat_filename, "w") do fp
+    
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+
+        for k = 1:np
+
+            @printf(fp, "%20.15f %20.15f %20.15f %1d\n",
+                    data[k, 1], data[k, 2], data[k, 3], Int(k in v))
+
+        end
+
+    end
+
+    return data, v
 
 end
 
