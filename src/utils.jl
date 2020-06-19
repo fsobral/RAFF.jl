@@ -281,7 +281,7 @@ Defaults to `Logging.Error`.
 """
 function set_raff_output_level(level::LogLevel)
 
-    global raff_logger = ConsoleLogger(stdout, level)
+    global raff_logger.x = ConsoleLogger(stdout, level)
 
 end
 
@@ -301,6 +301,6 @@ Defaults to `Logging.Error`.
 """
 function set_lm_output_level(level::LogLevel)
 
-    global lm_logger = ConsoleLogger(stdout, level)
+    global lm_logger.x = ConsoleLogger(stdout, level)
 
 end

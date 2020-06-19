@@ -1,5 +1,3 @@
-__precompile__(false)
-
 """
 
 `RAFF.jl` is a Jula package.
@@ -19,10 +17,16 @@ using Logging
 
 export lmlovo, raff, praff
 
-# Set RAFF logger
-raff_logger = ConsoleLogger(stdout, Logging.Error)
+const raff_logger = Ref{AbstractLogger}()
+const lm_logger = Ref{AbstractLogger}()
 
-lm_logger = ConsoleLogger(stdout, Logging.Error)
+function __init__()
+
+    # Set RAFF logger
+    raff_logger.x = ConsoleLogger(stdout, Logging.Error)
+    lm_logger.x = ConsoleLogger(stdout, Logging.Error)
+    
+end
 
 # Load code
 
@@ -91,7 +95,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     
     npun, = size(data)
 
-    with_logger(lm_logger) do
+    with_logger(lm_logger.x) do
         
         @debug("Size of data matrix ", size(data))
 
@@ -194,7 +198,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     
     while (ngrad_lovo >= ε) && (safecount < MAXITER)
 
-        with_logger(lm_logger) do
+        with_logger(lm_logger.x) do
 
             @info("Iteration $(safecount)")
             @info("  Current value:   $(best_val_lovo)")
@@ -222,7 +226,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
             "error"
         end
         if ad == "error" #restarting if lapack fails
-            with_logger(lm_logger) do
+            with_logger(lm_logger.x) do
             
                 @warn "Failed to solve the linear system. Will try new point."
                 d .= - 1.0 .* grad_lovo 
@@ -251,7 +255,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
             ngrad_lovo = norm(grad_lovo, 2)
 
-            with_logger(lm_logger) do
+            with_logger(lm_logger.x) do
                 
                 @info("  Better function value found, lambda changed to $(λ).")
 
@@ -261,7 +265,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
             λ = λ * λ_up
 
-            with_logger(lm_logger) do
+            with_logger(lm_logger.x) do
 
                 @info("  No improvement, lambda changed to $(λ).")
 
@@ -274,7 +278,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     end
     
     if safecount == MAXITER
-        with_logger(lm_logger) do
+        with_logger(lm_logger.x) do
             
             @info("No solution was found in $(safecount) iterations.")
 
@@ -284,7 +288,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
     # TODO: Create a test for this case
     if isnan(ngrad_lovo)
-        with_logger(lm_logger) do
+        with_logger(lm_logger.x) do
 
             @info("Incorrect value for gradient norm $(ngrad_lovo).")
 
@@ -295,7 +299,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     outliers = [1:npun;]
     setdiff!(outliers, ind_lovo)
 
-    with_logger(lm_logger) do
+    with_logger(lm_logger.x) do
 
         @info("""
 
@@ -424,7 +428,7 @@ function raff(model::Function, gmodel!::Function,
 
     catch e
 
-        with_logger(raff_logger) do
+        with_logger(raff_logger.x) do
 
             @error("Error in optional parameter `ftrusted`.", e)
 
@@ -446,7 +450,7 @@ function raff(model::Function, gmodel!::Function,
         
         for j = 1:MAXMS
 
-            with_logger(raff_logger) do
+            with_logger(raff_logger.x) do
                 
                 @debug("Running lmlovo for p = $(i). Repetition $(j).")
                 
@@ -466,7 +470,7 @@ function raff(model::Function, gmodel!::Function,
 
         sols[ind] = vbest
 
-        with_logger(raff_logger) do
+        with_logger(raff_logger.x) do
                 
             @debug("Best solution for p = $(i).", vbest.solution)
                 
@@ -493,7 +497,7 @@ function raff(model::Function, gmodel!::Function,
     # Apply the filter and the voting strategy to all the solutions
     # found
 
-    votsis = with_logger(raff_logger) do
+    votsis = with_logger(raff_logger.x) do
 
         voting_strategy(model, data, sols, pliminf, plimsup)
 
@@ -588,7 +592,7 @@ function praff(model::Function, gmodel!::Function,
 
     catch e
 
-        with_logger(raff_logger) do
+        with_logger(raff_logger.x) do
 
             @error("Error in optional parameter `ftrusted`.", e)
 
@@ -617,7 +621,7 @@ function praff(model::Function, gmodel!::Function,
     # @async with_logger(()-> update_best(bqueue, bestx), raff_logger)
         
     # Start workers Tasks (CPU intensive)
-    with_logger(raff_logger) do
+    with_logger(raff_logger.x) do
 
         @debug("Workers", curr_workers)
 
@@ -636,10 +640,10 @@ function praff(model::Function, gmodel!::Function,
                                               
                @error("Unable to start worker $(t).", e)
 
-            end, raff_logger
+            end, raff_logger.x
         ))
 
-        with_logger(raff_logger) do
+        with_logger(raff_logger.x) do
 
             @debug("Created worker $(t).")
 
@@ -649,7 +653,7 @@ function praff(model::Function, gmodel!::Function,
     # Check asynchronously if there is at least one live worker
     @async with_logger(
         () -> check_and_close(bqueue, tqueue, squeue, futures),
-        raff_logger)
+        raff_logger.x)
 
     # Populate the task queue with jobs
     
@@ -661,7 +665,7 @@ function praff(model::Function, gmodel!::Function,
 
         catch e
 
-            with_logger(raff_logger) do
+            with_logger(raff_logger.x) do
 
                 @warn("Tasks queue prematurely closed while inserting tasks. Will exit.")
 
@@ -671,7 +675,7 @@ function praff(model::Function, gmodel!::Function,
 
         end
 
-        with_logger(raff_logger) do
+        with_logger(raff_logger.x) do
 
             @debug("Added problem $(p) to tasks queue.")
 
@@ -684,7 +688,7 @@ function praff(model::Function, gmodel!::Function,
     # read, due to the size 0 of this channel
     close(tqueue)
 
-    with_logger(raff_logger) do
+    with_logger(raff_logger.x) do
         
         @debug("Waiting for workers to finish.")
 
@@ -701,7 +705,7 @@ function praff(model::Function, gmodel!::Function,
 
             sols[rout.p - pliminf + 1] = rout
 
-            with_logger(raff_logger) do
+            with_logger(raff_logger.x) do
 
                 @debug("Stored solution for p=$(rout.p).")
 
@@ -709,7 +713,7 @@ function praff(model::Function, gmodel!::Function,
 
         catch e
 
-            with_logger(raff_logger) do
+            with_logger(raff_logger.x) do
 
                 @error("Error when retrieving solutions.", e)
 
@@ -741,7 +745,7 @@ function praff(model::Function, gmodel!::Function,
     # Apply the filter and the voting strategy to all the solutions
     # found
 
-    votsis = with_logger(raff_logger) do
+    votsis = with_logger(raff_logger.x) do
 
         voting_strategy(model, data, sols, pliminf, plimsup)
 
