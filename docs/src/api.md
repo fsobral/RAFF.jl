@@ -36,6 +36,8 @@ RAFF.generate_noisy_data!
 RAFF.generate_noisy_data
 RAFF.generate_clustered_noisy_data!
 RAFF.generate_clustered_noisy_data
+RAFF.generate_circle
+RAFF.generate_ncircle
 RAFF.model_list
 ```
 
