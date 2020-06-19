@@ -43,6 +43,11 @@ function mainf()
         help = "Generate i-th run."
         arg_type = Int
         default = 0
+
+        "--std"
+        help = "Standard deviation of the error."
+        arg_type = Float64
+        default = 200.0
         
     end
 
@@ -87,13 +92,13 @@ function mainf()
 
             generate_test_problems(ffname, fsname, model, modelStr, n,
                 parsed_args["np"], parsed_args["p"], x_interval,
-                Tuple(parsed_args["cint"]); θSol=θSol, std=200.0)
+                Tuple(parsed_args["cint"]); θSol=θSol, std=parsed_args["std"])
 
         else
             
             generate_test_problems(ffname, fsname, model, modelStr, n,
                 parsed_args["np"], parsed_args["p"];
-                x_interval=x_interval, θSol=θSol, std=200.0)
+                x_interval=x_interval, θSol=θSol, std=parsed_args["std"])
 
         end
  

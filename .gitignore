@@ -11,3 +11,9 @@ test/*.dat
 
 # Ignore build subfolder from docs
 docs/build/*
+
+# Ignore files generated from C and C++ for Theia and Ceres
+*.o
+*.so
+test/mwe/test_ceres
+test/theia/ransac
