@@ -23,7 +23,7 @@ julia&gt; model(x, θ) = θ[1] * x[1]^2 + θ[2]
 model (generic function with 1 method)</code></pre><p>After that, we can run method <a href="../api/#RAFF.raff"><code>raff</code></a>:</p><pre><code class="language-julia-repl">julia&gt; raff(model, A, 2)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [0.999999, 1.0]
+Solution (.solution) = [0.999998774479423, 1.000003442880683]
 Number of iterations (.iter) = 39
 Number of trust points (.p) = 8
 Objective function value (.f) = 3.672268261041584e-11
@@ -32,7 +32,7 @@ Number of Jacobian evaluations (.nj) = 39
 Index of outliers (.outliers) = [6]</code></pre><p>The number <code>2</code> above is the number of variables in model, i. e., the number of parameters to adjust in the model. The output is a <a href="../api/#RAFF.RAFFOutput"><code>RAFFOutput</code></a> type. For example, to access only the parameters of solution, we can use</p><pre><code class="language-julia-repl">julia&gt; output = raff(model, A, 2)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [0.999999, 1.0]
+Solution (.solution) = [0.999998774479423, 1.000003442880683]
 Number of iterations (.iter) = 39
 Number of trust points (.p) = 8
 Objective function value (.f) = 3.672268261041584e-11
@@ -54,7 +54,7 @@ gmodel! (generic function with 1 method)
 julia&gt; raff(model, gmodel!, A, 2)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [0.999999, 1.0]
+Solution (.solution) = [0.999998774479423, 1.000003442880683]
 Number of iterations (.iter) = 39
 Number of trust points (.p) = 8
 Objective function value (.f) = 3.672268261041584e-11
@@ -74,7 +74,7 @@ Index of outliers (.outliers) = [6]</code></pre><p>Preliminary tests have shown 
 model (generic function with 1 method)</code></pre><p>Note that this model has two variables <span>$(x_1, x_2)$</span> and three parameters <span>$(\theta_1, \theta_2, \theta_3)$</span>. This problem has one outlier (<code>data[4,:]</code>), so there are 4 trusted points. Let&#39;s run <code>RAFF</code> and check the answer.</p><pre><code class="language-julia-repl">julia&gt; output = raff(model, data, 3)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [-0.999999, -0.999999, 4.0]
+Solution (.solution) = [-0.9999994158240709, -0.9999994546240264, 3.9999956758615816]
 Number of iterations (.iter) = 28
 Number of trust points (.p) = 4
 Objective function value (.f) = 2.9377653725356374e-11
@@ -88,7 +88,7 @@ Index of outliers (.outliers) = [4]</code></pre><p>The right answer is <code>[-1
 gmodel! (generic function with 1 method)</code></pre><pre><code class="language-julia-repl">julia&gt; output = raff(model, gmodel!, data, 3)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [-0.999999, -0.999999, 4.0]
+Solution (.solution) = [-0.9999994158240709, -0.9999994546240264, 3.9999956758615816]
 Number of iterations (.iter) = 28
 Number of trust points (.p) = 4
 Objective function value (.f) = 2.9377653725356374e-11
@@ -97,7 +97,7 @@ Number of Jacobian evaluations (.nj) = 28
 Index of outliers (.outliers) = [4]</code></pre><h2><a class="nav-anchor" id="Changing-some-options-1" href="#Changing-some-options-1">Changing some options</a></h2><p><code>RAFF</code> has tunning options like precision of gradient stopping criteria and initial guess.</p><pre><code class="language-julia-repl">julia&gt; output = raff(model, data, 3; initguess=[0.5,0.5,0.5], ε=1.0e-4)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [-0.92378, -0.757813, -0.186976]
+Solution (.solution) = [-0.9237801182083769, -0.7578132500754239, -0.18697627769713313]
 Number of iterations (.iter) = 28
 Number of trust points (.p) = 5
 Objective function value (.f) = 228.6473817033248
@@ -106,7 +106,7 @@ Number of Jacobian evaluations (.nj) = 28
 Index of outliers (.outliers) = Int64[]</code></pre><p><code>RAFF</code> is based on an optimization method. In this way, it is subject to stopping at stationary points that are not global minimizers. For this reason, heuristics were implemented to find global minimizers. Such heuristics depend on random number generation. So, if you want to run tests with more reliability this can be a useful strategy. To define in <code>RAFF</code>, say, 1000 different starting points, is enough to redefine the keyword argument <code>MAXMS</code>.</p><pre><code class="language-julia-repl">julia&gt; output = raff(model, data, 3; MAXMS=1, initguess=[0.5,0.5,0.5], ε=1.0e-10)
 ** RAFFOutput **
 Status (.status) = 1
-Solution (.solution) = [-1.0, -1.0, 4.0]
+Solution (.solution) = [-0.9999999999999273, -0.9999999999999324, 3.9999999999994627]
 Number of iterations (.iter) = 41
 Number of trust points (.p) = 4
 Objective function value (.f) = 4.536928392543292e-25
