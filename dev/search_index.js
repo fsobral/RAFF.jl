@@ -313,6 +313,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.generate_circle",
+    "page": "API",
+    "title": "RAFF.generate_circle",
+    "category": "function",
+    "text": "generate_circle(dat_filename::String, np::Int, p::Int;\n    std::Float64=0.1, θSol::Vector{Float64}=1.0*randn(Float64, 3),\n    outTimes::Float64=3.0, interval=(rand(i)*2.0*π for i = 1:np))\n\nGenerate perturbed points in a circle given by θSol and save to dat_filename in RAFF format. Return the np x 4 matrix with data (the 4th column is 0 if the point is \"correct\") and a np - p integer vector containing the points selected to be outliers.\n\ndat_filename is a String with the name of the file to store generated data.\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\nAdditional configuration parameters are\n\nstd: standard deviation.\nθSol: true solution, used for generating perturbed points.\nout_times: deviation for outliers will be out_times * std.\ninterval: any iterable object containing np numbers between 0 and 2π.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.generate_ncircle",
+    "page": "API",
+    "title": "RAFF.generate_ncircle",
+    "category": "function",
+    "text": "generate_ncircle(dat_filename::String,np::Int, p::Int;\n  std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),\n  interval=(rand()*2.0*π for i = 1:np))\n\nGenerate perturbed points and uniform noise in a square containing the circle given by θSol and save data to dat_filename in RAFF format. Return the np x 4 matrix with data (the 4th column is 0 if the point is \"correct\") and a np - p integer vector containing the points selected to be outliers.\n\ndat_filename is a String with the name of the file to store generated data.\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\nAdditional configuration parameters are\n\nstd: standard deviation.\nθSol: true solution, used for generating perturbed points.\ninterval: any iterable object containing np numbers between 0 and 2π.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#RAFF.model_list",
     "page": "API",
     "title": "RAFF.model_list",
@@ -325,7 +341,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Random generation",
     "category": "section",
-    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.get_unique_random_points!\nRAFF.generate_noisy_data!\nRAFF.generate_noisy_data\nRAFF.generate_clustered_noisy_data!\nRAFF.generate_clustered_noisy_data\nRAFF.model_list"
+    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.get_unique_random_points!\nRAFF.generate_noisy_data!\nRAFF.generate_noisy_data\nRAFF.generate_clustered_noisy_data!\nRAFF.generate_clustered_noisy_data\nRAFF.generate_circle\nRAFF.generate_ncircle\nRAFF.model_list"
 },
 
 {
