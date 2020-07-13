@@ -694,3 +694,66 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
     return data, θSol, v
     
 end
+
+"""
+    function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
+        model::Function, n::Int, np::Int, p::Int;
+        x_interval::Tuple{Number, Number}=(-10.0, 10.0),
+        θSol::Vector{Float64}=10.0 * randn(Float64, n),
+        std::Number=2, thck::Int=2, funcsize::Int=200)
+
+Modify figure `data` given by a real matrix so that it includes points
+associated with `model` and random uniform noise. **Attention**: this
+function only works with `n=1`-dimensional models.
+
+"""
+function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
+    model::Function, n::Int, np::Int, p::Int;
+    x_interval::Tuple{Number, Number}=(-10.0, 10.0),
+    θSol::Vector{Float64}=10.0 * randn(Float64, n),
+    std::Number=2, thck::Int=2, funcsize::Int=200)
+
+    @assert(x_interval[1] <= x_interval[2],
+            "Invalid interval for random number generation.")
+
+    @assert(n == 1, "Incompatible model")
+
+    # Generate (x_i) where x_interval[1] <= x_i <= x_interval[2] (data)
+    # Fix the problem of large interval with 1 element.
+    x = (np == 1) ? sum(x_interval) / 2.0 : LinRange(x_interval[1], x_interval[2], p)
+    
+    h, w = size(data)
+
+    # Correct points are black
+    y = map(x -> (model(x, θSol) + randn() * std), x)
+    dx = minimum(x)
+    dy = minimum(y)
+
+    scale = funcsize / max(maximum(x) - dx, maximum(y) - dy)
+    xshift = Int(round(rand() * (w - funcsize)))
+    yshift = Int(round(rand() * (h - funcsize)))
+    
+    # Noise is gray
+    for k = 1:np - p
+
+        j = 1 + Int(round(rand() * w))
+        i = 1 + Int(round(rand() * h))
+
+        data[max(1, i - thck):min(i + thck, h), max(1, j - thck):min(j + thck, w)] .= 0.0
+
+    end
+
+    for (tx, ty) in zip(x, y)
+        # TODO: adjust points to fit in the figure.
+        # TODO: add randomness in the position of the curve
+        j = xshift + Int(round((- dx + tx) * scale))
+        i = h - yshift - Int(round((- dy + ty) * scale))
+
+        ((i < 1) || (i > h) || (j < 1) || (j > w)) && continue
+        
+        data[max(1, i - thck):min(i + thck, h), max(1, j - thck):min(j + thck, w)] .= 0.0
+    end
+
+    return data
+
+end

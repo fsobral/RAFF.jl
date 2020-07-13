@@ -433,4 +433,16 @@
 
     end
 
+    @testset "Noisy images" begin
+
+        n, model, mstr = RAFF.model_list["linear"]
+
+        data = ones(400, 400)
+
+        RAFF.generate_uniform_noisy_data!(data, model, n, 500, 100)
+
+        @test(true)
+
+    end
+
 end
