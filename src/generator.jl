@@ -704,19 +704,34 @@ end
 
 Modify figure `data` given by a real matrix so that it includes points
 associated with `model` and random uniform noise. **Attention**: this
-function only works with `n=1`-dimensional models.
+function only works with `1`-dimensional models.
+
+The parameters are
+
+  - `data`: the matrix representing a figure
+  - `model`: real-valued model given by a function `model(x, θ)`
+  - `n`: dimension of the parameters of the model
+  - `np`: number of points to be generated
+  - `p`: number of trusted points that will define the correct points
+    in the model
+
+The function also accepts the following optional arguments:
+
+  - `x_interval`: tuple representing the interval for the `x` variable
+  - `θSol`: vector with the 'exact' parameters of the solution
+  - `std`: error that will be added to the simulated 'correct' points
+  - `thck`: thickness of the point in the image
+  - `funcsize`: size (in pixels) that the function will use in the image.
 
 """
 function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
     model::Function, n::Int, np::Int, p::Int;
     x_interval::Tuple{Number, Number}=(-10.0, 10.0),
     θSol::Vector{Float64}=10.0 * randn(Float64, n),
-    std::Number=2, thck::Int=2, funcsize::Int=200)
+    std::Number=2, thck::Int=2, funcsize::Int=minimum(size(data)))
 
     @assert(x_interval[1] <= x_interval[2],
             "Invalid interval for random number generation.")
-
-    @assert(n == 1, "Incompatible model")
 
     # Generate (x_i) where x_interval[1] <= x_i <= x_interval[2] (data)
     # Fix the problem of large interval with 1 element.
@@ -744,8 +759,7 @@ function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
     end
 
     for (tx, ty) in zip(x, y)
-        # TODO: adjust points to fit in the figure.
-        # TODO: add randomness in the position of the curve
+
         j = xshift + Int(round((- dx + tx) * scale))
         i = h - yshift - Int(round((- dy + ty) * scale))
 
