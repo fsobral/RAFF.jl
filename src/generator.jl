@@ -1,7 +1,7 @@
 export generate_test_problems, generate_noisy_data!,
     generate_noisy_data, generate_clustered_noisy_data,
     generate_clustered_noisy_data!, generate_circle,
-    generate_ncircle
+    generate_ncircle, generate_image_circle
 
 """
 
@@ -341,6 +341,109 @@ function generate_ncircle(dat_filename::String, np::Int, p::Int;
     end
 
     return data, v
+
+end
+
+"""
+
+    generate_ncircle(dat_filename::String,np::Int, p::Int;
+      std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),
+      interval=(rand()*2.0*π for i = 1:np))
+
+Generate perturbed points and uniform noise in a square containing the
+circle given by `θSol` and save data to `dat_filename` in RAFF
+format. Return the np x 4 matrix with data (the 4th column is 0 if the
+point is "correct") and a `np - p` integer vector containing the
+points selected to be outliers.
+
+  - `dat_filename` is a String with the name of the file to store
+    generated data.
+  - `w` and `h` are the dimensions of the image
+  - `np` is the number of points to be generated.
+  - `p` is the number of *trusted points* to be used in the LOVO
+    approach.
+
+Additional configuration parameters are
+
+  - `std`: standard deviation.
+  - `θSol`: true solution, used for generating perturbed points.
+  - `interval`: any iterable object containing `np` numbers between 0
+    and 2π.
+
+"""
+
+function generate_image_circle(dat_filename::String, w::Int, h::Int,
+    np::Int, p::Int; std=0.1,
+    θSol::Vector{Float64}=10.0*randn(Float64, 3),
+    interval=(rand()*2.0*π for i = 1:p), thck::Int=2, funcsize=min(w,
+    h))
+
+    (length(interval) != p) &&
+        error("Size of interval different from given value of p")
+
+    img = zeros(Int, h, w)
+
+    # Random uniform noise
+    for k = 1:np - p
+
+        j = 1 + Int(round(rand() * w))
+        i = 1 + Int(round(rand() * h))
+
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+
+    end
+
+    # Circle function
+    ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+
+    # Store 'true' perturbed points
+    x = Array{Float64}(undef, p)
+    y = Array{Float64}(undef, p)
+
+    for (i, α) in enumerate(interval)
+        x[i], y[i] = ρ(α, θSol[3] + std * randn())
+    end
+    
+    dx = minimum(x)
+    dy = minimum(y)
+
+    scale = funcsize / max(maximum(x) - dx, maximum(y) - dy)
+    xshift = Int(round(rand() * (w - funcsize)))
+    yshift = Int(round(rand() * (h - funcsize)))
+
+    # Correct points are black
+    
+    for (tx, ty) in zip(x, y)
+
+        j = xshift + Int(round((- dx + tx) * scale))
+        i = h - yshift - Int(round((- dy + ty) * scale))
+
+        ((i < 1) || (i > h) || (j < 1) || (j > w)) && continue
+        
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+    end
+
+    open(dat_filename, "w") do fp
+
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+        
+        # Only consider the white points in the image
+        for j = 1:w
+            for i = 1:h
+
+                (img[i, j] == 1) &&
+                    @printf(fp, "%6d %6d %1d %1d\n",
+                            j, i, 0, 0)
+
+            end
+        end
+
+    end
+
+    return img
 
 end
 
