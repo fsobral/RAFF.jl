@@ -329,6 +329,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.generate_image_circle",
+    "page": "API",
+    "title": "RAFF.generate_image_circle",
+    "category": "function",
+    "text": "generate_image_circle(dat_filename::String, w::Int, h::Int,\n    np::Int, p::Int; std=0.1,\n    θSol::Vector{Float64}=10.0*randn(Float64, 3),\n    interval=(rand()*2.0*π for i = 1:p), thck::Int=2,\n    funcsize=min(w, h))\n\nGenerate perturbed points and uniform noise in a wxh image containing the circle given by θSol and save data to dat_filename in RAFF format. Return the 0-1 matrix representing the black and white image generate.\n\ndat_filename is a String with the name of the file to store generated data.\nw and h are the dimensions of the image\nnp is the number of points to be generated.\np is the number of trusted points to be used in the LOVO approach.\n\nAdditional configuration parameters are\n\nstd: standard deviation.\nθSol: true solution, used for generating perturbed points.\ninterval: any iterable object containing np numbers between 0 and 2π.\nthck: thickness of the point in the image\nfuncsize: size (in pixels) that the function will use in the image.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.generate_image_noisy_data",
+    "page": "API",
+    "title": "RAFF.generate_image_noisy_data",
+    "category": "function",
+    "text": "function generate_image_noisy_data(dat_filename::String,\nw::Int, h::Int, model::Function, n::Int, np::Int, p::Int;\nx_interval::Tuple{Number, Number}=(-10.0, 10.0),\nθSol::Vector{Float64}=10.0 * randn(Float64, n), std=2,\nthck::Int=2, funcsize=min(w, h))\n\nCreate a file dat_filename with data information to detect model in a wxh image containing random uniform noise. Attention: this function only works with 1-dimensional models.\n\nReturn a black and white matrix representing the image.\n\nThe parameters are\n\ndat_filename: name of the file to save data\nw and h: dimension of the image\nmodel: real-valued model given by a function model(x, θ)\nn: dimension of the parameters of the model\nnp: number of points to be generated\np: number of trusted points that will define the correct points in the model\n\nThe function also accepts the following optional arguments:\n\nx_interval: tuple representing the interval for the x variable\nθSol: vector with the \'exact\' parameters of the solution\nstd: error that will be added to the simulated \'correct\' points\nthck: thickness of the point in the image\nfuncsize: size (in pixels) that the function will use in the image.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#RAFF.model_list",
     "page": "API",
     "title": "RAFF.model_list",
@@ -341,7 +357,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Random generation",
     "category": "section",
-    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.get_unique_random_points!\nRAFF.generate_noisy_data!\nRAFF.generate_noisy_data\nRAFF.generate_clustered_noisy_data!\nRAFF.generate_clustered_noisy_data\nRAFF.generate_circle\nRAFF.generate_ncircle\nRAFF.model_list"
+    "text": "RAFF.generate_test_problems\nRAFF.get_unique_random_points\nRAFF.get_unique_random_points!\nRAFF.generate_noisy_data!\nRAFF.generate_noisy_data\nRAFF.generate_clustered_noisy_data!\nRAFF.generate_clustered_noisy_data\nRAFF.generate_circle\nRAFF.generate_ncircle\nRAFF.generate_image_circle\nRAFF.generate_image_noisy_data\nRAFF.model_list"
 },
 
 {
