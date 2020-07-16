@@ -1,7 +1,7 @@
 export generate_test_problems, generate_noisy_data!,
     generate_noisy_data, generate_clustered_noisy_data,
-    generate_clustered_noisy_data!, generate_circle,
-    generate_ncircle
+    generate_clustered_noisy_data!, generate_image_noisy_data,
+    generate_circle, generate_ncircle, generate_image_circle
 
 """
 
@@ -341,6 +341,111 @@ function generate_ncircle(dat_filename::String, np::Int, p::Int;
     end
 
     return data, v
+
+end
+
+"""
+
+    generate_image_circle(dat_filename::String, w::Int, h::Int,
+        np::Int, p::Int; std=0.1,
+        θSol::Vector{Float64}=10.0*randn(Float64, 3),
+        interval=(rand()*2.0*π for i = 1:p), thck::Int=2,
+        funcsize=min(w, h))
+
+Generate perturbed points and uniform noise in a `w`x`h` image
+containing the circle given by `θSol` and save data to `dat_filename`
+in RAFF format. Return the 0-1 matrix representing the black and white
+image generate.
+
+  - `dat_filename` is a String with the name of the file to store
+    generated data.
+  - `w` and `h` are the dimensions of the image
+  - `np` is the number of points to be generated.
+  - `p` is the number of *trusted points* to be used in the LOVO
+    approach.
+
+Additional configuration parameters are
+
+  - `std`: standard deviation.
+  - `θSol`: true solution, used for generating perturbed points.
+  - `interval`: any iterable object containing `np` numbers between 0
+    and 2π.
+  - `thck`: thickness of the point in the image
+  - `funcsize`: size (in pixels) that the function will use in the
+    image.
+
+"""
+function generate_image_circle(dat_filename::String, w::Int, h::Int,
+    np::Int, p::Int; std=0.1,
+    θSol::Vector{Float64}=10.0*randn(Float64, 3),
+    interval=(rand()*2.0*π for i = 1:p), thck::Int=2, funcsize=min(w, h))
+
+    (length(interval) != p) &&
+        error("Size of interval different from given value of p")
+
+    img = zeros(Int, h, w)
+
+    # Random uniform noise
+    for k = 1:np - p
+
+        j = 1 + Int(round(rand() * w))
+        i = 1 + Int(round(rand() * h))
+
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+
+    end
+
+    # Circle function
+    ρ = (α, ρ) -> [ρ * cos(α) + θSol[1], ρ * sin(α) + θSol[2]]
+
+    # Store 'true' perturbed points
+    x = Array{Float64}(undef, p)
+    y = Array{Float64}(undef, p)
+
+    for (i, α) in enumerate(interval)
+        x[i], y[i] = ρ(α, θSol[3] + std * randn())
+    end
+    
+    dx = minimum(x)
+    dy = minimum(y)
+
+    scale = funcsize / max(maximum(x) - dx, maximum(y) - dy)
+    xshift = Int(round(rand() * (w - funcsize)))
+    yshift = Int(round(rand() * (h - funcsize)))
+
+    # Correct points are black
+    
+    for (tx, ty) in zip(x, y)
+
+        j = xshift + Int(round((- dx + tx) * scale))
+        i = h - yshift - Int(round((- dy + ty) * scale))
+
+        ((i < 1) || (i > h) || (j < 1) || (j > w)) && continue
+        
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+    end
+
+    open(dat_filename, "w") do fp
+
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+        
+        # Only consider the white points in the image
+        for j = 1:w
+            for i = 1:h
+
+                (img[i, j] == 1) &&
+                    @printf(fp, "%6d %6d %1d %1d\n",
+                            j, i, 0, 0)
+
+            end
+        end
+
+    end
+
+    return img
 
 end
 
@@ -693,4 +798,105 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
 
     return data, θSol, v
     
+end
+
+"""
+    function generate_image_noisy_data(dat_filename::String,
+    w::Int, h::Int, model::Function, n::Int, np::Int, p::Int;
+    x_interval::Tuple{Number, Number}=(-10.0, 10.0),
+    θSol::Vector{Float64}=10.0 * randn(Float64, n), std=2,
+    thck::Int=2, funcsize=min(w, h))
+
+Create a file `dat_filename` with data information to detect `model`
+in a `w`x`h` image containing random uniform noise. **Attention**:
+this function only works with `1`-dimensional models.
+
+Return a black and white matrix representing the image.
+
+The parameters are
+
+  - `dat_filename`: name of the file to save data
+  - `w` and `h`: dimension of the image
+  - `model`: real-valued model given by a function `model(x, θ)`
+  - `n`: dimension of the parameters of the model
+  - `np`: number of points to be generated
+  - `p`: number of trusted points that will define the correct points
+    in the model
+
+The function also accepts the following optional arguments:
+
+  - `x_interval`: tuple representing the interval for the `x` variable
+  - `θSol`: vector with the 'exact' parameters of the solution
+  - `std`: error that will be added to the simulated 'correct' points
+  - `thck`: thickness of the point in the image
+  - `funcsize`: size (in pixels) that the function will use in the image.
+
+"""
+function generate_image_noisy_data(dat_filename::String,
+    w::Int, h::Int, model::Function, n::Int, np::Int, p::Int;
+    x_interval::Tuple{Number, Number}=(-10.0, 10.0),
+    θSol::Vector{Float64}=10.0 * randn(Float64, n), std=2,
+    thck::Int=2, funcsize=min(w, h))
+
+    @assert(x_interval[1] <= x_interval[2],
+            "Invalid interval for random number generation.")
+
+    # Generate (x_i) where x_interval[1] <= x_i <= x_interval[2] (data)
+    # Fix the problem of large interval with 1 element.
+    x = (np == 1) ? sum(x_interval) / 2.0 : LinRange(x_interval[1], x_interval[2], p)
+    
+    img = zeros(Int, h, w)
+
+    # Correct points are black
+    y = map(x -> (model(x, θSol) + randn() * std), x)
+    dx = minimum(x)
+    dy = minimum(y)
+
+    scale = funcsize / max(maximum(x) - dx, maximum(y) - dy)
+    xshift = Int(round(rand() * (w - funcsize)))
+    yshift = Int(round(rand() * (h - funcsize)))
+    
+    # Noise is gray
+    for k = 1:np - p
+
+        j = 1 + Int(round(rand() * w))
+        i = 1 + Int(round(rand() * h))
+
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+
+    end
+
+    for (tx, ty) in zip(x, y)
+
+        j = xshift + Int(round((- dx + tx) * scale))
+        i = h - yshift - Int(round((- dy + ty) * scale))
+
+        ((i < 1) || (i > h) || (j < 1) || (j > w)) && continue
+        
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
+    end
+
+    # Create data filename
+    open(dat_filename, "w") do fp
+
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+        
+        # Only consider the white points in the image
+        for j = 1:w
+            for i = 1:h
+
+                (img[i, j] == 1) &&
+                    @printf(fp, "%6d %6d %1d %1d\n",
+                            j, i, 0, 0)
+
+            end
+        end
+
+    end
+
+    return img
+
 end
