@@ -346,15 +346,16 @@ end
 
 """
 
-    generate_ncircle(dat_filename::String,np::Int, p::Int;
-      std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),
-      interval=(rand()*2.0*π for i = 1:np))
+    generate_image_circle(dat_filename::String, w::Int, h::Int,
+        np::Int, p::Int; std=0.1,
+        θSol::Vector{Float64}=10.0*randn(Float64, 3),
+        interval=(rand()*2.0*π for i = 1:p), thck::Int=2,
+        funcsize=min(w, h))
 
-Generate perturbed points and uniform noise in a square containing the
-circle given by `θSol` and save data to `dat_filename` in RAFF
-format. Return the np x 4 matrix with data (the 4th column is 0 if the
-point is "correct") and a `np - p` integer vector containing the
-points selected to be outliers.
+Generate perturbed points and uniform noise in a `w`x`h` image
+containing the circle given by `θSol` and save data to `dat_filename`
+in RAFF format. Return the 0-1 matrix representing the black and white
+image generate.
 
   - `dat_filename` is a String with the name of the file to store
     generated data.
@@ -369,14 +370,15 @@ Additional configuration parameters are
   - `θSol`: true solution, used for generating perturbed points.
   - `interval`: any iterable object containing `np` numbers between 0
     and 2π.
+  - `thck`: thickness of the point in the image
+  - `funcsize`: size (in pixels) that the function will use in the
+    image.
 
 """
-
 function generate_image_circle(dat_filename::String, w::Int, h::Int,
     np::Int, p::Int; std=0.1,
     θSol::Vector{Float64}=10.0*randn(Float64, 3),
-    interval=(rand()*2.0*π for i = 1:p), thck::Int=2, funcsize=min(w,
-    h))
+    interval=(rand()*2.0*π for i = 1:p), thck::Int=2, funcsize=min(w, h))
 
     (length(interval) != p) &&
         error("Size of interval different from given value of p")
@@ -799,19 +801,22 @@ function generate_clustered_noisy_data!(data::Array{Float64, 2},
 end
 
 """
-    function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
-        model::Function, n::Int, np::Int, p::Int;
-        x_interval::Tuple{Number, Number}=(-10.0, 10.0),
-        θSol::Vector{Float64}=10.0 * randn(Float64, n),
-        std::Number=2, thck::Int=2, funcsize::Int=200)
+    function generate_image_noisy_data(dat_filename::String,
+    w::Int, h::Int, model::Function, n::Int, np::Int, p::Int;
+    x_interval::Tuple{Number, Number}=(-10.0, 10.0),
+    θSol::Vector{Float64}=10.0 * randn(Float64, n), std=2,
+    thck::Int=2, funcsize=min(w, h))
 
-Modify figure `data` given by a real matrix so that it includes points
-associated with `model` and random uniform noise. **Attention**: this
-function only works with `1`-dimensional models.
+Create a file `dat_filename` with data information to detect `model`
+in a `w`x`h` image containing random uniform noise. **Attention**:
+this function only works with `1`-dimensional models.
+
+Return a black and white matrix representing the image.
 
 The parameters are
 
-  - `data`: the matrix representing a figure
+  - `dat_filename`: name of the file to save data
+  - `w` and `h`: dimension of the image
   - `model`: real-valued model given by a function `model(x, θ)`
   - `n`: dimension of the parameters of the model
   - `np`: number of points to be generated
@@ -827,7 +832,6 @@ The function also accepts the following optional arguments:
   - `funcsize`: size (in pixels) that the function will use in the image.
 
 """
-
 function generate_image_noisy_data(dat_filename::String,
     w::Int, h::Int, model::Function, n::Int, np::Int, p::Int;
     x_interval::Tuple{Number, Number}=(-10.0, 10.0),
