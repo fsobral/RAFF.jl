@@ -1,7 +1,7 @@
 export generate_test_problems, generate_noisy_data!,
     generate_noisy_data, generate_clustered_noisy_data,
-    generate_clustered_noisy_data!, generate_circle,
-    generate_ncircle, generate_image_circle
+    generate_clustered_noisy_data!, generate_image_noisy_data,
+    generate_circle, generate_ncircle, generate_image_circle
 
 """
 
@@ -827,11 +827,12 @@ The function also accepts the following optional arguments:
   - `funcsize`: size (in pixels) that the function will use in the image.
 
 """
-function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
-    model::Function, n::Int, np::Int, p::Int;
+
+function generate_image_noisy_data(dat_filename::String,
+    w::Int, h::Int, model::Function, n::Int, np::Int, p::Int;
     x_interval::Tuple{Number, Number}=(-10.0, 10.0),
-    θSol::Vector{Float64}=10.0 * randn(Float64, n),
-    std::Number=2, thck::Int=2, funcsize::Int=minimum(size(data)))
+    θSol::Vector{Float64}=10.0 * randn(Float64, n), std=2,
+    thck::Int=2, funcsize=min(w, h))
 
     @assert(x_interval[1] <= x_interval[2],
             "Invalid interval for random number generation.")
@@ -840,7 +841,7 @@ function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
     # Fix the problem of large interval with 1 element.
     x = (np == 1) ? sum(x_interval) / 2.0 : LinRange(x_interval[1], x_interval[2], p)
     
-    h, w = size(data)
+    img = zeros(Int, h, w)
 
     # Correct points are black
     y = map(x -> (model(x, θSol) + randn() * std), x)
@@ -857,7 +858,8 @@ function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
         j = 1 + Int(round(rand() * w))
         i = 1 + Int(round(rand() * h))
 
-        data[max(1, i - thck):min(i + thck, h), max(1, j - thck):min(j + thck, w)] .= 0.0
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
 
     end
 
@@ -868,9 +870,29 @@ function generate_uniform_noisy_data!(data::AbstractArray{Float64, 2},
 
         ((i < 1) || (i > h) || (j < 1) || (j > w)) && continue
         
-        data[max(1, i - thck):min(i + thck, h), max(1, j - thck):min(j + thck, w)] .= 0.0
+        img[max(1, i - thck):min(i + thck, h),
+            max(1, j - thck):min(j + thck, w)] .= 1
     end
 
-    return data
+    # Create data filename
+    open(dat_filename, "w") do fp
+
+        # Dimension of the domain of the function to fit
+        @printf(fp, "%d\n", 2)
+        
+        # Only consider the white points in the image
+        for j = 1:w
+            for i = 1:h
+
+                (img[i, j] == 1) &&
+                    @printf(fp, "%6d %6d %1d %1d\n",
+                            j, i, 0, 0)
+
+            end
+        end
+
+    end
+
+    return img
 
 end

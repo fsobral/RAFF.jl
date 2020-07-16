@@ -437,11 +437,58 @@
 
         n, model, mstr = RAFF.model_list["linear"]
 
-        data = ones(400, 400)
+        fname = "line_image_remove.dat"
 
-        RAFF.generate_uniform_noisy_data!(data, model, n, 500, 100)
+        img = RAFF.generate_image_noisy_data(fname, 400, 400, model,
+                                             n, 500, 100)
 
-        @test(true)
+        @test(size(img) == (400, 400))
+        
+        open(fname, "r") do fp
+
+            readline(fp)
+
+            while !eof(fp)
+
+                l = readline(fp)
+
+                x, y, f, e = map(x -> parse(Int, x), split(l))
+
+                @test(img[y, x] == 1)
+                @test(f == 0)
+                @test(e == 0)
+
+            end
+
+        end
+
+        rm(fname)
+
+        fname = "circle_image_remove.dat"
+
+        img = RAFF.generate_image_circle(fname, 400, 400, 1000, 100)
+
+        @test(size(img) == (400, 400))
+        
+        open(fname, "r") do fp
+
+            readline(fp)
+
+            while !eof(fp)
+
+                l = readline(fp)
+
+                x, y, f, e = map(x -> parse(Int, x), split(l))
+
+                @test(img[y, x] == 1)
+                @test(f == 0)
+                @test(e == 0)
+
+            end
+
+        end
+
+        rm(fname)
 
     end
 
