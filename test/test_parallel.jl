@@ -87,7 +87,7 @@
         worker1 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS, initguess)
+                                MAXMS, seedMS, initguess, lmlovo)
             true
         end
 
@@ -164,7 +164,7 @@
         worker2 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS, initguess)
+                                MAXMS, seedMS, initguess, lmlovo)
             true
         end
 
@@ -201,7 +201,7 @@
         worker1 = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS, initguess)
+                                MAXMS, seedMS, initguess, lmlovo)
             true
         end
 
@@ -227,7 +227,7 @@
         worker = @async @test begin
             RAFF.consume_tqueue(bqueue, tqueue, squeue,
                                 model, gmodel!, data, n, p - 2, np,
-                                MAXMS, seedMS, initguess)
+                                MAXMS, seedMS, initguess, lmlovo)
             true
         end
 
