@@ -137,115 +137,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "api/#RAFF.lmlovo",
-    "page": "API",
-    "title": "RAFF.lmlovo",
-    "category": "function",
-    "text": "lmlovo(model::Function [, θ::Vector{Float64} = zeros(n)], data::Array{Float64, 2},\n       n::Int, p::Int [; kwargs...])\n\nlmlovo(model::Function, gmodel!::Function [, θ::Vector{Float64} = zeros(n)],\n       data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int=200,\n       ε::Float64=10.0^-4])\n\nFit the n-parameter model model to the data given by matrix data. The strategy is based on the LOVO function, which means that only p (0 < p <= rows of data) points are trusted. The Levenberg-Marquardt algorithm is implemented in this version.\n\nMatriz data is the data to be fit. This matrix should be in the form\n\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\n\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\n\nIf θ is provided, then it is used as the starting point.\n\nThe signature of function model should be given by\n\nmodel(x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64})\n\nwhere x are the variables and θ is a n-dimensional vector of parameters. If the gradient of the model gmodel!\n\ngmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},\n           θ::Vector{Float64})\n\nis not provided, then the function ForwardDiff.gradient! is called to compute it.  Note that this choice has an impact in the computational performance of the algorithm. In addition, if ForwardDiff.jl is being used, then one MUST remove the signature of vector θ from function model.\n\nThe optional arguments are\n\nMAXITER: maximum number of iterations\nε: tolerance for the gradient of the function\n\nReturns a RAFFOutput object.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.raff",
-    "page": "API",
-    "title": "RAFF.raff",
-    "category": "function",
-    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5)\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, θ)\nwhere x is the multidimensional argument and θ is the n-dimensional vector of parameters\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(g, x, θ)\nwhere x is the multidimensional argument, θ is the n-dimensional vector of parameters and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nε: gradient stopping criteria to lmlovo\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.praff",
-    "page": "API",
-    "title": "RAFF.praff",
-    "category": "function",
-    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    ε::Float64=1.0e-4, noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nε: stopping tolerance\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.set_raff_output_level",
-    "page": "API",
-    "title": "RAFF.set_raff_output_level",
-    "category": "function",
-    "text": "set_raff_output_level(level::LogLevel)\n\nSet the output level of raff and praff algorithms to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.set_lm_output_level",
-    "page": "API",
-    "title": "RAFF.set_lm_output_level",
-    "category": "function",
-    "text": "set_lm_output_level(level::LogLevel)\n\nSet the output level of lmlovo algorithm to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
-},
-
-{
     "location": "api/#Main-functions-1",
     "page": "API",
     "title": "Main functions",
     "category": "section",
-    "text": "lmlovo\nraff\npraff\nset_raff_output_level\nset_lm_output_level"
-},
-
-{
-    "location": "api/#RAFF.voting_strategy",
-    "page": "API",
-    "title": "RAFF.voting_strategy",
-    "category": "function",
-    "text": "voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,\n                plimsup::Int)\n\nUtility function to compute the matrix representing the voting system used by RAFF.\n\nIt first applies a filtering strategy, to eliminate obvious local minima, then it calculates a magic threshold and constructs the distance matrix. The vector sols contains the solutions s_p, for p = pliminf, ... plimsup.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.eliminate_local_min!",
-    "page": "API",
-    "title": "RAFF.eliminate_local_min!",
-    "category": "function",
-    "text": "eliminate_local_min!(sols::Vector{RAFFOutput})\n\nCheck if the function value of the solution found by smaller values of p is not greater when compared with larger ones. This certainly indicates that a local minimizer was found by the smaller p.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.sort_fun!",
-    "page": "API",
-    "title": "RAFF.sort_fun!",
-    "category": "function",
-    "text": "This function is an auxiliary function. It finds the p smallest values of vector V and brings them to the first p positions. The indexes associated with the p smallest values are stored in ind.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.update_best",
-    "page": "API",
-    "title": "RAFF.update_best",
-    "category": "function",
-    "text": "update_best(channel::RemoteChannel, bestx::SharedArray{Float64, 1})\n\nListen to a channel for results found by lmlovo. If there is an improvement for the objective function, the shared array bestx is updated.\n\nAttention: There might be an unstable state if there is a process   reading bestx while this function is updating it. This should not   be a problem, since it is used as a starting point.\n\nAttention 2: this function is currently out of use.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.consume_tqueue",
-    "page": "API",
-    "title": "RAFF.consume_tqueue",
-    "category": "function",
-    "text": "function consume_tqueue(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                        squeue::RemoteChannel, model::Function, gmodel!::Function,\n                        data::Array{Float64, 2}, n::Int, pliminf::Int,\n                        plimsup::Int, MAXMS::Int, seedMS::MersenneTwister)\n\nThis function represents one worker, which runs lmlovo in a multistart fashion.\n\nIt takes a job from the RemoteChannel tqueue and runs lmlovo function to it. It might run using a multistart strategy, if MAXMS>1. It sends the best results found for each value obtained in tqueue to channel squeue, which will be consumed by the main process. All the other arguments are the same for praff function.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.check_and_close",
-    "page": "API",
-    "title": "RAFF.check_and_close",
-    "category": "function",
-    "text": "check_and_close(bqueue::RemoteChannel, tqueue::RemoteChannel,\n                squeue::RemoteChannel, futures::Vector{Future};\n                secs::Float64=0.1)\n\nCheck if there is at least one worker process in the vector of futures that has not prematurely finished. If there is no alive worker, close task, solution and best queues, tqueue, squeue and bqueue, respectively.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.check_ftrusted",
-    "page": "API",
-    "title": "RAFF.check_ftrusted",
-    "category": "function",
-    "text": "check_ftrusted(ftrusted::Union{Float64, Tuple{Float64, Float64}}, np::Int)\n\nUtility function to check ftrusted parameter in raff and praff. Throws an ErrorException if the percentage of trusted points is incorrect.\n\n\n\n\n\n"
-},
-
-{
-    "location": "api/#RAFF.interval_rand!",
-    "page": "API",
-    "title": "RAFF.interval_rand!",
-    "category": "function",
-    "text": "interval_rand!(x::Vector{Float64},\n    intervals::Vector{Tuple{Float64, Float64}})\n\nFill a vector x with uniformly distributed random numbers generated in the interval given by intervals. It is assumed that length(x) == length(intervals).\n\nThrows an ErrorException if the dimension of x is smaller the dimension of intervals or if the intervals are invalid.\n\n\n\n\n\n"
+    "text": "lmlovo\ngnlslovo\nraff\npraff\nset_raff_output_level\nset_lm_output_level"
 },
 
 {
