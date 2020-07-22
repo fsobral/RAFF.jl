@@ -9,6 +9,7 @@ There are four main RAFF structures:
 ## Main functions
 ```@docs
 lmlovo
+gnlslovo
 raff
 praff
 set_raff_output_level

@@ -308,6 +308,18 @@ lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
 
 """
 
+    gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
+             ε::Number=1.0e-4, MAXITER=400, αls=2.0, dinc=2.0,
+             MAXLSITER=100) where {T<:Float64}
+
+    gnlslovo(model, θ::Vector{Float64}, data::Array{Float64,2},
+             n::Int, p::Int; kwargs...)
+
+    gnlslovo(model, gmodel!, data::Array{Float64,2}, n::Int,
+             p::Int; kwargs...)
+
+    gnlslovo(model, data::Array{Float64,2}, n::Int, p::Int; kwargs...)
+
 LOVO Gauss-Newton with line-search described in
 
 > R. Andreani, G. Cesar, R. M. Cesar-Jr., J. M. Martínez, and
@@ -315,6 +327,52 @@ LOVO Gauss-Newton with line-search described in
 > method with applications in agriculture,” in Proc. 1st International
 > Workshop on Computer Vision Applications for Developing Regions in
 > Conjunction with ICCV 2007-CVDR-ICCV07, 2007.
+
+Fit the `n`-parameter model `model` to the data given by matrix
+`data`. The strategy is based on the LOVO function, which means that
+only `p` (0 < `p` <= rows of `data`) points are trusted.
+
+Matriz `data` is the data to be fit. This matrix should be in the form
+
+    x11 x12 ... x1N y1
+    x21 x22 ... x2N y2
+    :
+
+where `N` is the dimension of the argument of the model
+(i.e. dimension of `x`).
+
+If `θ` is provided, then it is used as the starting point.
+
+The signature of function `model` should be given by
+
+    model(x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64})
+
+where `x` are the variables and `θ` is a `n`-dimensional vector of
+parameters. If the gradient of the model `gmodel!`
+
+    gmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},
+               θ::Vector{Float64})
+
+is not provided, then the function ForwardDiff.gradient! is called to
+compute it.  **Note** that this choice has an impact in the
+computational performance of the algorithm. In addition, if
+`ForwardDiff.jl` is being used, then one **MUST** remove the signature
+of vector `θ` from function `model`.
+
+The optional arguments are
+
+  - `MAXITER`: maximum number of iterations
+  - `ε`: tolerance for the gradient of the function
+  - `αls`: number >1 to increase/decrease the parameter `t` in
+    line-search
+  - `dinc`: number >1 to increase the diagonal of the J^T J
+    matrix in order to escape from singularity
+  - `MAXLSITER`: maximum number of Linear System increases in
+    diagonal before exiting. Also defines the maximum number of
+    Line Search trials to satisfy Armijo (but does not exit in such
+    case)
+
+Returns a [`RAFFOutput`](@ref) object.
 
 """
 
