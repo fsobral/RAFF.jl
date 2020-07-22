@@ -1,4 +1,4 @@
-@testset "Simple tests" begin
+@testset "Test RAFF" begin
 
     model(x, θ) = θ[1] * exp(x[1] * θ[2])
 
@@ -36,62 +36,8 @@
 
         answer = [2.0, -0.5]
 
-        θ = [0.0, 0.0]
-
-        rout = lmlovo(model, θ, data, 2, 18)
-
-        @test rout.status == 1
-        @test rout.solution ≈ answer atol=1.0e-5
-        @test rout.p == 18
-        @test rout.nf >= rout.iter
-        @test rout.nj >= rout.iter
-        
-        θ = [0.0, 0.0]
-
-        # Test with small p
-        rout = lmlovo(model, θ, data, 2, 3)
-
-        @test rout.status == 1
-        @test rout.p == 3
-
-        θ = [0.0, 0.0]
-
-        rout = raff(model, data, 2)
-
-        @test rout.f ≈ 0.0 atol=1.0e-5
-        @test rout.solution ≈ answer atol=1.0e-5
-        @test rout.p == 18
-        @test rout.iter >= size(data)[1]
-        @test rout.nf >= 1
-        @test rout.nj >= 1
-
-        @test_throws AssertionError lmlovo(model, θ, data, 0, 1)
-        @test_throws AssertionError lmlovo(model, θ, data, 2, -1)
-
-        rout = lmlovo(model, θ, data, 2, 0)
-
-        @test rout.status == 1
-        @test rout.iter == 0
-        @test rout.f == 0
-        @test rout.outliers == [1:size(data)[1];]
-        @test rout.solution == θ
-        @test rout.nf == 0
-        @test rout.nj == 0
-
-        # lmlovo with function and gradient
-
-        θ = [0.0, 0.0]
-
-        rout = lmlovo(model, gmodel!, θ, data, 2, 18)
-        
-        @test rout.status == 1
-        @test rout.solution ≈ answer atol=1.0e-5
-        @test rout.p == 18
-
-        θ = [0.0, 0.0]
-
         rout = raff(model, gmodel!, data, 2)
-        
+
         @test rout.f ≈ 0.0 atol=1.0e-5
         @test rout.solution ≈ answer atol=1.0e-5
         @test rout.p == 18
@@ -99,49 +45,6 @@
         @test rout.nf >= 1
         @test rout.nj >= 1
 
-        @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 0, 1)
-        @test_throws AssertionError lmlovo(model, gmodel!, θ, data, 2, -1)
-
-        rout = lmlovo(model, gmodel!, θ, data, 2, 0)
-
-        @test rout.status == 1
-        @test rout.iter == 0
-        @test rout.f == 0
-        @test rout.outliers == [1:size(data)[1];]
-        @test rout.solution == θ
-        @test rout.nf == 0
-        @test rout.nj == 0
-
-    end
-
-    # Test to check Issue #1
-    
-    @testset "Error in printing" begin
-
-        m(x, θ) = θ[1] * x[1]^2 + θ[2]
-
-        A = [ -2.0  5.00;
-              -1.5  3.25;
-              -1.0  2.00;
-              -0.5  1.25;
-              0.0  1.00;
-              0.5  1.25;
-              1.0  2.00;
-              1.5  3.25;
-              2.0  5.00 ]
-
-        θ = [0.0, 0.0]
-
-        # Changes log just for this test
-        rout = with_logger(Logging.NullLogger()) do
-            
-            lmlovo(m, θ, A, 2, 4)
-
-        end
-
-        @test rout.status == 1
-        @test rout.p == 4
-        
     end
 
     @testset "Test parameters" begin
@@ -260,6 +163,41 @@
         rx = Regex("\\(\\.outliers\\) = " * svec)
         
         @test match(rx, s) !== nothing
+
+    end
+
+    @testset "Different solvers ($(solver))" for solver in [lmlovo, gnlslovo]
+
+        lmodel = (x, θ) -> θ[1] * x[1] + θ[2]
+        glmodel! = (g, x, θ) -> begin
+            g[1] = x[1]
+            g[2] = 1.0
+        end
+
+        np = 21
+        p  = 18
+        
+        data = Array{Float64, 2}(undef, np, 2)
+        n = 2
+        θsol = [-p, 0.5 * np]
+        
+        for (i, x) in enumerate(range(-10, stop=10, length=np))
+            data[i, 1] = x
+            data[i, 2] = lmodel(x, θsol)
+        end
+
+        θ = [1.0, 1.0]
+
+        data[1:np - p, 2] .+= 100
+
+        rout = raff(lmodel, glmodel!, data, 2; inner_solver=solver)
+        
+        @test rout.f ≈ 0.0 atol=1.0e-5
+        @test rout.solution ≈ θsol atol=1.0e-5
+        @test rout.p == 18
+        @test rout.iter >= 1
+        @test rout.nf >= 1
+        @test rout.nj >= 1
 
     end
 

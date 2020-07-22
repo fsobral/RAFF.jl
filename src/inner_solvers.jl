@@ -320,7 +320,7 @@ LOVO Gauss-Newton with line-search described in
 
 function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
                   ε::Number=1.0e-4, MAXITER=400, αls=2.0, dinc=2.0,
-                  MAXLSITER=1000) where {T<:Float64}
+                  MAXLSITER=100) where {T<:Float64}
 
     @assert(n > 0, "Dimension should be positive.")
     @assert(p >= 0, "Trusted points should be nonnegative.")
@@ -415,6 +415,8 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
 
     safecount = 1
 
+    safelscnt = 0
+
     # Main loop
 
     while (norm∇f >= ε) && (safecount < MAXITER)
@@ -432,8 +434,10 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
         # Solve the system
 
         BLAS.gemm!('T', 'N', 1.0, Jrp, Jrp, 0.0, G)
+
+        safelscnt = 0
         
-        while true
+        while true && (safelscnt < MAXLSITER)
         
             F = qr(G)
 
@@ -462,6 +466,16 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
                 G[i] = max(dinc * G[i], 1.0)
             end
 
+            safelscnt += 1
+
+        end
+
+        if safelscnt >= MAXLSITER
+            with_logger(lm_logger.x) do
+                @debug("Unable to compute a descent direction.")
+            end
+            
+            break
         end
 
         d .*= -1.0
@@ -510,8 +524,8 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
                 """)
 
             if safelscnt == MAXLSITER
-                @warning("Armijo condition was not satisfied within" *
-                         " $(MAXLSITER) iterations.")
+                @warn("Armijo condition was not satisfied within" *
+                      " $(MAXLSITER) iterations.")
             end
 
         end
@@ -531,7 +545,17 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
 
     end
 
-    if safecount == MAXITER
+    if (norm∇f >= ε) && (safelscnt >= MAXLSITER)
+        with_logger(lm_logger.x) do
+
+            @info("Unable to compute a descent solution in " *
+                  "($MAXLSITER) attempts.")
+
+        end
+        status = 0
+    end        
+
+    if (norm∇f >= ε) && (safecount == MAXITER)
         with_logger(lm_logger.x) do
 
             @info("No solution was found in $(safecount) iterations.")
@@ -573,3 +597,30 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
     return RAFFOutput(status, θ, safecount, p, fk, nf, nj, outliers)
 
 end
+
+function gnlslovo(model, θ::Vector{Float64}, data::Array{Float64,2},
+                  n::Int, p::Int; kwargs...)
+
+    # Define closures for derivative and initializations
+
+    # 'x' is considered as global parameter for this function
+    model_cl(θ) = model(x, θ)
+    
+    grad_model!(g, x_, θ) = begin
+
+        global x = x_
+        
+        ForwardDiff.gradient!(g, model_cl, θ)
+
+    end
+
+    return gnlslovo(model, grad_model!, θ, data, n, p; kwargs...)
+    
+end
+
+gnlslovo(model, gmodel!, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    lmlovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
+
+gnlslovo(model, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
+    lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
+

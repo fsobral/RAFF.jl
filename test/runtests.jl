@@ -9,6 +9,8 @@ using Logging
 
 include("test_raff.jl")
 
+include("test_solvers.jl")
+
 include("test_utils.jl")
 
 include("test_generator.jl")
