@@ -1,4 +1,4 @@
-export lmlovo
+export lmlovo, gnlslovo
 
 """
     lmlovo(model::Function [, θ::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
@@ -306,3 +306,270 @@ lmlovo(model::Function, gmodel!::Function, data::Array{Float64,2}, n::Int, p::In
 lmlovo(model::Function, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
     lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
+"""
+
+LOVO Gauss-Newton with line-search described in
+
+> R. Andreani, G. Cesar, R. M. Cesar-Jr., J. M. Martínez, and
+> P. J. S. Silva, “Efficient curve detection using a {Gauss-Newton}
+> method with applications in agriculture,” in Proc. 1st International
+> Workshop on Computer Vision Applications for Developing Regions in
+> Conjunction with ICCV 2007-CVDR-ICCV07, 2007.
+
+"""
+
+function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
+                  ε::Number=1.0e-4, MAXITER=400, αls=2.0, dinc=2.0,
+                  MAXLSITER=1000) where {T<:Float64}
+
+    @assert(n > 0, "Dimension should be positive.")
+    @assert(p >= 0, "Trusted points should be nonnegative.")
+    
+    npun, = size(data)
+
+    with_logger(lm_logger.x) do
+        
+        @debug("Size of data matrix ", size(data))
+
+    end
+
+    # Counters for calls to F and its Jacobian
+    nf = 0
+
+    nj = 0
+    
+    (p == 0) && return RAFFOutput(1, θ, 0, p, 0.0, nf, nj, [1:npun;])
+
+    # Main function - the LOVO function
+    LovoFun = let
+
+        npun_::Int = npun
+        
+        ind::Vector{Int} = Vector{Int}(undef, npun_)
+        
+        F::Vector{Float64} = Vector{Float64}(undef, npun_)
+        
+        p_::Int = p
+        
+        # Return a ordered set index and lovo value
+        (θ) -> begin
+            
+            nf += 1
+            
+            @views for i = 1:npun_
+                F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
+            end
+            
+            indF, orderedF = sort_fun!(F, ind, p_)
+            
+            return indF, sum(orderedF)
+        end
+        
+    end
+    
+    # Residue and Jacobian of residue
+    rp::Vector{Float64} = Vector{Float64}(undef, p)
+    
+    Jrp::Array{Float64, 2} = Array{Float64}(undef, p, n)
+    
+    # This function returns the residue and Jacobian of residue
+    ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64}, rJ::Array{Float64, 2}) = begin
+
+        nj += 1
+        
+        for (k, i) in enumerate(ind)
+            
+            x = data[i, 1:(end - 1)]
+            
+            r[k] = model(x, θ) - data[i, end]
+            
+            v = @view(rJ[k, :])
+            
+            gmodel!(v, x, θ)
+
+        end
+
+    end
+
+    # Gauss-Newton algorithm
+
+    maxoutind = min(p, 5)
+    dtnf      = Inf
+    status    = 1
+    
+    # Allocation
+    θnew = Vector{Float64}(undef, n)
+    d    = Vector{Float64}(undef, n)
+    y    = Vector{Float64}(undef, n)
+    G    = Array{Float64, 2}(undef, n, n)
+    ∇f  = Vector{Float64}(undef, n)
+
+    # Initial information
+    
+    ip, fk = LovoFun(θ)
+    ResFun!(θ, ip, rp, Jrp)
+
+    BLAS.gemv!('T', 1.0, Jrp, rp, 0.0, ∇f)
+
+    norm∇f = norm(∇f, 2)
+
+    safecount = 1
+
+    # Main loop
+
+    while (norm∇f >= ε) && (safecount < MAXITER)
+
+        with_logger(lm_logger.x) do
+
+            @info("Iteration $(safecount)")
+            @info("  Current value:   $(fk)")
+            @info("  ||∇f||_2: $(norm∇f)")
+            @info("  Current iterate: $(θ)")
+            @info("  Best indices (first $(maxoutind)): $(ip[1:maxoutind])")
+
+        end
+
+        # Solve the system
+
+        BLAS.gemm!('T', 'N', 1.0, Jrp, Jrp, 0.0, G)
+        
+        while true
+        
+            F = qr(G)
+
+            serror = false
+            dtnf   = 0.0
+            try
+                ldiv!(d, F, ∇f)
+                dtnf = - dot(d, ∇f)
+            catch
+                serror = true
+            end
+
+            with_logger(lm_logger.x) do
+                @debug("  Found solution for linear system", d, dtnf)
+            end
+
+            (!serror) && (abs(dtnf) >= 1.0e-8) && break
+
+            with_logger(lm_logger.x) do
+                @debug("  Unable to solve the GN system (dtnf = $(dtnf))." *
+                       "  Will increase the diagonal elements.")
+            end
+
+            # Adjust the diagonal elements of G in case of failure
+            for i in diagind(G)
+                G[i] = max(dinc * G[i], 1.0)
+            end
+
+        end
+
+        d .*= -1.0
+
+        # Line search
+        θnew .= θ .+ d
+        
+        t = 1.0
+
+        safelscnt = 0
+
+        # Warning. We cannot store ip to save computation, due to the
+        # way that LovoFun is implemented (ip is a pointer to a hidden
+        # vector, actually). This will change in the future
+        ip, fkpd = LovoFun(θnew)
+
+        while (fkpd <= fk + t * dtnf) && (safelscnt < MAXLSITER)
+            t         *= αls
+            θnew      .= θ .+ t .* d
+            ip, fkpf   = LovoFun(θnew)
+            safelscnt += 1
+        end
+
+        if t > 1.0
+            t       /= αls
+            θnew    .= θ .+ t .* d
+            ip, fkpf = LovoFun(θnew)
+        end
+
+        # TODO: implement quadratic interpolation
+        while (fkpd > fk + t * dtnf) && (safelscnt < MAXLSITER)
+            t         /= αls
+            θnew      .= θ .+ t .* d
+            ip, fkpd   = LovoFun(θnew)
+            safelscnt += 1
+        end
+
+        with_logger(lm_logger.x) do
+
+            @info("""
+
+                \tLine search
+                \t  t          = $(t)
+                \t  f(θ + t d) = $(fkpd)
+                \t     d^T ∇f = $(dtnf)
+                """)
+
+            if safelscnt == MAXLSITER
+                @warning("Armijo condition was not satisfied within" *
+                         " $(MAXLSITER) iterations.")
+            end
+
+        end
+
+        # New iteration
+
+        θ .= θnew
+        fk = fkpd
+
+        ResFun!(θ, ip, rp, Jrp)
+
+        BLAS.gemv!('T', 1.0, Jrp, rp, 0.0, ∇f)
+
+        norm∇f = norm(∇f, 2)
+
+        safecount += 1
+
+    end
+
+    if safecount == MAXITER
+        with_logger(lm_logger.x) do
+
+            @info("No solution was found in $(safecount) iterations.")
+
+        end
+        status = 0
+    end
+
+    # TODO: Create a test for this case
+    if isnan(norm∇f)
+        with_logger(lm_logger.x) do
+
+            @info("Incorrect value for gradient norm $(norm∇f).")
+
+        end
+        status = 0
+    end
+
+    safecount -= 1
+    
+    outliers = [1:npun;]
+    setdiff!(outliers, ip)
+
+    with_logger(lm_logger.x) do
+
+        @info("""
+
+        Final iteration (STATUS=$(status))
+          Solution found:       $(θ)
+          ||grad_lovo||_2:      $(norm∇f)
+          Function value:       $(fk)
+          Number of iterations: $(safecount)
+          Outliers:             $(outliers)
+    
+        """)
+
+    end
+    
+    return RAFFOutput(status, θ, safecount, p, fk, nf, nj, outliers)
+
+end
