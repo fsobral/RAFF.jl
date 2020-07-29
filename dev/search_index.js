@@ -137,6 +137,54 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#RAFF.lmlovo",
+    "page": "API",
+    "title": "RAFF.lmlovo",
+    "category": "function",
+    "text": "lmlovo(model::Function [, θ::Vector{Float64} = zeros(n)], data::Array{Float64, 2},\n       n::Int, p::Int [; kwargs...])\n\nlmlovo(model::Function, gmodel!::Function [, θ::Vector{Float64} = zeros(n)],\n       data::Array{Float64,2}, n::Int, p::Int [; MAXITER::Int=200,\n       ε::Float64=10.0^-4])\n\nFit the n-parameter model model to the data given by matrix data. The strategy is based on the LOVO function, which means that only p (0 < p <= rows of data) points are trusted. The Levenberg-Marquardt algorithm is implemented in this version.\n\nMatriz data is the data to be fit. This matrix should be in the form\n\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\n\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\n\nIf θ is provided, then it is used as the starting point.\n\nThe signature of function model should be given by\n\nmodel(x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64})\n\nwhere x are the variables and θ is a n-dimensional vector of parameters. If the gradient of the model gmodel!\n\ngmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},\n           θ::Vector{Float64})\n\nis not provided, then the function ForwardDiff.gradient! is called to compute it.  Note that this choice has an impact in the computational performance of the algorithm. In addition, if ForwardDiff.jl is being used, then one MUST remove the signature of vector θ from function model.\n\nThe optional arguments are\n\nMAXITER: maximum number of iterations\nε: tolerance for the gradient of the function\n\nReturns a RAFFOutput object.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.gnlslovo",
+    "page": "API",
+    "title": "RAFF.gnlslovo",
+    "category": "function",
+    "text": "gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;\n         ε::Number=1.0e-4, MAXITER=400, αls=2.0, dinc=2.0,\n         MAXLSITER=100) where {T<:Float64}\n\ngnlslovo(model, θ::Vector{Float64}, data::Array{Float64,2},\n         n::Int, p::Int; kwargs...)\n\ngnlslovo(model, gmodel!, data::Array{Float64,2}, n::Int,\n         p::Int; kwargs...)\n\ngnlslovo(model, data::Array{Float64,2}, n::Int, p::Int; kwargs...)\n\nLOVO Gauss-Newton with line-search described in\n\nR. Andreani, G. Cesar, R. M. Cesar-Jr., J. M. Martínez, and P. J. S. Silva, “Efficient curve detection using a {Gauss-Newton} method with applications in agriculture,” in Proc. 1st International Workshop on Computer Vision Applications for Developing Regions in Conjunction with ICCV 2007-CVDR-ICCV07, 2007.\n\nFit the n-parameter model model to the data given by matrix data. The strategy is based on the LOVO function, which means that only p (0 < p <= rows of data) points are trusted.\n\nMatriz data is the data to be fit. This matrix should be in the form\n\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\n\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\n\nIf θ is provided, then it is used as the starting point.\n\nThe signature of function model should be given by\n\nmodel(x::Union{Vector{Float64}, SubArray}, θ::Vector{Float64})\n\nwhere x are the variables and θ is a n-dimensional vector of parameters. If the gradient of the model gmodel!\n\ngmodel! = (g::SubArray, x::Union{Vector{Float64}, SubArray},\n           θ::Vector{Float64})\n\nis not provided, then the function ForwardDiff.gradient! is called to compute it.  Note that this choice has an impact in the computational performance of the algorithm. In addition, if ForwardDiff.jl is being used, then one MUST remove the signature of vector θ from function model.\n\nThe optional arguments are\n\nMAXITER: maximum number of iterations\nε: tolerance for the gradient of the function\nαls: number >1 to increase/decrease the parameter t in line-search\ndinc: number >1 to increase the diagonal of the J^T J matrix in order to escape from singularity\nMAXLSITER: maximum number of Linear System increases in diagonal before exiting. Also defines the maximum number of Line Search trials to satisfy Armijo (but does not exit in such case)\n\nReturns a RAFFOutput object.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.raff",
+    "page": "API",
+    "title": "RAFF.raff",
+    "category": "function",
+    "text": "raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\nraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5,\n    inner_solver::Function=lmlovo, inner_solver_params...)\n\nRobust Algebric Fitting Function (RAFF) algorithm. This function uses a voting system to automatically find the number of trusted data points to fit the model.\n\nmodel: function to fit data. Its signature should be given by\nmodel(x, θ)\nwhere x is the multidimensional argument and θ is the n-dimensional vector of parameters\ngmodel!: gradient of the model function. Its signature should be given by\ngmodel!(g, x, θ)\nwhere x is the multidimensional argument, θ is the n-dimensional vector of parameters and the gradient is written in g.\ndata: data to be fit. This matrix should be in the form\nx11 x12 ... x1N y1\nx21 x22 ... x2N y2\n:\nwhere N is the dimension of the argument of the model (i.e. dimension of x).\nn: dimension of the parameter vector in the model function\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\ninitialguess: a good guess for the starting point and for generating random points in the multistart strategy\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\ninner_solver: solver to be used for the least square problems. By default, uses lmlovo. This function has the following mandatory parameters\ninner_solver(model, gmodel!, θ, data, n, p;\n             inner_solver_params...) = RAFFOutput\ninner_solver_params...: the remaining parameters will be sent as optional arguments to the inner_solver\n\nReturns a RAFFOutput object with the best parameter found.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.praff",
+    "page": "API",
+    "title": "RAFF.praff",
+    "category": "function",
+    "text": "praff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)\n\npraff(model::Function, gmodel!::Function, data::Array{Float64, 2},\n    n::Int; MAXMS::Int=1, SEEDMS::Int=123456789, batches::Int=1,\n    initguess::Vector{Float64}=zeros(Float64, n),\n    noutliers::Int=-1, ftrusted::Union{Float64,\n    Tuple{Float64, Float64}}=0.5,\n    inner_solver::Function=lmlovo, inner_solver_params...)\n\nMulticore distributed version of RAFF. See the description of the raff function for the main (non-optional) arguments. All the communication is performed by channels.\n\nThis function uses all available local workers to run RAFF algorithm. Note that this function does not use Tasks, so all the parallelism is based on the Distributed package.\n\nThe optional arguments are\n\nMAXMS: number of multistart points to be used\nSEEDMS: integer seed for random multistart points\nbatches: size of batches to be send to each worker\ninitguess: starting point to be used in the multistart procedure\nnoutliers: integer describing the maximum expected number of outliers. The default is half. Deprecated.\nftrusted: float describing the minimum expected percentage of trusted points. The default is half (0.5). Can also be a Tuple of the form (fmin, fmax) percentages of trusted points.\ninner_solver: solver to be used for the least square problems. By default, uses lmlovo. This function has the following mandatory parameters\ninner_solver(model, gmodel!, θ, data, n, p;\n             inner_solver_params...) = RAFFOutput\ninner_solver_params...: the remaining parameters will be sent as optional arguments to the inner_solver\n\nReturns a RAFFOutput object containing the solution.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.set_raff_output_level",
+    "page": "API",
+    "title": "RAFF.set_raff_output_level",
+    "category": "function",
+    "text": "set_raff_output_level(level::LogLevel)\n\nSet the output level of raff and praff algorithms to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#RAFF.set_lm_output_level",
+    "page": "API",
+    "title": "RAFF.set_lm_output_level",
+    "category": "function",
+    "text": "set_lm_output_level(level::LogLevel)\n\nSet the output level of lmlovo algorithm to the desired logging level. Options are (from highly verbose to just errors): Logging.Debug, Logging.Info, Logging.Warn and Logging.Error. The package Logging needs to be loaded.\n\nDefaults to Logging.Error.\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#Main-functions-1",
     "page": "API",
     "title": "Main functions",
