@@ -375,7 +375,6 @@ The optional arguments are
 Returns a [`RAFFOutput`](@ref) object.
 
 """
-
 function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
                   ε::Number=1.0e-4, MAXITER=400, αls=2.0, dinc=2.0,
                   MAXLSITER=100) where {T<:Float64}
@@ -677,8 +676,8 @@ function gnlslovo(model, θ::Vector{Float64}, data::Array{Float64,2},
 end
 
 gnlslovo(model, gmodel!, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
-    lmlovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
+    gnlslovo(model, gmodel!, zeros(Float64, n), data, n, p; kwargs...)
 
 gnlslovo(model, data::Array{Float64,2}, n::Int, p::Int; kwargs...) =
-    lmlovo(model, zeros(Float64, n), data, n, p; kwargs...)
+    gnlslovo(model, zeros(Float64, n), data, n, p; kwargs...)
 
