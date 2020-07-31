@@ -289,11 +289,17 @@ Additional configuration parameters are
   - `θSol`: true solution, used for generating perturbed points.
   - `interval`: any iterable object containing `np` numbers between 0
     and 2π.
+  - `leftd`: number of times the radius of the circle that will be
+    used for computing the **lower left corner** of the square for
+    generation of the random noise
+  - `lngth`: number of times the radius of the circle that will be
+    used for computing the **side of the square** for generation of
+    the random noise
 
 """
 function generate_ncircle(dat_filename::String, np::Int, p::Int;
     std::Float64=0.1, θSol::Vector{Float64}=10.0*randn(Float64, 3),
-    interval=(rand()*2.0*π for i = 1:np))
+    interval=(rand()*2.0*π for i = 1:np),leftd=2, lngth=4)
 
     (length(interval) != np) &&
         error("Size of interval different from given value of np")
@@ -317,8 +323,8 @@ function generate_ncircle(dat_filename::String, np::Int, p::Int;
 
     for i = p + 1:np
 
-        data[i, 1] = θSol[1] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
-        data[i, 2] = θSol[2] - 2.0 * θSol[3] + rand() * 4.0 * θSol[3]
+        data[i, 1] = θSol[1] - leftd * θSol[3] + rand() * lngth * θSol[3]
+        data[i, 2] = θSol[2] - leftd * θSol[3] + rand() * lngth * θSol[3]
         data[i, 3] = 0.0
         data[i, 4] = 1.0
 
