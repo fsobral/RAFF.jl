@@ -34,7 +34,6 @@ using Base.GC
 
 # Load libraries for drawing solutions
 include("draw.jl")
-include("gen_circle.jl")
 
 """
 
@@ -658,5 +657,150 @@ function run_circle_comparative_fitting()
                               ftrusted=(max(0.0, f - 0.3), min(1.0, f + 0.3)))
 
     end
+    
+end
+
+function praff_versus_gauss_newton(P; filename="/tmp/output.txt", model_str="circle",
+                                   MAXMS=10, MAXMSGN=100, outimage="/tmp/gn.png", kwargs...)
+
+    n, modl, = RAFF.model_list[model_str]
+
+    # Open file
+    data = Array{Float64, 2}(undef, 0, 0)
+
+    # t = 0:0.1:2.1 * π
+    
+    # ptx = (α, ρ, d) -> ρ * cos(α) + d[1]
+    # pty = (α, ρ, d) -> ρ * sin(α) + d[2]    
+
+    N = 1
+
+    open(filename) do fp
+
+        N = parse(Int, readline(fp))
+
+        data = readdlm(fp)
+
+    end
+
+    # draw_circle_sol(data)
+
+    @printf("%12s ", "")
+    
+    for p in P
+
+        @printf("& %10.3e ", p)
+
+    end
+
+    @printf("\\\\\n%12s ", "\\raff")
+
+    fSol = RAFFOutput()
+
+    for p in P
+    
+        # SEEDMS is an argument for RAFF, the seed for multi-start strategy
+        SEEDMS = 123456789
+
+        initguess = ones(Float64, n)
+
+        rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs..., MAXMS=MAXMS,
+                               ftrusted=(max(0.0, p - 0.3), min(1.0, p + 0.3)), 
+                               initguess=initguess, SEEDMS=SEEDMS, inner_solver=lmlovo)
+
+        fSol = rsol.solution
+
+        modl2 = (x) -> modl(x, rsol.solution)
+
+        fmeas = ls_measure(modl2, N, data)
+        
+        @printf("& %10.1e ", fmeas)
+
+    end
+
+    @printf("\\\\\n")
+        
+    # modl1x = (α) -> ptx(α, fSol[3], fSol[1:2])
+    # modl1y = (α) -> pty(α, fSol[3], fSol[1:2])
+
+    # PyPlot.plot(modl1x.(t), modl1y.(t), color=PyPlot.cm."Set1"(2.0/9.0),
+    #             linestyle="-", label="RAFF")
+
+    @printf("%12s ", "\\texttt{GN}")
+    
+    for p in P
+    
+        # SEEDMS is an argument for RAFF, the seed for multi-start strategy
+        SEEDMS = 123456789
+
+        initguess = ones(Float64, n)
+
+        rsol, tm = @timed raff(modl, data[:, 1:end - 1], n; kwargs...,
+                               ftrusted=(p, p), MAXMS=MAXMSGN,
+                               initguess=initguess, SEEDMS=SEEDMS,
+                               inner_solver=gnlslovo)
+
+        fSol = rsol.solution
+
+        modl2 = (x) -> modl(x, rsol.solution)
+        
+        fmeas = ls_measure(modl2, N, data)
+
+        @printf("& %10.1e ", fmeas)
+
+    end
+        
+    @printf("\\\\\n")
+
+    # modl1x = (α) -> ptx(α, fSol[3], fSol[1:2])
+    # modl1y = (α) -> pty(α, fSol[3], fSol[1:2])
+
+    # PyPlot.plot(modl1x.(t), modl1y.(t), color=PyPlot.cm."Set1"(3.0/9.0),
+    #             linestyle="-", label="GN")
+    
+    # PyPlot.legend(bbox_to_anchor=(0., 1.01, 1., .111), loc="lower left",
+    #               ncol=3, mode="expand", borderaxespad=0., numpoints=1)
+
+    # PyPlot.show()
+
+    # PyPlot.savefig(outimage, DPI=600, bbox_inches="tight")
+
+    # PyPlot.savefig("/tmp/gn.png", DPI=150)
+    
+end
+
+
+function run_praff_vs_gn()
+
+    large_number = 179424673
+
+    # Run cluster tests
+
+    for (model_str, sol) in [ ("linear", [-200.0, 1000.0]), ("cubic", [0.5, -20.0, 300.0, 1000.0]),
+                              ("expon", [5000.0, 4000.0, 0.2]),
+                              ("logistic", [6000.0, -5000, -0.2, -3.7]) ]
+
+        for (np, p) in [(100, 90)]
+
+            n, model, mstr = RAFF.model_list[model_str]
+
+            # Define seed for this run. The same seed for all instances.
+            Random.seed!(large_number + 300)
+
+            generate_test_problems("/tmp/output.txt", "/tmp/sol.txt", model, mstr, n, np, p,
+                                   (1.0, 30.0), (5.0, 10.0); θSol=sol, std=100.0)
+
+            praff_versus_gauss_newton([0.1, 0.2, 0.5, 0.6, 0.7, 0.95, 0.98, 0.99]; model_str=model_str, MAXMS=30)
+
+        end
+
+    end
+
+    # Circle
+
+    generate_ncircle("/tmp/output.txt", 300, 100; θSol=[- 10.0, 30.0, 2.0],
+                     std=0.1, leftd=5, lngth=7)
+
+    praff_versus_gauss_newton([0.01, 0.02, 0.05, 0.1, 0.4, 0.5, 0.6, 0.7]; MAXMS=30)
     
 end
