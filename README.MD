@@ -112,6 +112,17 @@ please use
 > Julia. *Journal of Open Source Software*,
 > 4(39), 1385. https://doi.org/10.21105/joss.01385
 
+The following paper describes the theory and several comparison tests
+
+> @article{Castelani2021,
+>    author = {Castelani, Emerson V. and Lopes, Ronaldo and Shirabayashi, Wesley V. I. and Sobral, Francisco N. C.},
+>    doi = {10.1007/s10898-020-00970-4},
+>    journal = {Journal of Global Optimization},
+>    title = {{A robust method based on LOVO functions for solving least squares problems}},
+>    url = {http://link.springer.com/10.1007/s10898-020-00970-4},
+>    year = {2021}
+> }
+
 ## References
 
 [1] Andreani, R., Martínez, J. M., Martínez, L., & Yano, F. S. (2009). Low order-value 

@@ -36,7 +36,7 @@ project number 002/17 - 47223.
 
 [2] Andreani, R., Martínez, J.M., Martínez, L. et al. J Glob Optim (2009) 43: 1. https://doi.org/10.1007/s10898-008-9280-3
 
-[3] Martínez, J.M. TOP (2012) 20: 75. https://doi.org/10.1007/s11750-010-0169-1
+[3] Martínez, J.M. TOP (2012) 20: 75. [https://doi.org/10.1007/s11750-010-0169-1]
 
 ## Citing this package
 
@@ -48,3 +48,14 @@ If you would like to cite this package, please use
 > 4(39), 1385. https://doi.org/10.21105/joss.01385
 
 [BibTex](assets/raff.bib)
+
+The following paper describes the theory and several comparison tests
+
+> @article{Castelani2021,
+>    author = {Castelani, Emerson V. and Lopes, Ronaldo and Shirabayashi, Wesley V. I. and Sobral, Francisco N. C.},
+>    doi = {10.1007/s10898-020-00970-4},
+>    journal = {Journal of Global Optimization},
+>    title = {{A robust method based on LOVO functions for solving least squares problems}},
+>    url = {http://link.springer.com/10.1007/s10898-020-00970-4},
+>    year = {2021}
+> }
