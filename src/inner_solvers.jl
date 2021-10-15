@@ -103,23 +103,21 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
     jac_res::Array{Float64, 2} = Array{Float64}(undef, p, n)
     
     # This function returns the residue and Jacobian of residue
-    ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64},
-            rJ::Array{Float64, 2}) = begin
+    ResFun! = let
 
-       nj += 1
-                
-       for (k, i) in enumerate(ind)
-            
-            x = data[i, 1:(end - 1)]
-            
-            r[k] = model(x, θ) - data[i, end]
-            
-            v = @view(rJ[k, :])
-            
-            gmodel!(v, x, θ)
-
-        end
-
+        data_    = data
+        model_   = model
+        gmodel!_ = gmodel!
+        
+        (θ::Vector{Float64}, ind, r::Vector{Float64},
+         rJ::Array{Float64, 2}) -> begin
+         
+             nj += 1
+         
+             residual_fg!(model_, gmodel!_, data_, θ, ind, r, rJ)
+         
+         end
+        
     end
     
     # Levenberg-Marquardt algorithm
@@ -175,19 +173,18 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
 
         BLAS.gemm!('T', 'N', 1.0, jac_res, jac_res, λ, G)
         
-        F = qr!(G)
-        #F = cholesky!(G, Val(true))
-        
-        ad = try
+        try
 
+            # TODO: use a smart version of the QR factorization
+            #F = qr!(G)
+            F = cholesky!(G, Val(true))
+            
             ldiv!(d, F, grad_lovo)
 
             d .*= -1.0
             
         catch
-            "error"
-        end
-        if ad == "error" #restarting if lapack fails
+
             with_logger(lm_logger.x) do
             
                 @warn "Failed to solve the linear system. Will try new point."
@@ -195,8 +192,7 @@ function lmlovo(model::Function, gmodel!::Function, θ::Vector{Float64},
                 θ .= rand(n)
                 
             end
-        else 
-            d .= ad
+            
         end
 
         θnew .= θ .+ d
@@ -430,22 +426,21 @@ function gnlslovo(model, gmodel!, θ, data::Array{T, 2}, n, p;
     Jrp::Array{Float64, 2} = Array{Float64}(undef, p, n)
     
     # This function returns the residue and Jacobian of residue
-    ResFun!(θ::Vector{Float64}, ind, r::Vector{Float64}, rJ::Array{Float64, 2}) = begin
+    ResFun! = let
 
-        nj += 1
+        data_    = data
+        model_   = model
+        gmodel!_ = gmodel!
         
-        for (k, i) in enumerate(ind)
-            
-            x = data[i, 1:(end - 1)]
-            
-            r[k] = model(x, θ) - data[i, end]
-            
-            v = @view(rJ[k, :])
-            
-            gmodel!(v, x, θ)
-
-        end
-
+        (θ::Vector{Float64}, ind, r::Vector{Float64},
+         rJ::Array{Float64, 2}) -> begin
+         
+             nj += 1
+         
+             residual_fg!(model_, gmodel!_, data_, θ, ind, r, rJ)
+         
+         end
+        
     end
 
     # Gauss-Newton algorithm

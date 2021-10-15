@@ -1,6 +1,34 @@
 export set_raff_output_level, set_lm_output_level
 
 """
+    residual_fg!(model::Function, data::AbstractMatrix{T}, θ::AbstractVector{T},
+                 ind, r::AbstractVector{T}, rJ::AbstractMatrix{T}) where T
+
+Compute F_I (the residual function) in `r`, using `model` and `data`,
+and J_I (the Jacobian of the residual function), using `gmodel!` and
+`data` in `rJ`, where I is given by `ind`, the indices associated with
+the current f_I.
+
+"""
+function residual_fg!(model::Function, gmodel!::Function, data::AbstractMatrix{T}, θ::AbstractVector{T},
+                      ind, r::AbstractVector{T}, rJ::AbstractMatrix{T}) where T
+
+    for (k, i) in enumerate(ind)
+        
+        x = @view(data[i, 1:(end - 1)])
+        
+        r[k] = model(x, θ) - data[i, end]
+        
+        v = @view(rJ[k, :])
+        
+        gmodel!(v, x, θ)
+
+    end
+
+end
+
+
+"""
 
     voting_strategy(model::Function, data::Array{Float64, 2}, sols::Vector{RAFFOutput}, pliminf::Int,
                     plimsup::Int)
