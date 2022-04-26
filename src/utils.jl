@@ -1,6 +1,25 @@
 export set_raff_output_level, set_lm_output_level
 
 """
+    lovo_fun!(θ, F, p, ind, npun, data)
+
+Compute the LOVO function for a given θ. This function alters `F` and
+`ind`.
+
+"""
+function lovo_fun!(θ, F, p, ind, npun, data)
+
+    @views for i = 1:npun
+        F[i] = (model(data[i,1:(end - 1)], θ) - data[i, end])^2
+    end
+    
+    indF, orderedF = sort_fun!(F, ind, p_)
+    
+    return indF, sum(orderedF)
+
+end
+
+"""
     residual_fg!(model::Function, data::AbstractMatrix{T}, θ::AbstractVector{T},
                  ind, r::AbstractVector{T}, rJ::AbstractMatrix{T}) where T
 
