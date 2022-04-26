@@ -1,5 +1,17 @@
 export lmlovo, gnlslovo
 
+function dslmlovo(model::Function, gmodel!::Function, data, n, p)
+
+    LovoFun = (θ, F, p, ind, npun, data) -> begin
+
+        nf += 1
+
+        return lovo_fun!(θ, F, p, ind, npun, data)
+
+    end
+
+end
+
 """
     lmlovo(model::Function [, θ::Vector{Float64} = zeros(n)], data::Array{Float64, 2},
            n::Int, p::Int [; kwargs...])
