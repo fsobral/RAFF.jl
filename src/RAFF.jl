@@ -40,6 +40,8 @@ include("generator.jl")
 
 include("inner_solvers.jl")
 
+include("smartqr.jl")
+
 """
 
     raff(model::Function, data::Array{Float64, 2}, n::Int; kwargs...)
