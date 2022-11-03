@@ -1,8 +1,8 @@
-export cs, create_vec, vector!, givens3, update3, solve_lower_vec, solve_upper_vec, solve_update_vec
+export cos_sin, create_vec, vector!, givens!, update!, solve_lower_vec!, solve_upper_vec!, solve_update_vec!
 
-cs(a, b)=
+cos_sin(a::Float64, b::Float64)=
 begin
-#     if b ==0
+#     if b == 0
 #         c = 1
 #         s = 0
 #     elseif abs(b) > abs(a)
@@ -30,7 +30,12 @@ begin
     return vetor_R
 end
 
-#transforma uma matriz triangular superior em um vetor
+"""
+    vector!(R, vetor_R) 
+
+Overwrite the vector `vector_R` with the upper triangular matrix `R`. 
+
+"""
 vector!(R, vetor_R)=
 begin
     m, n = size(R)
@@ -46,11 +51,10 @@ begin
     return vetor_R
 end
 
-givens3(A, aux, aux2)=
+givens!(A::Array{Float64,1}, aux, aux2)=
 begin    
     
-    #zeramos o elemento 1 da linha recebida
-    c, s = cs(A[1], aux[1])
+    c, s = cos_sin(A[1], aux[1])
     aux2 .= A
     A .= A .* c .- s .* aux
     aux .= aux2 .* s .+ c .* aux
@@ -58,8 +62,14 @@ begin
     return A, aux
 end
 
-#sobreescrevemos a fatoração QR recebida
-update3(R, λ)=
+"""
+    update!(R::Array{Float64,1}, λ)
+
+Receives the vector `R` that contains the upper triangular matrix of the qr factorization and a number `λ`. It computes a
+new qr factorization of the upper triangular matrix with the square root of λ added in the main diagonal. It uses Givens rotations.
+
+"""
+update!(R::Array{Float64,1}, λ)=
 begin
     z = length(R)   
     n = Int64((sqrt(1 + 8 * z) - 1) / 2)
@@ -69,21 +79,21 @@ begin
     
     for k = 1 : n
         aux[k] = sqrt(λ)
-        s_1 = s_1 + n - k + 1 #ultimo indice da linha k 
-        h_1 = s_1 - n + k #primeiro indice da linha k
+        s_1 = s_1 + n - k + 1 
+        h_1 = s_1 - n + k 
         s = s_1
         h = h_1
         for t = k : n
-            R[h : s], aux[t : n] = givens3(R[h : s], aux[t : n], aux2[t : n]) #vai zerar o primiero elemento de aux
-            h = s + 1 #vai para a proxima linha
-            s = s + n - t #vai para o ultimo elemento da proxima linha
+            R[h : s], aux[t : n] = givens!(R[h : s], aux[t : n], aux2[t : n]) 
+            h = s + 1 
+            s = s + n - t 
         end
        
     end
     return R # = R_λ 
 end
 
-solve_lower_vec(R_λ, b, z, n)=
+solve_lower_vec!(R_λ::Array{Float64,1}, b::Array{Float64,1}, z::Int64, n::Int64)=
 begin
     s = 1
     for j = 1 : n 
@@ -97,29 +107,37 @@ begin
     return b
 end
 
-solve_upper_vec(R_λ, b, z, n)=
+solve_upper_vec!(R_λ::Array{Float64,1}, b::Array{Float64,1}, z::Int64, n::Int64)=
 begin
     s = z
     for k = n : -1 : 1
-        soma = 0
+        sum = 0
         for i = n : -1 : k + 1
-            soma = soma + b[i] * R_λ[s]
+            sum = sum + b[i] * R_λ[s]
             s = s - 1 
         end
-        b[k] = (b[k] - soma) / R_λ[s]
+        b[k] = (b[k] - sum) / R_λ[s]
         s = s - 1
     end
     return b
 end
 
-solve_update_vec(R_λ, b)= #R ja alterada
+"""
+    solve_update_vec!(R_λ::Array{Float64,1}, b::Array{Float64,1})
+
+Solves the system (R^T * R + λI)x = b, where R is given by the vector `R_λ` that contains the updated upper triangular
+matrix R given by the qr factorization, and `b` that contains the right side of the system. `b` will be overwritten by the 
+solution of the system.
+
+"""
+solve_update_vec!(R_λ::Array{Float64,1}, b::Array{Float64,1})= 
 begin
     z = length(R_λ)
     n = length(b)
     
-    b = solve_lower_vec(R_λ, b, z, n)
+    b = solve_lower_vec!(R_λ, b, z, n)
     
-    b = solve_upper_vec(R_λ, b, z, n)
+    b = solve_upper_vec!(R_λ, b, z, n)
     
     return b
 end

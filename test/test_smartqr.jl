@@ -11,7 +11,7 @@
     @test v[2] == M[1,2]
     @test v[3] == M[2,2]
 
-    # Testa matriz m>n
+    # Test a matriz which m > n
     
     M = [1 2; 4 5; 6 7]
     v = create_vec(M)
@@ -22,7 +22,7 @@
     @test v[2] == M[1,2]
     @test v[3] == M[2,2]
 
-    # Test invalid case
+    # Test an invalid case
     
     M = [1 2 3; 4 5 6]
     
@@ -37,7 +37,7 @@ end
     b = [1.0, 0, 0, 0]
     aux2 = zeros(length(a))
     
-    givens3(a, b, aux2)
+    givens!(a, b, aux2)
     
     @test( b == zeros(length(b)))
     @test( aux2 == aorig)
@@ -46,7 +46,7 @@ end
     b = [-1.0, 0, 0, 0]
     aux2 = zeros(length(a))
     
-    givens3(a, b, aux2)
+    givens!(a, b, aux2)
     
     @test( b == zeros(length(b)))
     
@@ -54,7 +54,7 @@ end
     b = [-1.0, 0, 0, 0]
     aux2 = zeros(length(a))
     
-    givens3(a, b, aux2)
+    givens!(a, b, aux2)
     
     @test(b[2] == b[3] == b[4])
     # Fazer as contas
@@ -76,7 +76,7 @@ end
     v = create_vec(R)
     v = vector!(R, v)
     
-    update3(v, λ)
+    update!(v, λ)
     
     @test(norm(v) ≈ norm(w))
     
@@ -86,7 +86,7 @@ end
     
 end
 
-@testset "Test update2" begin
+@testset "Test update" begin
    
     R = [sqrt(3) -17.678 0 485 5.2 14; 0 694 -10 π 197 94; 0 0 -5 11 -24 1000; 0 0 0 19 2 87; 0 0 0 0 5 0; 0 0 0 0 0 -344]
     
@@ -101,7 +101,7 @@ end
     v = create_vec(R)
     v = vector!(R, v)
     
-    update3(v, λ)
+    update!(v, λ)
     
     @test(norm(v) ≈ norm(w))
     
@@ -129,9 +129,9 @@ end
     v = create_vec(R)
     v = vector!(R, v)
     
-    update3(v, λ)
+    update!(v, λ)
     
-    solve_update_vec(v, b)
+    solve_update_vec!(v, b)
     
     for i = 1 : length(b)
         @test(b[i] ≈ c[i])
@@ -140,7 +140,7 @@ end
     
 end
 
-@testset "Test solution2" begin
+@testset "Test solution" begin
    
     R = [sqrt(3) -17.678 0 485 5.2 14; 0 694 -10 π 197 94; 0 0 -5 11 -24 1000; 0 0 0 19 2 87; 0 0 0 0 5 0; 0 0 0 0 0 -344]
     
@@ -157,9 +157,9 @@ end
     v = create_vec(R)
     v = vector!(R, v)
     
-    update3(v, λ)
+    update!(v, λ)
     
-    solve_update_vec(v, b)
+    solve_update_vec!(v, b)
     
     for i = 1 : length(b)
         @test(b[i] ≈ c[i])
