@@ -1,0 +1,2 @@
+prob,error,minimum,feval,niter,convergence
+parabola_-0.5_-9.0_0.0_650_143.csv,4.512215832318326e-6,1.1082369337301134e-8,284.0,154,true

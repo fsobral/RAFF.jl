@@ -26,6 +26,20 @@ function residual_fg!(model::Function, gmodel!::Function, data::AbstractMatrix{T
     end
 
 end
+function residual_fg_acelerated!(model::Function,data::AbstractMatrix{T}, θ::AbstractVector{T},
+                      ind, r::AbstractVector{T}) where T
+
+    for (k, i) in enumerate(ind)
+        
+        x = @view(data[i, 1:(end - 1)])
+        
+        r[k] = model(x, θ) - data[i, end]
+        
+
+    end
+
+end
+
 
 
 """
