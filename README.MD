@@ -96,6 +96,9 @@ of `RAFF` in the test set.
 |    E4 |   3 |    100 |  10 |   1 |   1 |     0.2308 | 1 | [ 1.139e+03,  9.370e+03,  4.206e-01] |
 |  LOG1 |   4 |     10 |   1 |   0 |   0 |     0.0042 | 1 | [ 1.479e+03,  2.201e+03,  6.611e+01, -2.075e+02] |
 
+
+	Additional test problems to benchmarks can be found [here](https://github.com/evcastelani/problems_to_perform_lovo_methods).
+
 ## Credits
 
 * Francisco Sobral (Leader)
